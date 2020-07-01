@@ -1,0 +1,4 @@
+{
+  "enc_model_type": "roberta",
+  "enc_checkpoint": "roberta-large"
+}

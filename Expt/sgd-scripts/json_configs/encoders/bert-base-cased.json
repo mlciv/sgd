@@ -1,0 +1,4 @@
+{
+  "enc_model_type": "bert",
+  "enc_checkpoint": "bert-base-cased"
+}
