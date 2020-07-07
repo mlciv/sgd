@@ -32,6 +32,7 @@ import torch
 # from bert import tokenization
 
 from transformers.data.processors.utils import DataProcessor
+from transformers.tokenization_roberta import RobertaTokenizer, RobertaTokenizerFast
 
 logger = logging.getLogger(__name__)
 
@@ -279,13 +280,17 @@ class SchemaDSTC8Processor(DataProcessor):
             # 1 is added for the [CLS] token and for user tokens a bias of 2 +
             # len(system_tokens) is added to account for [CLS], system tokens and
             # [SEP].
+            if isinstance(self._tokenizer, RobertaTokenizer):
+                special_bias = (1, 3)
+            else:
+                special_bias = (1, 2)
             user_span_boundaries = self._find_subword_indices(
                 state_update, user_utterance, user_frame["slots"], user_alignments,
-                user_tokens, 2 + len(system_tokens))
+                user_tokens, special_bias[1] + len(system_tokens))
             if system_frame is not None:
                 system_span_boundaries = self._find_subword_indices(
                     state_update, system_utterance, system_frame["slots"],
-                    system_alignments, system_tokens, 1)
+                    system_alignments, system_tokens, special_bias[0])
             else:
                 system_span_boundaries = {}
 
@@ -585,7 +590,11 @@ class SchemaDSTExample(object):
         # Modify lengths of sys & usr utterance so that length of total utt
         # (including [CLS], [SEP], [SEP]) is no more than max_utt_len
         # For Roberta, we need to change this.
-        is_too_long = data_utils.truncate_seq_pair(system_tokens, user_tokens, max_utt_len - 3)
+        if isinstance(self._tokenizer, RobertaTokenizer):
+            special_token_num = 4
+        else:
+            special_token_num = 3
+        is_too_long = data_utils.truncate_seq_pair(system_tokens, user_tokens, max_utt_len - special_token_num)
         if is_too_long and self._log_data_warnings:
             logger.info("Utterance sequence truncated in example id - %s.",
                         self.example_id)
@@ -620,6 +629,12 @@ class SchemaDSTExample(object):
         end_char_idx.append(0)
 
         # for roberta, TODO
+        if isinstance(self._tokenizer, RobertaTokenizer):
+            utt_subword.append(self._tokenizer.cls_token)
+            utt_seg.append(1)
+            utt_mask.append(1)
+            start_char_idx.append(0)
+            end_char_idx.append(0)
 
         for subword_idx, subword in enumerate(user_tokens):
             utt_subword.append(subword)
@@ -639,8 +654,8 @@ class SchemaDSTExample(object):
 
         # Zero-pad up to the BERT input sequence length.
         while len(utterance_ids) < max_utt_len:
-            utterance_ids.append(0)
-            utt_seg.append(0)
+            utterance_ids.append(self._tokenizer.pad_token_id)
+            utt_seg.append(self._tokenizer.pad_token_type_id)
             utt_mask.append(0)
             start_char_idx.append(0)
             end_char_idx.append(0)

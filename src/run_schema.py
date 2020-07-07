@@ -46,6 +46,7 @@ from utils import schema_dataset_config
 from utils import data_utils
 from utils import pred_utils
 from utils import evaluate_utils
+from utils import torch_ext
 from src import utils_schema
 
 try:
@@ -128,7 +129,8 @@ def train(args, train_dataset, model, processor):
 
     # multi-gpu training (should be after apex fp16 initialization)
     if args.n_gpu > 1:
-        model = torch.nn.DataParallel(model)
+        # model = torch.nn.DataParallel(model)
+        model = torch_ext.DataParallelPassthrough(model)
 
     # Distributed training (should be after apex fp16 initialization)
     if args.local_rank != -1:
@@ -158,6 +160,8 @@ def train(args, train_dataset, model, processor):
         logger.info("  When Model Type = %s, create or load the schema embedding:", args.model_type)
         for key, tensor in schema_tensors.items():
             logger.info("%s: %s", key, tensor.size())
+
+    logger.info("  Model Architecture = %s", model)
 
     best_metrics = {}
     global_step = 1
@@ -276,12 +280,13 @@ def train(args, train_dataset, model, processor):
                 except:
                     logger.error("loss_name:{}, loss:{}".format(loss_name, l))
 
-            logger.info("Epoch = {}, Global_step = {}, losses = {}".format(
-                epoch, global_step, tmp_loss_dict
-                )
-            )
+#            logger.info("Epoch = {}, Global_step = {}, losses = {}".format(
+#                epoch, global_step, tmp_loss_dict
+#                )
+#            )
 
-            loss = sum(losses.values())
+            # loss = sum(losses.values())
+            loss = losses["span_start_loss"] + losses["span_end_loss"] + losses["noncat_slot_status_loss"]
 
             if args.n_gpu > 1:
                 loss = loss.mean()  # mean() to average on multi-gpu parallel (not distributed) training
@@ -384,7 +389,10 @@ def evaluate(args, model, processor, mode, prefix=""):
 
     # multi-gpu evaluate
     if args.n_gpu > 1 and not isinstance(model, torch.nn.DataParallel):
-        model = torch.nn.DataParallel(model)
+        # model = torch.nn.DataParallel(model)
+        model = torch_ext.DataParallelPassthrough(model)
+    else:
+        model = torch_ext.DataParallelPassthrough(model)
 
     # Eval!
     logger.info("***** Running evaluation {} *****".format(prefix))
@@ -445,10 +453,44 @@ def evaluate(args, model, processor, mode, prefix=""):
         if args.enc_model_type in ["xlm", "roberta", "distilbert", "camembert"]:
             inputs["utt_seg"] = None
 
+        if len(batch) > 13:
+            # results
+            all_cat_slot_status = batch[13]
+            all_cat_slot_values = batch[14]
+            all_noncat_slot_status = batch[15]
+            all_noncat_slot_start = batch[16]
+            all_noncat_slot_end = batch[17]
+            all_req_slot_status = batch[18]
+            all_intent_status = batch[19]
+
+            labels = {
+                "cat_slot_status": all_cat_slot_status,
+                "cat_slot_value": all_cat_slot_values,
+                "noncat_slot_status": all_noncat_slot_status,
+                "noncat_slot_value_start": all_noncat_slot_start,
+                "noncat_slot_value_end": all_noncat_slot_end,
+                "req_slot_status": all_req_slot_status,
+                "intent_status": all_intent_status
+            }
+        else:
+            labels = None
+
         with torch.no_grad():
-            # TODO: check different bert
-            outputs = model(inputs)
+            outputs = model(inputs, labels)
+            if labels:
+                losses = outputs[1]
+                tmp_loss_dict = {}
+                for loss_name, l in losses.items():
+                    try:
+                        tmp_loss_dict[loss_name] = l.item()
+                    except:
+                        logger.error("loss_name:{}, loss:{}".format(loss_name, l))
+                logger.info("prefix = {}, losses = {}".format(
+                    prefix, tmp_loss_dict)
+                )
+
             # dict: batch_size
+            # dict of list => list of dict
             predictions = model.define_predictions(inputs, outputs[0])
             for i in range(len(all_examples_ids)):
                 prediction = {}
@@ -462,6 +504,7 @@ def evaluate(args, model, processor, mode, prefix=""):
 
     # Compute predictions
     start_time = timeit.default_timer()
+    # indexed dialogue, key is (dialogue_id, turn_idx, service_name)
     indexed_predictions = pred_utils.get_predictions_index_dict(all_predictions)
     # Here dials will be modified and return
     all_predicted_dialogues = pred_utils.get_all_prediction_dialogues(dials, indexed_predictions, schemas)
@@ -475,6 +518,7 @@ def evaluate(args, model, processor, mode, prefix=""):
         args.use_fuzzy_match,
         args.joint_acc_across_turn)
 
+    logger.info("Model_prefix: {}, Dialog metrics: {}".format(prefix, str(all_metric_aggregate[evaluate_utils.ALL_SERVICES])))
     metric_time = timeit.default_timer() - start_time
     logger.info("  Metrics done in total %f secs (%f sec per example)",
                 metric_time, metric_time / len(dataset))
@@ -503,19 +547,20 @@ def load_and_cache_examples(args, processor, mode, output_examples=False):
     else:
         file_split = args.test_file
 
-    evaluate = True if mode in ["dev", "test"] else False
+    # Here are also return the labels for the dev set
+    is_eval = True if mode in ["test"] else False
 
-    name = args.model_name_or_path if args.model_name_or_path else args.config_name
     sub_dir = os.path.join(args.cache_dir, args.task_name)
     if not os.path.exists(sub_dir):
         os.makedirs(sub_dir)
 
     cached_features_file = os.path.join(
         sub_dir,
-        "cached_{}_{}_{}".format(
+        "cached_{}_{}_{}_{}".format(
             list(filter(None, file_split.split("/"))).pop(),
-            list(filter(None, name.split("/"))).pop(),
-            str(args.max_seq_length),
+            args.model_type,
+            args.enc_model_type,
+            args.max_seq_length
         ),
     )
 
@@ -545,7 +590,7 @@ def load_and_cache_examples(args, processor, mode, output_examples=False):
 
             # the schema dataset is not in tensorflow_datasets right now
             # tfds_examples = tfds.load("schema_guided_dataset")
-            # examples = SquadV1Processor().get_examples_from_dataset(tfds_examples, evaluate=evaluate)
+            # examples = SquadV1Processor().get_examples_from_dataset(tfds_examples,  evaluate=evaluate)
             raise NotImplementedError("schema_guided_dialogue is not in tensorflow_datasets")
         else:
             examples = processor.get_dialog_examples(args.data_dir, file_split)
@@ -557,7 +602,7 @@ def load_and_cache_examples(args, processor, mode, output_examples=False):
             examples=examples,
             dataset_config=args.dataset_config,
             max_seq_length=args.max_seq_length,
-            is_training=not evaluate,
+            is_training=not is_eval,
             return_dataset="pt"
         )
 
@@ -888,7 +933,6 @@ def main():
         args.fp16,
     )
 
-
     args.models_dir = os.path.join(args.output_dir, "models")
     if not os.path.exists(args.models_dir):
         os.makedirs(args.models_dir)
@@ -913,7 +957,6 @@ def main():
     else:
         args.dataset_config = schema_dataset_config.DATASET_CONFIG[args.task_name]
 
-    args.log_data_warnnings = True
     # build different model type for different options.
     args.model_type = args.model_type.lower()
     # encoder config

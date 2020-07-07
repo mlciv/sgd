@@ -62,11 +62,10 @@ pargs="--do_train \
 --output_dir=$EXP_DIR \
 --cache_dir=$CACHE_DIR \
 --logging_steps=$LOGGING_STEPS \
---max_seq_length=$MAX_SEQ_LENGTH \
+--fp16
 "
 
 pushd $EVAL_DIR
-#CUDA_LAUNCH_BLOCKING=1
 python src/run_schema.py $pargs 2>&1 &> ${EXP_DIR}/train.log
 #  python src/run_schema.py $pargs 2>&1 &> ${EXP_DIR}/train.log
 popd

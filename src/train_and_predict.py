@@ -422,6 +422,7 @@ class SchemaGuidedDST(object):
     }
     for loss_name, loss in losses.items():
       tf.summary.scalar(loss_name, loss)
+
     return sum(losses.values()) / len(losses)
 
   def define_predictions(self, features, outputs):

@@ -55,7 +55,7 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                 dialog["turns"][turn_idx - 1]["utterance"] if turn_idx else "")
             for frame in turn["frames"]:
                 predictions = all_predictions[(dialog_id, turn_idx, frame["service"])]
-                # logger.info("dial_id:{}, turn_idx:{}, predictions:{}".format(dialog_id, turn_idx, predictions))
+                logger.info("dial_id:{}, turn_idx:{}, predictions:{}".format(dialog_id, turn_idx, predictions))
                 slot_values = all_slot_values[frame["service"]]
                 service_schema = schemas.get_service_schema(frame["service"])
                 # Remove the slot spans and state if present.

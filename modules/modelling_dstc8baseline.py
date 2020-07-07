@@ -146,8 +146,12 @@ class DSTC8BaselineModel(PreTrainedModel):
         cache_dir: the dir used to store the task-related global files
         schema_embedding_dir_name: dirname for storing schema embedding
         schema_embedding_file_name: filename of schema embedding
+        # TODO: schema embdding type
         """
-        schema_embedding_dir = os.path.join(args.cache_dir, args.task_name, self.config.schema_embedding_dir_name)
+        schema_embedding_dir = "{}_{}".format(args.enc_model_type, self.config.schema_max_seq_length)
+        schema_embedding_dir = os.path.join(
+            args.cache_dir, args.task_name,
+            schema_embedding_dir)
         if not os.path.exists(schema_embedding_dir):
             os.makedirs(schema_embedding_dir)
         schema_embedding_file = os.path.join(
@@ -162,7 +166,7 @@ class DSTC8BaselineModel(PreTrainedModel):
             with torch.no_grad():
                 schema_emb_generator = SchemaEmbeddingGenerator(
                     self.tokenizer, args.enc_model_type, self.encoder,
-                    self.embedding_dim, args.max_seq_length, self.device)
+                    self.embedding_dim, self.config.schema_max_seq_length, self.device)
                 schema_data = schema_emb_generator.save_embeddings(
                     schemas,
                     schema_embedding_file,

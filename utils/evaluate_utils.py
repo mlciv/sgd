@@ -119,7 +119,7 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services, u
 
     # Ensure the dialogs in dataset_hyp also occur in dataset_ref.
     assert set(dataset_hyp.keys()).issubset(set(dataset_ref.keys()))
-    logger.info("len(dataset_hyp)=%d, len(dataset_ref)=%d", len(dataset_hyp), len(dataset_ref))
+    # logger.info("len(dataset_hyp)=%d, len(dataset_ref)=%d", len(dataset_hyp), len(dataset_ref))
 
     # Store metrics for every frame for debugging.
     per_frame_metric = {}
@@ -152,8 +152,8 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services, u
                 raise ValueError(
                     "Utterances don't match for dialogue with id {}".format(dial_id))
 
-            logger.info("turn_ref:{}".format(turn_ref))
-            logger.info("turn_hyp:{}".format(turn_hyp))
+            # logger.info("turn_ref:{}".format(turn_ref))
+            # logger.info("turn_hyp:{}".format(turn_hyp))
             # here, one service per frame
             hyp_frames_by_service = {
                 frame["service"]: frame for frame in turn_hyp["frames"]
@@ -204,7 +204,7 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services, u
                 # Add the frame-level metric result back to dialogues.
                 frame_hyp["metrics"] = frame_metric
 
-                logger.info("frame_id:{}, metrics:{}".format(frame_id, frame_metric))
+                # logger.info("frame_id:{}, metrics:{}".format(frame_id, frame_metric))
                 # Get the domain name of the service.
                 domain_name = frame_hyp["service"].split("_")[0]
                 domain_keys = [ALL_SERVICES, frame_hyp["service"], domain_name]
@@ -326,7 +326,6 @@ def get_metrics_result(dataset_ref, dataset_hyp, data_dir, split, use_fuzzy_matc
     all_metric_aggregate, _ = get_metrics(dataset_ref, dataset_hyp,
                                           eval_services, in_domain_services,
                                           use_fuzzy_match, joint_acc_across_turn)
-    logger.info("Dialog metrics: %s", str(all_metric_aggregate[ALL_SERVICES]))
     return all_metric_aggregate
 
 
