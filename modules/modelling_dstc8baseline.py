@@ -364,6 +364,7 @@ class DSTC8BaselineModel(PreTrainedModel):
         # Intents.
         # Shape: (batch_size, max_num_intents + 1).
         intent_logits = outputs["logit_intent_status"]
+        max_intent_num = intent_logits.size()[-1]
         # Shape: (batch_size, max_num_intents).
         intent_labels = labels["intent_status"]
         # Add label corresponding to NONE intent.
@@ -373,15 +374,18 @@ class DSTC8BaselineModel(PreTrainedModel):
         none_intent_label = torch.ones_like(num_active_intents) - num_active_intents
         # Shape: (batch_size, max_num_intents + 1).
         onehot_intent_labels = torch.cat([none_intent_label, intent_labels], dim=1).type_as(intent_logits)
+        intent_weights = torch_ext.sequence_mask(
+            features["intent_num"],
+            maxlen=max_intent_num, device=self.device, dtype=torch.float)
         # the weight expect for a (batch_size, x ) tensor
-        real_examples_mask_for_bce = features["is_real_example"].unsqueeze(1).expand_as(intent_logits)
+        # real_examples_mask_for_bce = features["is_real_example"].unsqueeze(1).expand_as(intent_logits)
         # https://pytorch.org/docs/stable/nn.functional.html?highlight=binary%20cross%20entropy#torch.nn.functional.binary_cross_entropy_with_logits
         # we split N intent classification into N binary classification
         # A directy way is to use the binary_cross_entropy
         intent_loss = torch.nn.functional.binary_cross_entropy_with_logits(
             intent_logits,
             onehot_intent_labels,
-            weight=real_examples_mask_for_bce,
+            weight=intent_weights,
             reduction="sum"
         )
 
@@ -391,7 +395,7 @@ class DSTC8BaselineModel(PreTrainedModel):
         # batch_size, num_max_slot
         requested_slot_labels = labels["req_slot_status"].type_as(requested_slot_logits)
         max_num_requested_slots = requested_slot_labels.size()[-1]
-        weights = torch_ext.sequence_mask(
+        requested_slots_weights = torch_ext.sequence_mask(
             features["req_slot_num"],
             maxlen=max_num_requested_slots, device=self.device, dtype=torch.float)
         # Sigmoid cross entropy is used because more than one slots can be requested
@@ -400,7 +404,7 @@ class DSTC8BaselineModel(PreTrainedModel):
         requested_slot_loss = torch.nn.functional.binary_cross_entropy_with_logits(
             requested_slot_logits,
             requested_slot_labels,
-            weight=weights,
+            weight=requested_slots_weights,
             reduction="sum"
         )
 
@@ -476,13 +480,13 @@ class DSTC8BaselineModel(PreTrainedModel):
         span_end_loss = (span_end_losses * active_noncat_value_weights).sum()
 
         losses = {
-            "intent_loss": intent_loss,
-            "requested_slot_loss": requested_slot_loss,
-            "cat_slot_status_loss": cat_slot_status_loss,
-            "cat_slot_value_loss": cat_slot_value_loss,
-            "noncat_slot_status_loss": noncat_slot_status_loss,
-            "span_start_loss": span_start_loss,
-            "span_end_loss": span_end_loss,
+            "loss_intent": intent_loss,
+            "loss_requested_slot": requested_slot_loss,
+            "loss_cat_slot_status": cat_slot_status_loss,
+            "loss_cat_slot_value": cat_slot_value_loss,
+            "loss_noncat_slot_status": noncat_slot_status_loss,
+            "loss_span_start": span_start_loss,
+            "loss_span_end": span_end_loss,
         }
         return losses
 

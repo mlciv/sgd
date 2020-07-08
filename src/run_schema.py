@@ -206,31 +206,20 @@ def train(args, train_dataset, model, processor):
             batch = tuple(t.to(args.device) for t in batch)
 
             all_examples_ids = batch[0]
-            all_real_example_flags = batch[1]
-            all_service_ids = batch[2]
-            all_input_ids = batch[3]
-            all_attention_masks = batch[4]
-            all_token_type_ids = batch[5]
-            all_cat_slot_num = batch[6]
-            all_cat_slot_value_num = batch[7]
-            all_noncat_slot_num = batch[8]
-            all_noncat_alignment_start = batch[9]
-            all_noncat_alignment_end = batch[10]
-            all_req_slot_num = batch[11]
-            all_intent_num = batch[12]
-
-            # results
-            all_cat_slot_status = batch[13]
-            all_cat_slot_values = batch[14]
-            all_noncat_slot_status = batch[15]
-            all_noncat_slot_start = batch[16]
-            all_noncat_slot_end = batch[17]
-            all_req_slot_status = batch[18]
-            all_intent_status = batch[19]
+            all_service_ids = batch[1]
+            all_input_ids = batch[2]
+            all_attention_masks = batch[3]
+            all_token_type_ids = batch[4]
+            all_cat_slot_num = batch[5]
+            all_cat_slot_value_num = batch[6]
+            all_noncat_slot_num = batch[7]
+            all_noncat_alignment_start = batch[8]
+            all_noncat_alignment_end = batch[9]
+            all_req_slot_num = batch[10]
+            all_intent_num = batch[11]
 
             inputs = {
                 "example_id": all_examples_ids,
-                "is_real_example": all_real_example_flags,
                 "service_id": all_service_ids,
                 "utt": all_input_ids,
                 "utt_mask": all_attention_masks,
@@ -247,6 +236,15 @@ def train(args, train_dataset, model, processor):
             # Add schema tensor into features
             for key, tensor in schema_tensors.items():
                 inputs[key] = tensor.to(args.device)
+
+            # results
+            all_cat_slot_status = batch[12]
+            all_cat_slot_values = batch[13]
+            all_noncat_slot_status = batch[14]
+            all_noncat_slot_start = batch[15]
+            all_noncat_slot_end = batch[16]
+            all_req_slot_status = batch[17]
+            all_intent_status = batch[18]
 
             labels = {
                 "cat_slot_status": all_cat_slot_status,
@@ -285,8 +283,8 @@ def train(args, train_dataset, model, processor):
 #                )
 #            )
 
-            # loss = sum(losses.values())
-            loss = losses["span_start_loss"] + losses["span_end_loss"] + losses["noncat_slot_status_loss"]
+            loss = sum(losses.values())
+            # loss = losses["span_start_loss"] + losses["span_end_loss"] + losses["noncat_slot_status_loss"]
 
             if args.n_gpu > 1:
                 loss = loss.mean()  # mean() to average on multi-gpu parallel (not distributed) training
@@ -316,7 +314,7 @@ def train(args, train_dataset, model, processor):
                     # Only evaluate when single GPU otherwise metrics may not average well
                     if args.local_rank == -1 and args.evaluate_during_training:
                         # we need a metric here to track and save the checkpoints.
-                        results, _ = evaluate(args, model, processor, "dev", prefix=global_step)
+                        results, _ = evaluate(args, model, processor, "dev", step=global_step, tb_writer=tb_writer)
 
                         for key, value in results.items():
                             # tb_writer.add_scalar("eval_{}".format(key), value, global_step)
@@ -367,7 +365,7 @@ def train(args, train_dataset, model, processor):
     return global_step, tr_loss / global_step
 
 
-def evaluate(args, model, processor, mode, prefix=""):
+def evaluate(args, model, processor, mode, step="", tb_writer=None):
     # In this task, we simply use the split name as the train, dev, test files.
     if mode == 'train':
         file_split = args.train_file
@@ -395,7 +393,7 @@ def evaluate(args, model, processor, mode, prefix=""):
         model = torch_ext.DataParallelPassthrough(model)
 
     # Eval!
-    logger.info("***** Running evaluation {} *****".format(prefix))
+    logger.info("***** Running evaluation {} *****".format(step))
     logger.info("  Num examples = %d", len(dataset))
     logger.info("  Batch size = %d", args.eval_batch_size)
     if args.model_type in ["dstc8baseline", "dstc8baseline_toptrans"]:
@@ -415,23 +413,21 @@ def evaluate(args, model, processor, mode, prefix=""):
         batch = tuple(t.to(args.device) for t in batch)
 
         all_examples_ids = batch[0]
-        all_real_example_flags = batch[1]
-        all_service_ids = batch[2]
-        all_input_ids = batch[3]
-        all_attention_masks = batch[4]
-        all_token_type_ids = batch[5]
-        all_cat_slot_num = batch[6]
-        all_cat_slot_value_num = batch[7]
-        all_noncat_slot_num = batch[8]
-        all_noncat_alignment_start = batch[9]
-        all_noncat_alignment_end = batch[10]
-        all_req_slot_num = batch[11]
-        all_intent_num = batch[12]
+        all_service_ids = batch[1]
+        all_input_ids = batch[2]
+        all_attention_masks = batch[3]
+        all_token_type_ids = batch[4]
+        all_cat_slot_num = batch[5]
+        all_cat_slot_value_num = batch[6]
+        all_noncat_slot_num = batch[7]
+        all_noncat_alignment_start = batch[8]
+        all_noncat_alignment_end = batch[9]
+        all_req_slot_num = batch[10]
+        all_intent_num = batch[11]
 
         # no results
         inputs = {
             "example_id": all_examples_ids,
-            "is_real_example": all_real_example_flags,
             "service_id": all_service_ids,
             "utt": all_input_ids,
             "utt_mask": all_attention_masks,
@@ -453,15 +449,15 @@ def evaluate(args, model, processor, mode, prefix=""):
         if args.enc_model_type in ["xlm", "roberta", "distilbert", "camembert"]:
             inputs["utt_seg"] = None
 
-        if len(batch) > 13:
+        if len(batch) > 12:
             # results
-            all_cat_slot_status = batch[13]
-            all_cat_slot_values = batch[14]
-            all_noncat_slot_status = batch[15]
-            all_noncat_slot_start = batch[16]
-            all_noncat_slot_end = batch[17]
-            all_req_slot_status = batch[18]
-            all_intent_status = batch[19]
+            all_cat_slot_status = batch[12]
+            all_cat_slot_values = batch[13]
+            all_noncat_slot_status = batch[14]
+            all_noncat_slot_start = batch[15]
+            all_noncat_slot_end = batch[16]
+            all_req_slot_status = batch[17]
+            all_intent_status = batch[18]
 
             labels = {
                 "cat_slot_status": all_cat_slot_status,
@@ -481,13 +477,12 @@ def evaluate(args, model, processor, mode, prefix=""):
                 losses = outputs[1]
                 tmp_loss_dict = {}
                 for loss_name, l in losses.items():
+                    if tb_writer:
+                        tb_writer.add_scalar(mode + "_" + loss_name, l, step)
                     try:
                         tmp_loss_dict[loss_name] = l.item()
                     except:
                         logger.error("loss_name:{}, loss:{}".format(loss_name, l))
-                logger.info("prefix = {}, losses = {}".format(
-                    prefix, tmp_loss_dict)
-                )
 
             # dict: batch_size
             # dict of list => list of dict
@@ -518,7 +513,7 @@ def evaluate(args, model, processor, mode, prefix=""):
         args.use_fuzzy_match,
         args.joint_acc_across_turn)
 
-    logger.info("Model_prefix: {}, Dialog metrics: {}".format(prefix, str(all_metric_aggregate[evaluate_utils.ALL_SERVICES])))
+    logger.info("Model_step: {}, Dialog metrics: {}".format(step, str(all_metric_aggregate[evaluate_utils.ALL_SERVICES])))
     metric_time = timeit.default_timer() - start_time
     logger.info("  Metrics done in total %f secs (%f sec per example)",
                 metric_time, metric_time / len(dataset))
@@ -1083,7 +1078,7 @@ def main():
                 args.log_data_warnings)
 
             # Evaluate
-            metrics, all_predictions = evaluate(args, model, processor, "test", prefix=global_step)
+            metrics, all_predictions = evaluate(args, model, processor, "test", step=global_step)
             # Write predictions to file in DSTC8 format.
             dataset_mark = os.path.basename(args.data_dir)
             prediction_dir = os.path.join(

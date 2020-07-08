@@ -246,7 +246,6 @@ class SchemaDSTC8Processor(DataProcessor):
         base_example = SchemaDSTExample(
             dataset_config=self._dataset_config,
             max_seq_length=self._max_seq_length,
-            is_real_example=True,
             tokenizer=self._tokenizer,
             log_data_warnings=self._log_data_warnings)
         base_example.example_id = turn_id
@@ -403,7 +402,7 @@ class SchemaDSTExample(object):
                  max_seq_length=DEFAULT_MAX_SEQ_LENGTH,
                  service_schema=None, example_id="NONE",
                  service_id="NONE",
-                 is_real_example=False, tokenizer=None,
+                 tokenizer=None,
                  log_data_warnings=False):
         """Constructs an SchemaDSTExample.
         Args:
@@ -413,11 +412,8 @@ class SchemaDSTExample(object):
         service_schema: A ServiceSchema object wrapping the schema for the service
         corresponding to this example.
         example_id: Unique identifier for the example.
-        is_real_example: Indicates if an example is real or used for padding in a
-        minibatch.
         tokenizer: A tokenizer object that has convert_tokens_to_ids and
         convert_ids_to_tokens methods. It must be non-None when
-        is_real_example=True.
         log_data_warnings: If True, warnings generted while processing data are
         logged. This is useful for debugging data processing.
         """
@@ -427,8 +423,6 @@ class SchemaDSTExample(object):
         # global_turn_id = split-dialogue_id-turn_idx
         self.example_id = example_id
         self.service_id = service_id
-        # Whether this example a real example or padding example
-        self.is_real_example = is_real_example
         # max seq_length for bert sequence encoding
         self._max_seq_length = max_seq_length
         # tokenizer used token the utterance
@@ -437,9 +431,6 @@ class SchemaDSTExample(object):
         self._log_data_warnings = log_data_warnings
         # the dataset config, which contains the range of dataset for single or multiple domain
         self._dataset_config = dataset_config
-        if self.is_real_example and self._tokenizer is None:
-            raise ValueError("Must specify tokenizer when input is a real example.")
-
         # prepare for bert input
         # The id of each subword in the vocabulary for BERT.
         self.utterance_ids = [0] * self._max_seq_length
@@ -675,7 +666,6 @@ class SchemaDSTExample(object):
             service_schema=self.service_schema,
             example_id=self.example_id,
             service_id=self.service_id,
-            is_real_example=self.is_real_example,
             tokenizer=self._tokenizer,
             log_data_warnings=self._log_data_warnings)
 
@@ -771,7 +761,7 @@ class InputFeatures(object):
     A single set of features of the data, Here we build the baseline model first
     Then we will consider how merge all into a unified model
     """
-    def __init__(self, example_id, is_real_example, service_id,
+    def __init__(self, example_id, service_id,
                  utt_ids, utt_seg, utt_mask,
                  cat_slot_num, cat_slot_status, cat_slot_value_num,
                  cat_slot_value, noncat_slot_num, noncat_slot_status,
@@ -780,7 +770,6 @@ class InputFeatures(object):
                  intent_num, intent_status):
         # example_info
         self.example_id = example_id
-        self.is_real_example = is_real_example
         self.service_id = service_id
         self.utt_ids = utt_ids
         self.utt_seg = utt_seg
@@ -824,7 +813,6 @@ def convert_examples_to_features(examples,
 
         feature = InputFeatures(
             ex.example_id,
-            int(ex.is_real_example),
             ex.service_schema.service_id,
             ex.utterance_ids,
             ex.utterance_segment,
@@ -849,7 +837,6 @@ def convert_examples_to_features(examples,
         # Convert to Tensors and build dataset
         # flags or ids for the example
         all_example_ids = torch.tensor([list(f.example_id.encode("utf-8")) for f in features], dtype=torch.uint8)
-        all_real_example_flags = torch.tensor([f.is_real_example for f in features], dtype=torch.int)
         all_service_ids = torch.tensor([f.service_id for f in features], dtype=torch.long)
 
         # dialogue history features
@@ -881,7 +868,6 @@ def convert_examples_to_features(examples,
         if not is_training:
             dataset = torch.utils.data.TensorDataset(
                 all_example_ids,
-                all_real_example_flags,
                 all_service_ids,
                 all_input_ids,
                 all_attention_masks,
@@ -897,7 +883,6 @@ def convert_examples_to_features(examples,
         else:
             dataset = torch.utils.data.TensorDataset(
                 all_example_ids,
-                all_real_example_flags,
                 all_service_ids,
                 all_input_ids,
                 all_attention_masks,
