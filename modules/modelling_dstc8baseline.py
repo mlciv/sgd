@@ -435,7 +435,7 @@ class DSTC8BaselineModel(PreTrainedModel):
         cat_loss_weight = (cat_slot_status_labels == utils_schema.STATUS_ACTIVE).type(torch.float32).view(-1)
         cat_slot_value_losses = torch.nn.functional.cross_entropy(
             cat_slot_value_logits.view(-1, max_num_slot_values),
-            cat_slot_value_labels.view(-1).long(), reduce='none')
+            cat_slot_value_labels.view(-1).long(), reduction='none')
 
         # batch_size, max_num_cat
         active_cat_value_weights = cat_weights * cat_loss_weight
@@ -454,7 +454,7 @@ class DSTC8BaselineModel(PreTrainedModel):
         noncat_slot_status_losses = torch.nn.functional.cross_entropy(
             noncat_slot_status_logits.view(-1, 3),
             noncat_slot_status_labels.view(-1).long(),
-            reduce='none'
+            reduction='none'
         )
         noncat_slot_status_loss = (noncat_slot_status_losses * noncat_weights).sum()
         # Non-categorical slot spans.
@@ -472,10 +472,10 @@ class DSTC8BaselineModel(PreTrainedModel):
         active_noncat_value_weights = noncat_weights * noncat_loss_weight
         span_start_losses = torch.nn.functional.cross_entropy(
             span_start_logits.view(-1, max_num_tokens),
-            span_start_labels.view(-1).long(), reduce='none')
+            span_start_labels.view(-1).long(), reduction='none')
         span_end_losses = torch.nn.functional.cross_entropy(
             span_end_logits.view(-1, max_num_tokens),
-            span_end_labels.view(-1).long(), reduce='none')
+            span_end_labels.view(-1).long(), reduction='none')
         span_start_loss = (span_start_losses * active_noncat_value_weights).sum()
         span_end_loss = (span_end_losses * active_noncat_value_weights).sum()
 
