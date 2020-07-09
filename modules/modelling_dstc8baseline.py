@@ -582,7 +582,7 @@ class SchemaEmbeddingGenerator(nn.Module):
         super(SchemaEmbeddingGenerator, self).__init__()
         self.tokenizer = tokenizer
         self.enc_model_type = enc_model_type
-        self.encoder= encoder
+        self.encoder = encoder
         self.schema_embedding_dim = schema_embedding_dim
         self.max_seq_length = max_seq_length
         self.device = device

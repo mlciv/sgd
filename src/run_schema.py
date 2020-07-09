@@ -908,10 +908,10 @@ def main():
 
 
     # for debuging only
-    np.random.seed(0)
-    random.seed(0)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+    #np.random.seed(0)
+    #random.seed(0)
+    #torch.backends.cudnn.deterministic = True
+    #torch.backends.cudnn.benchmark = False
 
     # Setup CUDA, GPU & distributed training
     if args.local_rank == -1 or args.no_cuda:
