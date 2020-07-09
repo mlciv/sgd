@@ -30,9 +30,9 @@ DEV_FILE=train
 # test_file, the file for eval
 TEST_FILE=train
 # per_gpu_eval_batch_size
-PER_GPU_EVAL_BATCH_SIZE=16
+PER_GPU_EVAL_BATCH_SIZE=1
 # per_gpu_train_batch_size
-PER_GPU_TRAIN_BATCH_SIZE=16
+PER_GPU_TRAIN_BATCH_SIZE=1
 # num_train_epochs
 NUM_TRAIN_EPOCHS=100
 # learning_rate
@@ -49,3 +49,5 @@ JOINT_ACC_ACROSS_TURN=
 USE_FUZZY_MATCH=x
 # MAX_SEQ_LENGTH
 MAX_SEQ_LENGTH=80
+# warmup_step
+WARMUP_PORTION=0.1

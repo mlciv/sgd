@@ -97,6 +97,7 @@ def train(args, train_dataset, model, processor):
     else:
         t_total = len(train_dataloader) // args.gradient_accumulation_steps * args.num_train_epochs
 
+    args.warmup_steps = args.warmup_portion * t_total
     # Prepare optimizer and schedule (linear warmup and decay)
     no_decay = ["bias", "LayerNorm.weight"]
     optimizer_grouped_parameters = [
@@ -151,6 +152,7 @@ def train(args, train_dataset, model, processor):
     )
     logger.info("  Gradient Accumulation steps = %d", args.gradient_accumulation_steps)
     logger.info("  Total optimization steps = %d", t_total)
+    logger.info("  Warmup portion = %f, warmup steps = %d", args.warmup_portion, args.warmup_steps)
     logger.info("  Model Type = %s", args.model_type)
     if args.model_type in ["dstc8baseline", "dstc8baseline_toptrans"]:
         schema_tensors = model.create_or_load_schema_embedding(
@@ -186,7 +188,7 @@ def train(args, train_dataset, model, processor):
     tr_loss, logging_loss = 0.0, 0.0
     model.zero_grad()
     train_iterator = trange(
-        epochs_trained, int(args.num_train_epochs), desc="Epoch", disable=args.local_rank not in [-1, 0]
+        epochs_trained, int(args.num_train_epochs), desc="Epoch", position=0, leave=True, disable=args.local_rank not in [-1, 0]
     )
     # Added here for reproductibility
     set_seed(args)
@@ -194,7 +196,7 @@ def train(args, train_dataset, model, processor):
     epoch = 0
     for _ in train_iterator:
         epoch += 1
-        epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=args.local_rank not in [-1, 0])
+        epoch_iterator = tqdm(train_dataloader, desc="Iteration", position=0, leave=True, disable=args.local_rank not in [-1, 0])
         for step, batch in enumerate(epoch_iterator):
 
             # Skip past any already trained steps if resuming training
@@ -340,7 +342,7 @@ def train(args, train_dataset, model, processor):
                                     if key in evaluate_utils.CORE_METRIC_KEYS and \
                                        v_key in evaluate_utils.CORE_METRIC_SUBKEYS:
                                         save_checkpoint(args, model, processor._tokenizer,
-                                                        optimizer, scheduler, "best-{}-{}".format(joint_key, global_step))
+                                                        optimizer, scheduler, "best-{}".format(joint_key))
 
                     tb_writer.add_scalar("lr", scheduler.get_lr()[0], global_step)
                     tb_writer.add_scalar("loss", (tr_loss - logging_loss) / args.logging_steps, global_step)
@@ -361,6 +363,8 @@ def train(args, train_dataset, model, processor):
 
     if args.local_rank in [-1, 0]:
         tb_writer.close()
+
+    logger.info("Best metrics after {} training:{}".format(global_step, best_metrics))
 
     return global_step, tr_loss / global_step
 
@@ -408,7 +412,7 @@ def evaluate(args, model, processor, mode, step="", tb_writer=None):
     all_predictions = []
     start_time = timeit.default_timer()
 
-    for batch in tqdm(eval_dataloader, desc="Evaluating"):
+    for batch in tqdm(eval_dataloader, desc="Evaluating", position=0, leave=True):
         model.eval()
         batch = tuple(t.to(args.device) for t in batch)
 
@@ -811,7 +815,7 @@ def main():
         type=int,
         help="If > 0: set total number of training steps to perform. Override num_train_epochs.",
     )
-    parser.add_argument("--warmup_steps", default=0, type=int, help="Linear warmup over warmup_steps.")
+    parser.add_argument("--warmup_portion", default=0.0, type=float, help="Linear warmup over warmup_portion.")
     parser.add_argument(
         "--n_best_size",
         default=20,
@@ -901,6 +905,13 @@ def main():
         print("Waiting for debugger attach")
         ptvsd.enable_attach(address=(args.server_ip, args.server_port), redirect_output=True)
         ptvsd.wait_for_attach()
+
+
+    # for debuging only
+    np.random.seed(0)
+    random.seed(0)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
 
     # Setup CUDA, GPU & distributed training
     if args.local_rank == -1 or args.no_cuda:
@@ -1016,7 +1027,8 @@ def main():
     # Training
     if args.do_train:
         train_dataset = load_and_cache_examples(args, processor, mode="train", output_examples=False)
-        global_step, tr_loss = train(args, train_dataset, model, processor)
+        with torch.autograd.detect_anomaly():
+            global_step, tr_loss = train(args, train_dataset, model, processor)
         logger.info(" global_step = %s, average loss = %s", global_step, tr_loss)
 
     # Save the trained model and the tokenizer

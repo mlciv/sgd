@@ -150,7 +150,7 @@ class DSTC8BaselineTopTransModel(PreTrainedModel):
         schema_embedding_dir_name: dirname for storing schema embedding
         schema_embedding_file_name: filename of schema embedding
         """
-        schema_embedding_dir = "{}_{}".format(args.enc_model_type, self.config.schema_max_seq_length)
+        schema_embedding_dir = "{}_{}_{}".format(args.model_type, args.enc_model_type, self.config.schema_max_seq_length)
         schema_embedding_dir = os.path.join(args.cache_dir, args.task_name, schema_embedding_dir)
         if not os.path.exists(schema_embedding_dir):
             os.makedirs(schema_embedding_dir)
@@ -205,6 +205,7 @@ class DSTC8BaselineTopTransModel(PreTrainedModel):
         """Encode system and user utterances using BERT."""
         # Optain the embedded representation of system and user utterances in the
         # turn and the corresponding token level representations.
+        logger.info("utt:{}, utt_mask:{}, utt_seg:{}".format(features["utt"], features["utt_mask"], features["utt_seg"]))
         output = self.encoder(
             input_ids=features["utt"],
             attention_mask=features["utt_mask"],
@@ -235,7 +236,7 @@ class DSTC8BaselineTopTransModel(PreTrainedModel):
         batch_size1, num_elements, max_seq_length, element_emb_dim = element_embeddings.size()
         batch_size2, max_u_len, u_emb_len = _encoded_tokens.size()
         assert batch_size1 == batch_size2, "batch_size not match between element_emb and utterance_emb"
-        assert element_emb_dim == u_emb_len, "batch_size not match between element_emb and utterance_emb"
+        assert element_emb_dim == u_emb_len, "dim not much element_emb={} and utterance_emb={}".format(element_emb_dim, u_emb_len)
         # (batch_size, num_elements, max_seq_length, dim)
         expanded_encoded_tokens = _encoded_tokens.unsqueeze(1).expand(-1, num_elements, -1, -1)
         expanded_utterance_mask = utterance_mask.unsqueeze(1).expand(-1, num_elements, -1)
@@ -245,12 +246,12 @@ class DSTC8BaselineTopTransModel(PreTrainedModel):
         max_total_len = max_u_len + max_seq_length
         # (batch_size * num_elements, max_total_len, dim)
         utterance_element_pair_emb = torch.cat(
-            (expanded_encoded_tokens, element_embeddings),
-            dim=2).view(-1, max_total_len, u_emb_len)
+            (expanded_encoded_tokens, element_embeddings), dim=2).view(-1, max_total_len, u_emb_len)
         # (batch_size, num_elements, max_u_len+max_seq_length)
         utterance_element_pair_mask = torch.cat(
             (expanded_utterance_mask, element_mask),
             dim=2).view(-1, max_total_len).bool()
+
         # trans_output: (batch_size * num_elements, max_total_len, dim)
         trans_output = matching_layer(
             utterance_element_pair_emb.transpose(0, 1),
@@ -264,15 +265,17 @@ class DSTC8BaselineTopTransModel(PreTrainedModel):
         # service_id is the index of emb value
         # [service_num, max_intentnum, max_seq_length, dim]
         intent_embeddings = features["intent_emb"].index_select(0, features["service_id"])
+        # self.device is the device for Dataparallel model,which device 0
+        # Here we need the device current input on
+        current_device = intent_embeddings.device
         intent_mask = features["intent_mask"].index_select(0, features["service_id"])
         # Add a trainable vector for the NONE intent.
-        _, max_num_intents, max_seq_length, embedding_dim = intent_embeddings.size()
+        batch_size, max_num_intents, max_seq_length, embedding_dim = intent_embeddings.size()
         # init a matrix
-        null_intent_embedding = torch.empty(1, 1, max_seq_length, embedding_dim, device=self.device)
-        null_intent_mask = torch.zeros(1, 1, max_seq_length, dtype=torch.long, device=self.device)
-        null_intent_mask[:,:,0] = 1
+        null_intent_embedding = torch.empty(1, 1, max_seq_length, embedding_dim, device=current_device)
+        null_intent_mask = torch.zeros(1, 1, max_seq_length, dtype=torch.long, device=current_device)
+        null_intent_mask[:, :, 0] = 1
         torch.nn.init.normal_(null_intent_embedding, std=0.02)
-        batch_size = intent_embeddings.size()[0]
         repeated_null_intent_embedding = null_intent_embedding.expand(batch_size, 1, -1, -1)
         # batch_size, 1, max_seq_length]
         repeated_null_intent_mask = null_intent_mask.expand(batch_size, 1, -1)
@@ -381,6 +384,7 @@ class DSTC8BaselineTopTransModel(PreTrainedModel):
         But in our case, we encode each sentence seperately.
         plan2 is the same, for AE, only input_ids is useful.
         """
+        logger.info("device:{}, self_device:{}, features_size:{}".format(features["utt_mask"].device, self.device, features["utt_mask"].size()))
         is_training = (labels is not None)
         _encoded_utterance, _encoded_tokens = self._encode_utterances(features, is_training)
         outputs = {}
@@ -406,6 +410,7 @@ class DSTC8BaselineTopTransModel(PreTrainedModel):
         # Intents.
         # Shape: (batch_size, max_num_intents + 1).
         intent_logits = outputs["logit_intent_status"]
+        max_intent_num = intent_logits.size()[-1]
         # Shape: (batch_size, max_num_intents).
         intent_labels = labels["intent_status"]
         # Add label corresponding to NONE intent.
@@ -415,15 +420,17 @@ class DSTC8BaselineTopTransModel(PreTrainedModel):
         none_intent_label = torch.ones_like(num_active_intents) - num_active_intents
         # Shape: (batch_size, max_num_intents + 1).
         onehot_intent_labels = torch.cat([none_intent_label, intent_labels], dim=1).type_as(intent_logits)
+        intent_weights = torch_ext.sequence_mask(
+            features["intent_num"],
+            maxlen=max_intent_num, device=self.device, dtype=torch.float)
         # the weight expect for a (batch_size, x ) tensor
-        real_examples_mask_for_bce = features["is_real_example"].unsqueeze(1).expand_as(intent_logits)
         # https://pytorch.org/docs/stable/nn.functional.html?highlight=binary%20cross%20entropy#torch.nn.functional.binary_cross_entropy_with_logits
         # we split N intent classification into N binary classification
         # A directy way is to use the binary_cross_entropy
         intent_loss = torch.nn.functional.binary_cross_entropy_with_logits(
             intent_logits,
             onehot_intent_labels,
-            weight=real_examples_mask_for_bce,
+            weight=intent_weights,
             reduction="sum"
         )
 
@@ -433,7 +440,7 @@ class DSTC8BaselineTopTransModel(PreTrainedModel):
         # batch_size, num_max_slot
         requested_slot_labels = labels["req_slot_status"].type_as(requested_slot_logits)
         max_num_requested_slots = requested_slot_labels.size()[-1]
-        weights = torch_ext.sequence_mask(
+        requested_slot_weights = torch_ext.sequence_mask(
             features["req_slot_num"],
             maxlen=max_num_requested_slots, device=self.device, dtype=torch.float)
         # Sigmoid cross entropy is used because more than one slots can be requested
@@ -442,7 +449,7 @@ class DSTC8BaselineTopTransModel(PreTrainedModel):
         requested_slot_loss = torch.nn.functional.binary_cross_entropy_with_logits(
             requested_slot_logits,
             requested_slot_labels,
-            weight=weights,
+            weight=requested_slot_weights,
             reduction="sum"
         )
 
@@ -618,7 +625,7 @@ class SchemaEmbeddingGenerator(nn.Module):
         super(SchemaEmbeddingGenerator, self).__init__()
         self.tokenizer = tokenizer
         self.enc_model_type = enc_model_type
-        self.encoder= encoder
+        self.encoder = encoder
         self.schema_embedding_dim = schema_embedding_dim
         self.max_seq_length = max_seq_length
         self.device = device
