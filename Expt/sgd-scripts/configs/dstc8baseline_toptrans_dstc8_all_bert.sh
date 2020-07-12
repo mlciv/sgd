@@ -30,9 +30,9 @@ DEV_FILE=train
 # test_file, the file for eval
 TEST_FILE=train
 # per_gpu_eval_batch_size
-PER_GPU_EVAL_BATCH_SIZE=1
+PER_GPU_EVAL_BATCH_SIZE=4
 # per_gpu_train_batch_size
-PER_GPU_TRAIN_BATCH_SIZE=1
+PER_GPU_TRAIN_BATCH_SIZE=4
 # num_train_epochs
 NUM_TRAIN_EPOCHS=100
 # learning_rate
@@ -40,7 +40,7 @@ LEARNING_RATE=0.00005
 # gradient_accumulation_steps
 GRADIENT_ACCUMULATION_STEPS=16
 # logging_steps
-LOGGING_STEPS=10000
+LOGGING_STEPS=500
 # save_steps 
 SAVE_STEPS=100000
 # JOINT_ACC_ACROSS_TURN

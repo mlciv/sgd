@@ -36,7 +36,7 @@ PER_GPU_TRAIN_BATCH_SIZE=128
 # num_train_epochs
 NUM_TRAIN_EPOCHS=80
 # learning_rate
-LEARNING_RATE=0.00001
+LEARNING_RATE=0.0001
 # gradient_accumulation_steps
 GRADIENT_ACCUMULATION_STEPS=2
 # logging_steps

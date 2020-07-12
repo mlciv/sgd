@@ -22,6 +22,7 @@ import logging
 import os
 import random
 import timeit
+import shutil
 
 import numpy as np
 import torch
@@ -42,6 +43,7 @@ from modules.core.encoder_configuration import EncoderConfig
 from modules.core.encoder_utils import EncoderUtils
 from modules.modelling_dstc8baseline import DSTC8BaselineModel
 from modules.modelling_dstc8baseline_toptrans import DSTC8BaselineTopTransModel
+from modules.schema_embedding_generator import SchemaEmbeddingGenerator
 from utils import schema_dataset_config
 from utils import data_utils
 from utils import pred_utils
@@ -82,7 +84,7 @@ def to_list(tensor):
     return tensor.detach().cpu().tolist()
 
 
-def train(args, train_dataset, model, processor):
+def train(args, config, train_dataset, model, processor):
     """ Train the model """
     if args.local_rank in [-1, 0]:
         tb_writer = SummaryWriter(args.summary_dir)
@@ -155,8 +157,9 @@ def train(args, train_dataset, model, processor):
     logger.info("  Warmup portion = %f, warmup steps = %d", args.warmup_portion, args.warmup_steps)
     logger.info("  Model Type = %s", args.model_type)
     if args.model_type in ["dstc8baseline", "dstc8baseline_toptrans"]:
-        schema_tensors = model.create_or_load_schema_embedding(
+        schema_tensors = SchemaEmbeddingGenerator.create_or_load_schema_embedding(
             args,
+            config,
             "train"
         )
         logger.info("  When Model Type = %s, create or load the schema embedding:", args.model_type)
@@ -173,7 +176,8 @@ def train(args, train_dataset, model, processor):
     if os.path.exists(args.model_name_or_path):
         try:
             # set global_step to gobal_step of last saved checkpoint from model path
-            checkpoint_suffix = args.model_name_or_path.split("-")[-1].split("/")[0]
+            # "checkpoing-xxxx" or "best-model-xxxx"
+            checkpoint_suffix = os.path.basename(os.path.normpath(args.model_name_or_path)).split("-")[-1]
             global_step = int(checkpoint_suffix)
             epochs_trained = global_step // (len(train_dataloader) // args.gradient_accumulation_steps)
             steps_trained_in_current_epoch = global_step % (len(train_dataloader) // args.gradient_accumulation_steps)
@@ -316,7 +320,7 @@ def train(args, train_dataset, model, processor):
                     # Only evaluate when single GPU otherwise metrics may not average well
                     if args.local_rank == -1 and args.evaluate_during_training:
                         # we need a metric here to track and save the checkpoints.
-                        results, _ = evaluate(args, model, processor, "dev", step=global_step, tb_writer=tb_writer)
+                        results, _ = evaluate(args, config, model, processor, "dev", step=global_step, tb_writer=tb_writer)
 
                         for key, value in results.items():
                             # tb_writer.add_scalar("eval_{}".format(key), value, global_step)
@@ -337,21 +341,31 @@ def train(args, train_dataset, model, processor):
                                     logger.info("Epoch = {}, Global_step = {}, Update metric {} = {}".format(
                                         epoch, global_step, joint_key, v_value))
                                     # Save model checkpoint
+                                    if v_key in metrics_for_key:
+                                        old_global_step = metrics_for_key[v_key][1]
+                                        old_name = "best-{}-{}".format(joint_key, old_global_step)
+                                        old_path = os.path.join(args.models_dir, old_name)
+                                    else:
+                                        old_path = None
                                     metrics_for_key[v_key] = (v_value, global_step)
                                     # We only save the model for core metrics
                                     if key in evaluate_utils.CORE_METRIC_KEYS and \
                                        v_key in evaluate_utils.CORE_METRIC_SUBKEYS:
+                                        if old_path:
+                                            shutil.rmtree(old_path)
                                         save_checkpoint(args, model, processor._tokenizer,
-                                                        optimizer, scheduler, "best-{}".format(joint_key))
+                                                        optimizer, scheduler, "best-{}-{}".format(joint_key, global_step))
 
                     tb_writer.add_scalar("lr", scheduler.get_lr()[0], global_step)
                     tb_writer.add_scalar("loss", (tr_loss - logging_loss) / args.logging_steps, global_step)
+                    logger.info("Epoch = {}, Global_step = {}, lr = {}, losses = {}".format(
+                        epoch, global_step, scheduler.get_lr()[0], tmp_loss_dict)
+                    )
                     logging_loss = tr_loss
 
                 # Save model checkpoint
                 if args.local_rank in [-1, 0] and args.save_steps > 0 and global_step % args.save_steps == 0:
                     save_checkpoint(args, model, processor._tokenizer, optimizer, scheduler, "checkpoint-{}".format(global_step))
-
 
 
             if args.max_steps > 0 and global_step > args.max_steps:
@@ -369,7 +383,7 @@ def train(args, train_dataset, model, processor):
     return global_step, tr_loss / global_step
 
 
-def evaluate(args, model, processor, mode, step="", tb_writer=None):
+def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
     # In this task, we simply use the split name as the train, dev, test files.
     if mode == 'train':
         file_split = args.train_file
@@ -400,9 +414,11 @@ def evaluate(args, model, processor, mode, step="", tb_writer=None):
     logger.info("***** Running evaluation {} *****".format(step))
     logger.info("  Num examples = %d", len(dataset))
     logger.info("  Batch size = %d", args.eval_batch_size)
+    # schame embededing should be done before the training
     if args.model_type in ["dstc8baseline", "dstc8baseline_toptrans"]:
-        schema_tensors = model.create_or_load_schema_embedding(
+        schema_tensors = SchemaEmbeddingGenerator.create_or_load_schema_embedding(
             args,
+            config,
             file_split
         )
         logger.info("  When Model Type = %s, create or load the schema embedding:", args.model_type)
@@ -622,7 +638,6 @@ def load_and_cache_examples(args, processor, mode, output_examples=False):
     if output_examples:
         return dataset, examples, features, dials, schemas
     return dataset
-
 
 def save_checkpoint(args, model, tokenizer, optimizer, scheduler, name):
     # Save model checkpoint
@@ -994,12 +1009,13 @@ def main():
     # model class
     # Here, we need to build differe model class for different models
     model_class = MODEL_CLASSES[args.model_type]
+
     if args.model_name_or_path:
         model = model_class.from_pretrained(
             args.model_name_or_path,
             from_tf=bool(".ckpt" in args.model_name_or_path),
             config=config,
-            cache_dir=args.cache_dir if args.cache_dir else None,
+            args=args
         )
     else:
         logger.info("{} is not existed, training model from scratch".format(args.model_name_or_path))
@@ -1027,8 +1043,8 @@ def main():
     # Training
     if args.do_train:
         train_dataset = load_and_cache_examples(args, processor, mode="train", output_examples=False)
-        with torch.autograd.detect_anomaly():
-            global_step, tr_loss = train(args, train_dataset, model, processor)
+        # with torch.autograd.detect_anomaly():
+        global_step, tr_loss = train(args, config, train_dataset, model, processor)
         logger.info(" global_step = %s, average loss = %s", global_step, tr_loss)
 
     # Save the trained model and the tokenizer
@@ -1075,8 +1091,12 @@ def main():
             if checkpoint == args.models_dir:
                 global_step = -1
             else:
-                global_step = checkpoint.split("-")[-1] if len(checkpoints) > 1 else ""
+                global_step = os.path.basename(os.path.normpath(checkpoint)).split("-")[-1]
             model = model_class.from_pretrained(checkpoint, args=args)  # , force_download=True)
+            model.eval()
+            logger.info("Model's state_dict:")
+            for param_tensor in model.state_dict():
+                logger.info("{}\t{}".format(param_tensor, model.state_dict()[param_tensor].size()))
             tokenizer = tokenizer_class.from_pretrained(checkpoint)
             model.to(args.device)
 
@@ -1090,7 +1110,7 @@ def main():
                 args.log_data_warnings)
 
             # Evaluate
-            metrics, all_predictions = evaluate(args, model, processor, "test", step=global_step)
+            metrics, all_predictions = evaluate(args, config, model, processor, "test", step=global_step)
             # Write predictions to file in DSTC8 format.
             dataset_mark = os.path.basename(args.data_dir)
             prediction_dir = os.path.join(
@@ -1102,11 +1122,13 @@ def main():
             input_json_files = processor.get_input_dialog_files(args.data_dir, args.test_file)
             schema_json_file = processor.get_schema_file(args.data_dir, args.test_file)
             # Here, we write the evaluation files, and then get the metrics
-            # TODO: get the metric one the fly
             pred_utils.write_predictions_to_file(all_predictions, input_json_files,
                                                  schema_json_file, prediction_dir)
 
+            output_metric_file = os.path.join(prediction_dir, "eval_metrics.json")
+            evaluate_utils.write_metrics_to_file(output_metric_file, metrics)
             logger.info("metrics for checkpoint:{} is :{}".format(checkpoint, metrics))
+            # TODO: do some error analysis
 
 if __name__ == "__main__":
     main()

@@ -312,6 +312,16 @@ def main(_):
     with open(os.path.join(args.prediction_dir, PER_FRAME_OUTPUT_FILENAME), "w") as f:
         json.dump(dataset_hyp, f, indent=2, separators=(",", ": "))
 
+
+def write_metrics_to_file(output_metric_file, agg_metrics):
+    with open(output_metric_file, "w") as f:
+        json.dump(
+            agg_metrics,
+            f,
+            indent=2,
+            separators=(",", ": "),
+            sort_keys=True)
+
 def get_metrics_result(dataset_ref, dataset_hyp, data_dir, split, use_fuzzy_match, joint_acc_across_turn):
     in_domain_services = get_in_domain_services(
         os.path.join(data_dir, split, "schema.json"),

@@ -25,11 +25,12 @@ import re
 import csv
 import math
 import logging
+import numpy as np
 
 from utils import schema
 from utils import data_utils
 import torch
-# from bert import tokenization
+import torch.nn as nn
 
 from transformers.data.processors.utils import DataProcessor
 from transformers.tokenization_roberta import RobertaTokenizer, RobertaTokenizerFast
@@ -802,15 +803,9 @@ def convert_examples_to_features(examples,
 
     """
     features = []
-    for (ex_index, example) in enumerate(examples):
+    for (ex_index, ex) in enumerate(examples):
         if ex_index % 10000 == 0:
             logger.info("Writing example %d of %d", ex_index, len(examples))
-
-        if isinstance(example, PaddingSchemaDSTExample):
-            ex = SchemaDSTExample(dataset_config=dataset_config)
-        else:
-            ex = example
-
         feature = InputFeatures(
             ex.example_id,
             ex.service_schema.service_id,
