@@ -201,7 +201,7 @@ class DSTC8BaselineModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         mask = torch_ext.sequence_mask(
             features["intent_num"] + 1,
             maxlen=max_num_intents + 1, device=self.device, dtype=torch.bool)
-        negative_logits = -0.7 * torch.ones_like(logits) * torch.finfo().max
+        negative_logits = -0.7 * torch.ones_like(logits) * torch.finfo(torch.float16).max
         return torch.where(mask, logits, negative_logits)
 
     def _get_requested_slots(self, features, _encoded_utterance):
@@ -238,7 +238,7 @@ class DSTC8BaselineModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         mask = torch_ext.sequence_mask(
             features["cat_slot_value_num"],
             maxlen=max_num_values, device=self.device, dtype=torch.bool)
-        negative_logits = -0.7 * torch.ones_like(value_logits) * torch.finfo().max
+        negative_logits = -0.7 * torch.ones_like(value_logits) * torch.finfo(torch.float16).max
         value_logits = torch.where(mask, value_logits, negative_logits)
         return status_logits, value_logits
 
@@ -266,7 +266,7 @@ class DSTC8BaselineModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         # Mask out invalid logits for padded tokens.
         token_mask = features["utt_mask"]  # Shape: (batch_size, max_num_tokens).
         tiled_token_mask = token_mask.unsqueeze(1).unsqueeze(3).expand(-1, max_num_slots, -1, 2)
-        negative_logits = -0.7 * torch.ones_like(span_logits) * torch.finfo().max
+        negative_logits = -0.7 * torch.ones_like(span_logits) * torch.finfo(torch.float16).max
         #logger.info("span_logits:{}, token_mask: {} , titled_token_mask:{}".format(
         #    span_logits.size(), token_mask.size(), tiled_token_mask.size()))
         span_logits = torch.where(tiled_token_mask.bool(), span_logits, negative_logits)
