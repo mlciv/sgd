@@ -43,6 +43,7 @@ from modules.core.encoder_configuration import EncoderConfig
 from modules.core.encoder_utils import EncoderUtils
 from modules.modelling_dstc8baseline import DSTC8BaselineModel
 from modules.modelling_dstc8baseline_toptrans import DSTC8BaselineTopTransModel
+from modules.modelling_toptransformer import TopTransformerModel
 from modules.schema_embedding_generator import SchemaEmbeddingGenerator
 from utils import schema_dataset_config
 from utils import data_utils
@@ -67,6 +68,7 @@ ALL_ENCODER_MODELS = ALL_PRETRAINED_CONFIG_ARCHIVE_MAP.keys()
 # model classes to use
 MODEL_CLASSES = {
     "dstc8baseline": (DSTC8BaselineModel),
+    "toptrans": (TopTransformerModel),
     "dstc8baseline_toptrans": (DSTC8BaselineTopTransModel),
     }
 
@@ -156,7 +158,7 @@ def train(args, config, train_dataset, model, processor):
     logger.info("  Total optimization steps = %d", t_total)
     logger.info("  Warmup portion = %f, warmup steps = %d", args.warmup_portion, args.warmup_steps)
     logger.info("  Model Type = %s", args.model_type)
-    if args.model_type in ["dstc8baseline", "dstc8baseline_toptrans"]:
+    if args.model_type in ["dstc8baseline", "dstc8baseline_toptrans", "toptrans"]:
         schema_tensors = SchemaEmbeddingGenerator.create_or_load_schema_embedding(
             args,
             config,
@@ -241,7 +243,7 @@ def train(args, config, train_dataset, model, processor):
 
             # Add schema tensor into features
             for key, tensor in schema_tensors.items():
-                inputs[key] = tensor.to(args.device)
+                inputs[key] = tensor.to(args.device).index_select(0, inputs["service_id"])
 
             # results
             all_cat_slot_status = batch[12]
@@ -275,14 +277,20 @@ def train(args, config, train_dataset, model, processor):
 #                    )
 
             outputs = model(inputs, labels)
+            # for outputs_name, l in outputs[0].items():
+            #    logger.info("outputs_name:{}, l:{}".format(outputs_name, l.size()))
+
+
             losses = outputs[1]
             tmp_loss_dict = {}
-            for loss_name, l in losses.items():
-                tb_writer.add_scalar(loss_name, l, global_step)
+            for loss_name, loss in losses.items():
+                if isinstance(loss, torch.Tensor):
+                    loss = loss.sum()
+                tb_writer.add_scalar(loss_name, loss, global_step)
                 try:
-                    tmp_loss_dict[loss_name] = l.item()
+                    tmp_loss_dict[loss_name] = loss.item()
                 except:
-                    logger.error("loss_name:{}, loss:{}".format(loss_name, l))
+                    logger.error("loss_name:{}, loss:{}".format(loss_name, loss))
 
 #            logger.info("Epoch = {}, Global_step = {}, losses = {}".format(
 #                epoch, global_step, tmp_loss_dict
@@ -356,10 +364,10 @@ def train(args, config, train_dataset, model, processor):
                                         save_checkpoint(args, model, processor._tokenizer,
                                                         optimizer, scheduler, "best-{}-{}".format(joint_key, global_step))
 
-                    tb_writer.add_scalar("lr", scheduler.get_lr()[0], global_step)
+                    tb_writer.add_scalar("lr", scheduler.get_last_lr()[0], global_step)
                     tb_writer.add_scalar("loss", (tr_loss - logging_loss) / args.logging_steps, global_step)
                     logger.info("Epoch = {}, Global_step = {}, lr = {}, losses = {}".format(
-                        epoch, global_step, scheduler.get_lr()[0], tmp_loss_dict)
+                        epoch, global_step, scheduler.get_last_lr()[0], tmp_loss_dict)
                     )
                     logging_loss = tr_loss
 
@@ -378,7 +386,7 @@ def train(args, config, train_dataset, model, processor):
     if args.local_rank in [-1, 0]:
         tb_writer.close()
 
-    logger.info("Best metrics after {} training:{}".format(global_step, best_metrics))
+    logger.info("Best metrics on dev after {} training:{}".format(global_step, best_metrics))
 
     return global_step, tr_loss / global_step
 
@@ -407,15 +415,13 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
     if args.n_gpu > 1 and not isinstance(model, torch.nn.DataParallel):
         # model = torch.nn.DataParallel(model)
         model = torch_ext.DataParallelPassthrough(model)
-    else:
-        model = torch_ext.DataParallelPassthrough(model)
 
     # Eval!
     logger.info("***** Running evaluation {} *****".format(step))
     logger.info("  Num examples = %d", len(dataset))
     logger.info("  Batch size = %d", args.eval_batch_size)
     # schame embededing should be done before the training
-    if args.model_type in ["dstc8baseline", "dstc8baseline_toptrans"]:
+    if args.model_type in ["dstc8baseline", "dstc8baseline_toptrans", "toptrans"]:
         schema_tensors = SchemaEmbeddingGenerator.create_or_load_schema_embedding(
             args,
             config,
@@ -463,7 +469,7 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
 
         # Add schema tensor into features
         for key, tensor in schema_tensors.items():
-            inputs[key] = tensor.to(args.device)
+            inputs[key] = tensor.to(args.device).index_select(0, inputs["service_id"])
 
         # not adding token_type_ids for roberta
         if args.enc_model_type in ["xlm", "roberta", "distilbert", "camembert"]:
@@ -496,13 +502,15 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
             if labels:
                 losses = outputs[1]
                 tmp_loss_dict = {}
-                for loss_name, l in losses.items():
+                for loss_name, loss in losses.items():
+                    if isinstance(loss, torch.Tensor):
+                        loss = loss.sum()
                     if tb_writer:
-                        tb_writer.add_scalar(mode + "_" + loss_name, l, step)
+                        tb_writer.add_scalar(mode + "_" + loss_name, loss, step)
                     try:
-                        tmp_loss_dict[loss_name] = l.item()
+                        tmp_loss_dict[loss_name] = loss.item()
                     except:
-                        logger.error("loss_name:{}, loss:{}".format(loss_name, l))
+                        logger.error("loss_name:{}, loss:{}".format(loss_name, loss))
 
             # dict: batch_size
             # dict of list => list of dict
@@ -1043,8 +1051,8 @@ def main():
     # Training
     if args.do_train:
         train_dataset = load_and_cache_examples(args, processor, mode="train", output_examples=False)
-        # with torch.autograd.detect_anomaly():
-        global_step, tr_loss = train(args, config, train_dataset, model, processor)
+        with torch.autograd.detect_anomaly():
+            global_step, tr_loss = train(args, config, train_dataset, model, processor)
         logger.info(" global_step = %s, average loss = %s", global_step, tr_loss)
 
     # Save the trained model and the tokenizer
@@ -1079,11 +1087,19 @@ def main():
                     os.path.dirname(c)
                     for c in sorted(glob.glob(args.models_dir + "/**/" + WEIGHTS_NAME, recursive=True))
                 )
-                logging.getLogger("transformers.modeling_utils").setLevel(logging.WARN)  # Reduce model loading logs
         else:
-            logger.info("Loading checkpoint %s for evaluation", args.model_name_or_path)
-            checkpoints = [args.model_name_or_path]
+            # not training, but we still want to evaluate on all checkpoints
+            if args.eval_all_checkpoints and not args.model_name_or_path:
+                checkpoints = list(
+                    os.path.dirname(c)
+                    for c in sorted(glob.glob(args.models_dir + "/**/" + WEIGHTS_NAME, recursive=True))
+                )
+            else:
+                # we only want to evaluate on specific checkpoint
+                logger.info("Loading checkpoint %s for evaluation", args.model_name_or_path)
+                checkpoints = [args.model_name_or_path]
 
+        logging.getLogger("transformers.modeling_utils").setLevel(logging.WARN)  # Reduce model loading logs
         logger.info("Evaluate the following checkpoints: %s", checkpoints)
 
         for checkpoint in checkpoints:

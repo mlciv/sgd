@@ -44,7 +44,7 @@ pargs="
 --data_dir=$DATA_DIR \
 --train_file=$TRAIN_FILE \
 --dev_file=$DEV_FILE \
---test_file=$TEST_FILE \
+--test_file=$DEV_FILE \
 --per_gpu_eval_batch_size=$PER_GPU_EVAL_BATCH_SIZE \
 --per_gpu_train_batch_size=$PER_GPU_TRAIN_BATCH_SIZE \
 --gradient_accumulation_steps=$GRADIENT_ACCUMULATION_STEPS \
@@ -60,6 +60,6 @@ pargs="
 
 pushd $EVAL_DIR
 # CUDA_LAUNCH_BLOCKING=1
-python src/run_schema.py $pargs 2>&1 &> ${EXP_DIR}/eval.log
+python src/run_schema.py $pargs 2>&1 &> ${EXP_DIR}/eval_dev.log
 popd
 

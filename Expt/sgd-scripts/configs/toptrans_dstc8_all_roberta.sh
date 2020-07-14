@@ -10,13 +10,13 @@ EXP_SUMMARY=$EXP_DIR/summary/
 EXP_RESULTS=$EXP_DIR/results/
 
 # model_type, some model name to initialize or load pretrained model
-MODEL_TYPE=dstc8baseline_toptrans
+MODEL_TYPE=toptrans
 # encoder config name for the task
 ENCODER_CONFIG_NAME=
 # encoder_model_name_path, whether a name or a path for the model
-ENCODER_MODEL_NAME_PATH=$SGD_JSON_CONFIG_DIR/encoders/bert-base-cased.json
+ENCODER_MODEL_NAME_PATH=$SGD_JSON_CONFIG_DIR/encoders/roberta-base.json
 # config name for the task
-CONFIG_NAME=$SGD_JSON_CONFIG_DIR/models/dstc8baseline_toptrans.json
+CONFIG_NAME=$SGD_JSON_CONFIG_DIR/models/toptrans.json
 # model_name_path, whether a name or a path for the model
 MODEL_NAME_PATH=
 # cache_dir, the cache_dir for store the mebdding, exampls.
@@ -30,17 +30,17 @@ DEV_FILE=dev
 # test_file, the file for eval
 TEST_FILE=test
 # per_gpu_eval_batch_size
-PER_GPU_EVAL_BATCH_SIZE=4
+PER_GPU_EVAL_BATCH_SIZE=128
 # per_gpu_train_batch_size
-PER_GPU_TRAIN_BATCH_SIZE=4
+PER_GPU_TRAIN_BATCH_SIZE=128
 # num_train_epochs
-NUM_TRAIN_EPOCHS=100
+NUM_TRAIN_EPOCHS=80
 # learning_rate
-LEARNING_RATE=0.00005
+LEARNING_RATE=0.0001
 # gradient_accumulation_steps
-GRADIENT_ACCUMULATION_STEPS=16
+GRADIENT_ACCUMULATION_STEPS=2
 # logging_steps
-LOGGING_STEPS=3000
+LOGGING_STEPS=400
 # save_steps 
 SAVE_STEPS=100000
 # JOINT_ACC_ACROSS_TURN
@@ -48,6 +48,6 @@ JOINT_ACC_ACROSS_TURN=
 # USE_FUZZY_MATCH
 USE_FUZZY_MATCH=x
 # MAX_SEQ_LENGTH
-MAX_SEQ_LENGTH=160
+MAX_SEQ_LENGTH=80
 # warmup_step
 WARMUP_PORTION=0.1

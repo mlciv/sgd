@@ -17,6 +17,7 @@ from transformers.modeling_utils import PreTrainedModel
 from modules.core.encoder_utils import EncoderUtils
 from modules.core.schemadst_configuration import SchemaDSTConfig
 from modules.dstc8baseline_output_interface import DSTC8BaselineOutputInterface
+from modules.schema_embedding_generator import SchemaInputFeatures
 from src import utils_schema
 from utils import (
     torch_ext,
@@ -178,10 +179,9 @@ class DSTC8BaselineModel(PreTrainedModel, DSTC8BaselineOutputInterface):
 
     def _get_intents(self, features, _encoded_utterance):
         """Obtain logits for intents."""
-        # service_id is the index of emb value
-        # [service_num, max_intentnum, dim]
-        intent_embeddings = features["intent_emb"].index_select(0, features["service_id"])
+        intent_embeddings = features[SchemaInputFeatures.get_embedding_tensor_name("intent")]
         # Add a trainable vector for the NONE intent.
+        # [batch_size, max_num_intent, dim]
         _, max_num_intents, embedding_dim = intent_embeddings.size()
         # init a matrix
         null_intent_embedding = torch.empty(1, 1, embedding_dim, device=self.device)
@@ -206,7 +206,7 @@ class DSTC8BaselineModel(PreTrainedModel, DSTC8BaselineOutputInterface):
 
     def _get_requested_slots(self, features, _encoded_utterance):
         """Obtain logits for requested slots."""
-        slot_embeddings = features["req_slot_emb"].index_select(0, features["service_id"])
+        slot_embeddings = features[SchemaInputFeatures.get_embedding_tensor_name("req_slot")]
         logits = self._get_logits(
             slot_embeddings, _encoded_utterance,
             self.requested_slots_utterance_proj, self.requested_slots_final_proj)
@@ -215,7 +215,7 @@ class DSTC8BaselineModel(PreTrainedModel, DSTC8BaselineOutputInterface):
     def _get_categorical_slots_goals(self, features, _encoded_utterance):
         """Obtain logits for status and values for categorical slots."""
         # Predict the status of all categorical slots.
-        slot_embeddings = features["cat_slot_emb"].index_select(0, features["service_id"])
+        slot_embeddings = features[SchemaInputFeatures.get_embedding_tensor_name("cat_slot")]
         status_logits = self._get_logits(slot_embeddings,
                                          _encoded_utterance,
                                          self.categorical_slots_status_utterance_proj,
@@ -223,7 +223,7 @@ class DSTC8BaselineModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         # Predict the goal value.
         # Shape: (batch_size, max_categorical_slots, max_categorical_values,
         # embedding_dim).
-        value_embeddings = features["cat_slot_value_emb"].index_select(0, features["service_id"])
+        value_embeddings = features[SchemaInputFeatures.get_embedding_tensor_name("cat_slot_value")]
         _, max_num_slots, max_num_values, embedding_dim = (
             value_embeddings.size())
         value_embeddings_reshaped = value_embeddings.view(-1, max_num_slots * max_num_values, embedding_dim)
@@ -245,7 +245,7 @@ class DSTC8BaselineModel(PreTrainedModel, DSTC8BaselineOutputInterface):
     def _get_noncategorical_slots_goals(self, features, _encoded_utterance, _encoded_tokens):
         """Obtain logits for status and slot spans for non-categorical slots."""
         # Predict the status of all non-categorical slots.
-        slot_embeddings = features["noncat_slot_emb"].index_select(0, features["service_id"])
+        slot_embeddings = features[SchemaInputFeatures.get_embedding_tensor_name("noncat_slot")]
         max_num_slots = slot_embeddings.size()[1]
         status_logits = self._get_logits(slot_embeddings,
                                          _encoded_utterance,
@@ -299,6 +299,7 @@ class DSTC8BaselineModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         outputs["logit_noncat_slot_start"] = noncat_span_start
         outputs["logit_noncat_slot_end"] = noncat_span_end
 
+        # when it is dataparallel, the output will keep the tuple, but the content are gathered from different GPUS.
         if labels:
             losses = self.define_loss(features, labels, outputs)
             return (outputs, losses)

@@ -1,6 +1,6 @@
 # Time-stamp: <2020-06-06>
 # --------------------------------------------------------------------
-# File Name          : modelling_dstc8baseline.py
+# File Name          : modelling_toptransformer.py
 # Original Author    : jiessie.cao@gmail.com
 # Description        : A baseline model for schema-guided dialogyem given the input,
 # to predict active_intent, requested_slots, slot goals
@@ -16,6 +16,8 @@ import torch.nn as nn
 from transformers.modeling_utils import PreTrainedModel
 from modules.core.encoder_utils import EncoderUtils
 from modules.core.schemadst_configuration import SchemaDSTConfig
+from modules.dstc8baseline_output_interface import DSTC8BaselineOutputInterface
+from modules.schema_embedding_generator import SchemaInputFeatures
 from src import utils_schema
 from utils import (
     torch_ext,
@@ -33,7 +35,7 @@ CLS_PRETRAINED_MODEL_ARCHIVE_MAP = {
 
 }
 
-class TopTransformerModel(PreTrainedModel):
+class TopTransformerModel(PreTrainedModel, DSTC8BaselineOutputInterface):
     """
     Main entry of Classifier Model
     """
@@ -68,76 +70,76 @@ class TopTransformerModel(PreTrainedModel):
         # config is the configuration for pretrained model
         self.config = config
         self.tokenizer = EncoderUtils.create_tokenizer(self.config)
-        # one encoder used for both utterance and schema
         self.encoder = EncoderUtils.create_encoder(self.config)
         setattr(self, self.base_model_prefix, self.encoder)
         self.embedding_dim = self.config.schema_embedding_dim
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
         self.token_dropout = torch.nn.Dropout(self.config.token_dropout)
-        self.intent_utterance_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.config.utterance_embedding_dim, self.embedding_dim),
-            torch.nn.GELU()
-        )
-        self.requested_slots_utterance_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.config.utterance_embedding_dim, self.embedding_dim),
-            torch.nn.GELU()
-        )
-        self.categorical_slots_status_utterance_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.config.utterance_embedding_dim, self.embedding_dim),
-            torch.nn.GELU()
-        )
-        self.categorical_slots_values_utterance_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.config.utterance_embedding_dim, self.embedding_dim),
-            torch.nn.GELU()
-        )
-        self.noncategorical_slots_status_utterance_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.config.utterance_embedding_dim, self.embedding_dim),
-            torch.nn.GELU()
-        )
+        self.intent_matching_layer = torch.nn.TransformerEncoder(
+            encoder_layer=torch.nn.TransformerEncoderLayer(self.embedding_dim, self.config.nhead),
+            num_layers=self.config.num_matching_layer,
+            norm=torch.nn.LayerNorm(self.embedding_dim))
+
+        self.requested_slots_matching_layer = nn.TransformerEncoder(
+            encoder_layer=nn.TransformerEncoderLayer(self.embedding_dim, self.config.nhead),
+            num_layers=self.config.num_matching_layer,
+            norm=nn.LayerNorm(self.embedding_dim))
+
+        self.categorical_slots_status_matching_layer = nn.TransformerEncoder(
+            encoder_layer=nn.TransformerEncoderLayer(self.embedding_dim, self.config.nhead),
+            num_layers=self.config.num_matching_layer,
+            norm=torch.nn.LayerNorm(self.embedding_dim))
+
+        self.categorical_slots_values_matching_layer = nn.TransformerEncoder(
+            encoder_layer=nn.TransformerEncoderLayer(self.embedding_dim, self.config.nhead),
+            num_layers=self.config.num_matching_layer,
+            norm=nn.LayerNorm(self.embedding_dim))
+
+        self.noncategorical_slots_status_matching_layer = torch.nn.TransformerEncoder(
+            encoder_layer=nn.TransformerEncoderLayer(self.embedding_dim, self.config.nhead),
+            num_layers=self.config.num_matching_layer,
+            norm=nn.LayerNorm(self.embedding_dim))
         # Project the combined embeddings to obtain logits.
         # for intent, one logits
         self.intent_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.embedding_dim * 2, self.embedding_dim),
+            torch.nn.Linear(self.embedding_dim, int(self.embedding_dim/2)),
             torch.nn.GELU(),
-            torch.nn.Linear(self.embedding_dim, 1)
+            torch.nn.Linear(int(self.embedding_dim/2), 1)
         )
 
         # for requested slots, one logits
         self.requested_slots_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.embedding_dim * 2, self.embedding_dim),
+            torch.nn.Linear(self.embedding_dim, int(self.embedding_dim/2)),
             torch.nn.GELU(),
-            torch.nn.Linear(self.embedding_dim, 1)
+            torch.nn.Linear(int(self.embedding_dim/2), 1)
         )
 
         # for categorical_slots, 3 logits
         self.categorical_slots_status_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.embedding_dim * 2, self.embedding_dim),
+            torch.nn.Linear(self.embedding_dim, int(self.embedding_dim/2)),
             torch.nn.GELU(),
-            torch.nn.Linear(self.embedding_dim, 3)
+            torch.nn.Linear(int(self.embedding_dim/2), 3)
         )
 
         # for categorical_slot_values,
         self.categorical_slots_values_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.embedding_dim * 2, self.embedding_dim),
+            torch.nn.Linear(self.embedding_dim, int(self.embedding_dim/2)),
             torch.nn.GELU(),
-            torch.nn.Linear(self.embedding_dim, 1)
+            torch.nn.Linear(int(self.embedding_dim/2), 1)
         )
 
         # for non-categorical_slots, 3 logits
         self.noncategorical_slots_status_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.embedding_dim * 2, self.embedding_dim),
+            torch.nn.Linear(self.embedding_dim, int(self.embedding_dim/2)),
             torch.nn.GELU(),
-            torch.nn.Linear(self.embedding_dim, 3)
+            torch.nn.Linear(int(self.embedding_dim/2), 3)
         )
-        self.noncat_layer_1 = nn.Sequential(
-            nn.Linear(2 * self.embedding_dim, self.embedding_dim),
-            nn.GELU()
+        self.noncat_span_layer = nn.Sequential(
+            nn.Linear(self.embedding_dim, int(self.embedding_dim/2)),
+            nn.GELU(),
+            nn.Linear(int(self.embedding_dim/2), 2),
         )
-        self.noncat_layer_2 = nn.Sequential(
-            nn.Linear(self.embedding_dim, 2),
-        )
-
         # for non-categorical span value
         if not args.no_cuda:
             self.cuda(args.device)
@@ -146,6 +148,7 @@ class TopTransformerModel(PreTrainedModel):
         """Encode system and user utterances using BERT."""
         # Optain the embedded representation of system and user utterances in the
         # turn and the corresponding token level representations.
+        # logger.info("utt:{}, utt_mask:{}, utt_seg:{}".format(features["utt"], features["utt_mask"], features["utt_seg"]))
         output = self.encoder(
             input_ids=features["utt"],
             attention_mask=features["utt_mask"],
@@ -159,44 +162,107 @@ class TopTransformerModel(PreTrainedModel):
             encoded_tokens = self.utterance_dropout(encoded_tokens)
         return encoded_utterance, encoded_tokens
 
-    def _get_logits(self, element_embeddings, _encoded_utterance, utterance_proj, final_proj):
+    def _encode_schema(self, features, schema_type, is_training):
+        """Encode system and user utterances using BERT."""
+        # Optain the embedded representation of system and user utterances in the
+        # turn and the corresponding token level representations.
+        schema_input_ids = features[SchemaInputFeatures.get_input_ids_tensor_name(schema_type)]
+        schema_input_shape = list(schema_input_ids.size())
+        max_length = schema_input_shape[-1]
+        schema_attention_mask = features[SchemaInputFeatures.get_input_mask_tensor_name(schema_type)]
+        schema_token_type_ids = features[SchemaInputFeatures.get_input_type_ids_tensor_name(schema_type)]
+        assert schema_attention_mask.size()[-1] == max_length, "schema_attention_mask has wrong shape:{}".format(schema_attention_mask.size())
+        assert schema_token_type_ids.size()[-1] == max_length, "schema_token_type_ids has wrong shape:{}".format(schema_token_type_ids.size())
+
+        logger.info("input_ids:{}, attention_mask:{}, token_type_ids :{}".format(
+            schema_input_ids.size(), schema_attention_mask.size(), schema_token_type_ids.size()))
+        output = self.encoder(
+            input_ids=schema_input_ids.view(-1, schema_input_ids.size()[-1]),
+            attention_mask=schema_attention_mask.view(-1, schema_input_ids.size()[-1]),
+            token_type_ids=schema_token_type_ids.view(-1, schema_input_ids.size()[-1]))
+
+        encoded_schema_cls = output[0][:, 0, :]
+        embedding_dim = encoded_schema_cls.size()[-1]
+        # adding the last dim
+        schema_cls_shape = schema_input_shape[:-1]
+        schema_cls_shape.append(embedding_dim)
+        schema_input_shape.append(embedding_dim)
+        encoded_schema_tokens = output[0]
+        # Apply dropout in training mode.
+        if is_training:
+            encoded_schema_cls = self.utterance_dropout(encoded_schema_cls)
+            encoded_schema_tokens = self.utterance_dropout(encoded_schema_tokens)
+        return encoded_schema_cls.view(torch.Size(schema_cls_shape)), encoded_schema_tokens.view(torch.Size(schema_input_shape))
+
+    def _get_logits(self, element_embeddings, element_mask, _encoded_tokens, utterance_mask, matching_layer, final_proj):
         """Get logits for elements by conditioning on utterance embedding.
         Args:
         element_embeddings: A tensor of shape (batch_size, num_elements,
-        embedding_dim).
+        max_seq_length, embedding_dim).
+        element_mask: (batch_size, max_seq_length)
+        _encoded_tokens: (batch_size, max_u_len, embedding_dim)
+        _utterance_mask: (batch_size, max_u_len)
         num_classes: An int containing the number of classes for which logits are
         to be generated.
         Returns:
         A tensor of shape (batch_size, num_elements, num_classes) containing the
         logits.
         """
-        _, num_elements, _ = element_embeddings.size()
-        # Project the utterance embeddings.
-        utterance_embedding = utterance_proj(_encoded_utterance)
-        # logger.info("element_embeddings:{}, utterance_embeddings:{}".format(element_embeddings.size(), utterance_embedding.size()))
-        # Combine the utterance and element embeddings.
-        repeat_utterance_embeddings = utterance_embedding.unsqueeze(1).expand(-1, num_elements, -1)
-        utterance_element_emb = torch.cat((repeat_utterance_embeddings, element_embeddings), dim=2)
-        return final_proj(utterance_element_emb)
+        batch_size1, num_elements, max_seq_length, element_emb_dim = element_embeddings.size()
+        batch_size2, max_u_len, u_emb_len = _encoded_tokens.size()
+        assert batch_size1 == batch_size2, "batch_size not match between element_emb and utterance_emb"
+        assert element_emb_dim == u_emb_len, "dim not much element_emb={} and utterance_emb={}".format(element_emb_dim, u_emb_len)
+        # (batch_size, num_elements, max_seq_length, dim)
+        expanded_encoded_tokens = _encoded_tokens.unsqueeze(1).expand(-1, num_elements, -1, -1)
+        expanded_utterance_mask = utterance_mask.unsqueeze(1).expand(-1, num_elements, -1)
+        # (batch_size, num_elements, max_seq_length + max_u_len, dim)
+        # Here, we use the same bert, max_seq_length == max_u_len for now.
+        # [CLS] pre_system[SEP] user_utt [SEP] padding.... [CLS] schema seq1 [SEP] schema seq2 [SEP] padding
+        max_total_len = max_u_len + max_seq_length
+        # (batch_size * num_elements, max_total_len, dim)
+        utterance_element_pair_emb = torch.cat(
+            (expanded_encoded_tokens, element_embeddings), dim=2).view(-1, max_total_len, u_emb_len)
+        # (batch_size, num_elements, max_u_len+max_seq_length)
+        utterance_element_pair_mask = torch.cat(
+            (expanded_utterance_mask, element_mask),
+            dim=2).view(-1, max_total_len).bool()
 
-    def _get_intents(self, features, _encoded_utterance):
+        # trans_output: (batch_size * num_elements, max_total_len, dim)
+        trans_output = matching_layer(
+            utterance_element_pair_emb.transpose(0, 1),
+            src_key_padding_mask=utterance_element_pair_mask).transpose(0, 1)
+        # use the first [CLS] for classification
+        output = final_proj(trans_output[ :, 0, :])
+        return output.view(batch_size1, num_elements, -1), trans_output.view(batch_size1, num_elements, max_total_len, -1)
+
+    def _get_intents(self, features, _encoded_tokens, is_training):
         """Obtain logits for intents."""
         # service_id is the index of emb value
-        # [service_num, max_intentnum, dim]
-        intent_embeddings = features["intent_emb"].index_select(0, features["service_id"])
+        # [service_num, max_intentnum, max_seq_length, dim]
+        _, intent_embeddings = self._encode_schema(features, "intent", is_training)
+        # self.device is the device for Dataparallel model,which device 0
+        # Here we need the device current input on
+        current_device = intent_embeddings.device
+        intent_mask = features[SchemaInputFeatures.get_input_mask_tensor_name("intent")]
         # Add a trainable vector for the NONE intent.
-        _, max_num_intents, embedding_dim = intent_embeddings.size()
+        batch_size, max_num_intents, max_seq_length, embedding_dim = intent_embeddings.size()
         # init a matrix
-        null_intent_embedding = torch.empty(1, 1, embedding_dim, device=self.device)
+        null_intent_embedding = torch.empty(1, 1, max_seq_length, embedding_dim, device=current_device)
+        null_intent_mask = torch.zeros(1, 1, max_seq_length, dtype=torch.long, device=current_device)
+        null_intent_mask[:, :, 0] = 1
         torch.nn.init.normal_(null_intent_embedding, std=0.02)
-        batch_size = intent_embeddings.size()[0]
-        repeated_null_intent_embedding = null_intent_embedding.expand(batch_size, 1, -1)
+        repeated_null_intent_embedding = null_intent_embedding.expand(batch_size, 1, -1, -1)
+        # batch_size, 1, max_seq_length]
+        repeated_null_intent_mask = null_intent_mask.expand(batch_size, 1, -1)
         intent_embeddings = torch.cat(
             (repeated_null_intent_embedding, intent_embeddings), dim=1)
+        intent_mask = torch.cat((repeated_null_intent_mask, intent_mask), dim=1)
 
-        logits = self._get_logits(
-            intent_embeddings, _encoded_utterance,
-            self.intent_utterance_proj, self.intent_final_proj)
+        utterance_mask = features["utt_mask"]
+        logits, _ = self._get_logits(
+            intent_embeddings, intent_mask,
+            _encoded_tokens, utterance_mask,
+            self.intent_matching_layer, self.intent_final_proj)
         # Shape: (batch_size, max_intents + 1)
         logits = logits.squeeze(-1)
         # Mask out logits for padded intents. 1 is added to account for NONE intent.
@@ -204,36 +270,44 @@ class TopTransformerModel(PreTrainedModel):
         mask = torch_ext.sequence_mask(
             features["intent_num"] + 1,
             maxlen=max_num_intents + 1, device=self.device, dtype=torch.bool)
-        negative_logits = -0.7 * torch.ones_like(logits) * torch.finfo().max
+        negative_logits = -0.7 * torch.ones_like(logits) * torch.finfo(torch.float16).max
         return torch.where(mask, logits, negative_logits)
 
-    def _get_requested_slots(self, features, _encoded_utterance):
+    def _get_requested_slots(self, features, _encoded_tokens, is_training):
         """Obtain logits for requested slots."""
-        slot_embeddings = features["req_slot_emb"].index_select(0, features["service_id"])
-        logits = self._get_logits(
-            slot_embeddings, _encoded_utterance,
-            self.requested_slots_utterance_proj, self.requested_slots_final_proj)
+        _, slot_embeddings = self._encode_schema(features, "req_slot", is_training)
+        slot_mask = features[SchemaInputFeatures.get_input_mask_tensor_name("req_slot")]
+        utterance_mask = features["utt_mask"]
+        logits, _ = self._get_logits(
+            slot_embeddings, slot_mask,
+            _encoded_tokens, utterance_mask,
+            self.requested_slots_matching_layer, self.requested_slots_final_proj)
         return torch.squeeze(logits, dim=-1)
 
-    def _get_categorical_slots_goals(self, features, _encoded_utterance):
+    def _get_categorical_slots_goals(self, features, _encoded_tokens, is_training):
         """Obtain logits for status and values for categorical slots."""
         # Predict the status of all categorical slots.
-        slot_embeddings = features["cat_slot_emb"].index_select(0, features["service_id"])
-        status_logits = self._get_logits(slot_embeddings,
-                                         _encoded_utterance,
-                                         self.categorical_slots_status_utterance_proj,
-                                         self.categorical_slots_status_final_proj)
+        _, slot_embeddings = self._encode_schema(features, "cat_slot", is_training)
+        slot_mask = features[SchemaInputFeatures.get_input_mask_tensor_name("cat_slot")]
+        utterance_mask = features["utt_mask"]
+        status_logits, _ = self._get_logits(
+            slot_embeddings, slot_mask,
+            _encoded_tokens, utterance_mask,
+            self.categorical_slots_status_matching_layer,
+            self.categorical_slots_status_final_proj)
         # Predict the goal value.
         # Shape: (batch_size, max_categorical_slots, max_categorical_values,
         # embedding_dim).
-        value_embeddings = features["cat_slot_value_emb"].index_select(0, features["service_id"])
-        _, max_num_slots, max_num_values, embedding_dim = (
-            value_embeddings.size())
-        value_embeddings_reshaped = value_embeddings.view(-1, max_num_slots * max_num_values, embedding_dim)
-        value_logits = self._get_logits(value_embeddings_reshaped,
-                                        _encoded_utterance,
-                                        self.categorical_slots_values_utterance_proj,
-                                        self.categorical_slots_values_final_proj)
+        _, value_embeddings = self._encode_schema(features, "cat_slot_value", is_training)
+        value_mask = features[SchemaInputFeatures.get_input_mask_tensor_name("cat_slot_value")]
+        batch_size, max_num_slots, max_num_values, _, embedding_dim = value_embeddings.size()
+        value_embeddings_reshaped = value_embeddings.view(batch_size, max_num_slots * max_num_values, -1, embedding_dim)
+        value_mask_reshaped = value_mask.view(batch_size, max_num_slots * max_num_values, -1)
+        value_logits, _ = self._get_logits(
+            value_embeddings_reshaped, value_mask_reshaped,
+            _encoded_tokens, utterance_mask,
+            self.categorical_slots_values_matching_layer,
+            self.categorical_slots_values_final_proj)
         # Reshape to obtain the logits for all slots.
         value_logits = value_logits.view(-1, max_num_slots, max_num_values)
         # Mask out logits for padded slots and values because they will be
@@ -241,35 +315,32 @@ class TopTransformerModel(PreTrainedModel):
         mask = torch_ext.sequence_mask(
             features["cat_slot_value_num"],
             maxlen=max_num_values, device=self.device, dtype=torch.bool)
-        negative_logits = -0.7 * torch.ones_like(value_logits) * torch.finfo().max
+        negative_logits = -0.7 * torch.ones_like(value_logits) * torch.finfo(torch.float16).max
         value_logits = torch.where(mask, value_logits, negative_logits)
         return status_logits, value_logits
 
-    def _get_noncategorical_slots_goals(self, features, _encoded_utterance, _encoded_tokens):
+    def _get_noncategorical_slots_goals(self, features, _encoded_tokens, is_training):
         """Obtain logits for status and slot spans for non-categorical slots."""
         # Predict the status of all non-categorical slots.
-        slot_embeddings = features["noncat_slot_emb"].index_select(0, features["service_id"])
+        _, slot_embeddings = self._encode_schema(features, "noncat_slot", is_training)
+        slot_mask = features[SchemaInputFeatures.get_input_mask_tensor_name("noncat_slot")]
+        utterance_mask = features["utt_mask"]
         max_num_slots = slot_embeddings.size()[1]
-        status_logits = self._get_logits(slot_embeddings,
-                                         _encoded_utterance,
-                                         self.noncategorical_slots_status_utterance_proj,
-                                         self.noncategorical_slots_status_final_proj)
+        status_logits, matching_output = self._get_logits(
+            slot_embeddings, slot_mask,
+            _encoded_tokens, utterance_mask,
+            self.noncategorical_slots_status_matching_layer,
+            self.noncategorical_slots_status_final_proj)
 
         # Predict the distribution for span indices.
-        token_embeddings = _encoded_tokens
-        max_num_tokens = token_embeddings.size()[1]
-        tiled_token_embeddings = token_embeddings.unsqueeze(1).expand(-1, max_num_slots, -1, -1)
-        tiled_slot_embeddings = slot_embeddings.unsqueeze(2).expand(-1, -1, max_num_tokens, -1)
-        # Shape: (batch_size, max_num_slots, max_num_tokens, 2 * embedding_dim).
-        slot_token_embeddings = torch.cat(
-            [tiled_slot_embeddings, tiled_token_embeddings], dim=3)
-
+        # (batch_size, num_elements, max_u_len, dim)
+        token_embeddings = matching_output[:, :, :_encoded_tokens.size()[1], :]
         # Shape: (batch_size, max_num_slots, max_num_tokens, 2)
-        span_logits = self.noncat_layer_2(self.noncat_layer_1(slot_token_embeddings))
+        span_logits = self.noncat_span_layer(token_embeddings)
         # Mask out invalid logits for padded tokens.
         token_mask = features["utt_mask"]  # Shape: (batch_size, max_num_tokens).
         tiled_token_mask = token_mask.unsqueeze(1).unsqueeze(3).expand(-1, max_num_slots, -1, 2)
-        negative_logits = -0.7 * torch.ones_like(span_logits) * torch.finfo().max
+        negative_logits = -0.7 * torch.ones_like(span_logits) * torch.finfo(torch.float16).max
         #logger.info("span_logits:{}, token_mask: {} , titled_token_mask:{}".format(
         #    span_logits.size(), token_mask.size(), tiled_token_mask.size()))
         span_logits = torch.where(tiled_token_mask.bool(), span_logits, negative_logits)
@@ -278,208 +349,37 @@ class TopTransformerModel(PreTrainedModel):
         span_end_logits = span_logits[:, :, :, 1]
         return status_logits, span_start_logits, span_end_logits
 
-class SchemaInputFeatures(object):
-    """A single set of features for BERT inference."""
-    def __init__(self, input_ids, input_mask, input_type_ids,
-                 embedding_tensor_name, service_id, intent_or_slot_id, value_id):
-        # The ids in the vocabulary for input tokens.
-        self.input_ids = input_ids
-        # A boolean mask indicating which tokens in the input_ids are valid.
-        self.input_mask = input_mask
-        # Denotes the sequence each input token belongs to.
-        self.input_type_ids = input_type_ids
-        # The name of the embedding tensor corresponding to this example.
-        self.embedding_tensor_name = embedding_tensor_name
-        # The id of the service corresponding to this example.
-        self.service_id = service_id
-        # The id of the intent (for intent embeddings) or slot (for slot or slot
-        # value embeddings) corresponding to this example.
-        self.intent_or_slot_id = intent_or_slot_id
-        # The id of the value corresponding to this example. Only set if slot value
-        # embeddings are being calculated.
-        self.value_id = value_id
-
-
-class SchemaEmbeddingGenerator(nn.Module):
-    """Generate embeddings different components of a service schema."""
-    def __init__(self, tokenizer, enc_model_type, encoder, schema_embedding_dim, max_seq_length, device):
-        """Generate the embeddings for a schema's elements.
-        Args:
-        tokenizer: BERT's wordpiece tokenizer.
-        estimator: Estimator object of BERT model.
-        max_seq_length: Sequence length used for BERT model.
+    def forward(self, features, labels=None):
         """
-        super(SchemaEmbeddingGenerator, self).__init__()
-        self.tokenizer = tokenizer
-        self.enc_model_type = enc_model_type
-        self.encoder = encoder
-        self.schema_embedding_dim = schema_embedding_dim
-        self.max_seq_length = max_seq_length
-        self.device = device
-        self.cuda(device)
-
-    def _create_feature(self, input_line, embedding_tensor_name, service_id,
-                        intent_or_slot_id, value_id=-1):
-        """Create a single InputFeatures instance."""
-        seq_length = self.max_seq_length
-        line = input_line.strip()
-        text_a = None
-        text_b = None
-        m = re.match(r"^(.*) \|\|\| (.*)$", line)
-        if m is None:
-            text_a = line
-        else:
-            text_a = m.group(1)
-            text_b = m.group(2)
-
-        batch_encodings = self.tokenizer.encode_plus(
-            text_a, text_b,
-            max_length=self.max_seq_length,
-            return_tensors="pt",
-            return_token_type_ids=True,
-            return_attention_mask=True
+        given input, output probibilities of each selection
+        input: (input1_ids, input2_ids)
+        In the sentence pair of Bert, token_type_ids indices to indicate first and second portions of the inputs.
+        Indices are selected in ``[0, 1]``: ``0`` corresponds to a `sentence A` token, ``1``
+        corresponds to a `sentence B` token
+        But in our case, we encode each sentence seperately.
+        plan2 is the same, for AE, only input_ids is useful.
+        """
+        is_training = (labels is not None)
+        # utterance encode is shared by all classifier
+        _ , _encoded_tokens = self._encode_utterances(features, is_training)
+        outputs = {}
+        outputs["logit_intent_status"] = self._get_intents(features, _encoded_tokens, is_training)
+        outputs["logit_req_slot_status"] = self._get_requested_slots(
+            features, _encoded_tokens, is_training
         )
-        input_ids = batch_encodings["input_ids"]
-        input_mask = batch_encodings["attention_mask"]
-        input_type_ids = batch_encodings["token_type_ids"]
+        cat_slot_status, cat_slot_value = self._get_categorical_slots_goals(
+            features, _encoded_tokens, is_training
+        )
+        outputs["logit_cat_slot_status"] = cat_slot_status
+        outputs["logit_cat_slot_value"] = cat_slot_value
+        noncat_slot_status, noncat_span_start, noncat_span_end = (
+            self._get_noncategorical_slots_goals(features, _encoded_tokens, is_training))
+        outputs["logit_noncat_slot_status"] = noncat_slot_status
+        outputs["logit_noncat_slot_start"] = noncat_span_start
+        outputs["logit_noncat_slot_end"] = noncat_span_end
 
-        return SchemaInputFeatures(
-            input_ids=input_ids,
-            input_mask=input_mask,
-            input_type_ids=input_type_ids,
-            embedding_tensor_name=embedding_tensor_name,
-            service_id=service_id,
-            intent_or_slot_id=intent_or_slot_id,
-            value_id=value_id)
-
-    def _get_intents_input_features(self, service_schema):
-        """Create features for BERT inference for all intents of a service.
-        We use "[service description] ||| [intent name] [intent description]" as an
-        intent's full description.
-        Args:
-        service_schema: A ServiceSchema object containing the schema for the
-        corresponding service.
-        Returns:
-        A list of SchemaInputFeatures containing features to be given as input to the
-        BERT model.
-        """
-        service_des = service_schema.description
-        features = []
-        intent_descriptions = {
-            i["name"]: i["description"]
-            for i in service_schema.schema_json["intents"]
-        }
-
-        for intent_id, intent in enumerate(service_schema.intents):
-            nl_seq = " ".join(
-                [service_des, _NL_SEPARATOR, intent, intent_descriptions[intent]])
-            features.append(self._create_feature(
-                nl_seq, "intent_emb", service_schema.service_id, intent_id))
-        return features
-
-    def _get_req_slots_input_features(self, service_schema):
-        """Create features for BERT inference for all requested slots of a service.
-        We use "[service description] ||| [slot name] [slot description]" as a
-        slot's full description.
-
-        Args:
-        service_schema: A ServiceSchema object containing the schema for the
-        corresponding service.
-        Returns:
-        A list of InputFeatures containing features to be given as input to the
-        BERT model.
-        """
-        service_des = service_schema.description
-        slot_descriptions = {
-            s["name"]: s["description"] for s in service_schema.schema_json["slots"]
-        }
-        features = []
-        for slot_id, slot in enumerate(service_schema.slots):
-            nl_seq = " ".join(
-                [service_des, _NL_SEPARATOR, slot, slot_descriptions[slot]])
-            features.append(self._create_feature(
-                nl_seq, "req_slot_emb", service_schema.service_id, slot_id))
-        return features
-
-    def _get_goal_slots_and_values_input_features(self, service_schema):
-        """Get BERT input features for all goal slots and categorical values.
-        We use "[service description] ||| [slot name] [slot description]" as a
-        slot's full description.
-        We use ""[slot name] [slot description] ||| [value name]" as a categorical
-        slot value's full description.
-        Args:
-        service_schema: A ServiceSchema object containing the schema for the
-        corresponding service.
-        Returns:
-        A list of InputFeatures containing features to be given as input to the
-        BERT model.
-        """
-        service_des = service_schema.description
-        features = []
-        slot_descriptions = {
-            s["name"]: s["description"] for s in service_schema.schema_json["slots"]
-        }
-
-        for slot_id, slot in enumerate(service_schema.non_categorical_slots):
-            nl_seq = " ".join(
-                [service_des, _NL_SEPARATOR, slot, slot_descriptions[slot]])
-            features.append(self._create_feature(nl_seq, "noncat_slot_emb",
-                                                 service_schema.service_id, slot_id))
-
-        for slot_id, slot in enumerate(service_schema.categorical_slots):
-            nl_seq = " ".join(
-                [service_des, _NL_SEPARATOR, slot, slot_descriptions[slot]])
-            features.append(self._create_feature(nl_seq, "cat_slot_emb",
-                                                 service_schema.service_id, slot_id))
-            for value_id, value in enumerate(
-                    service_schema.get_categorical_slot_values(slot)):
-                nl_seq = " ".join([slot, slot_descriptions[slot], _NL_SEPARATOR, value])
-                features.append(self._create_feature(
-                    nl_seq, "cat_slot_value_emb", service_schema.service_id, slot_id,
-                    value_id))
-        return features
-
-    def _get_input_schema_features(self, schemas):
-        """Get the input function to compute schema element embeddings.
-        Args:
-        schemas: A wrapper for all service schemas in the dataset to be embedded.
-        Returns:
-        The input_fn to be passed to the estimator.
-        """
-        # Obtain all the features.
-        features = []
-        for service in schemas.services:
-            service_schema = schemas.get_service_schema(service)
-            features.extend(self._get_intents_input_features(service_schema))
-            features.extend(self._get_req_slots_input_features(service_schema))
-            features.extend(
-                self._get_goal_slots_and_values_input_features(service_schema))
-        return features
-
-    def _populate_schema_embeddings(self, schemas, schema_embeddings):
-        """Run the BERT estimator and populate all schema embeddings."""
-        features = self._get_input_schema_features(schemas)
-        # prepare features into tensor dataset
-        completed_services = set()
-        # not batch or sampler
-        for feature in features:
-            if self.enc_model_type in ["xlm", "roberta", "distilbert", "camembert"]:
-                token_type_ids = None
-            else:
-                token_type_ids = feature.input_type_ids.to(self.device)
-            output = self.encoder(
-                input_ids=feature.input_ids.to(self.device),
-                attention_mask=feature.input_mask.to(self.device),
-                token_type_ids=token_type_ids)
-            service = schemas.get_service_from_id(feature.service_id)
-            if service not in completed_services:
-                logger.info("Generating embeddings for service %s.", service)
-                completed_services.add(service)
-            tensor_name = feature.embedding_tensor_name
-            emb_mat = schema_embeddings[feature.service_id][tensor_name]
-            # Obtain the encoding of the [CLS] token.
-            embedding = [round(float(x), 6) for x in output[0][0, 0, :].cpu().numpy()]
-            if tensor_name == "cat_slot_value_emb":
-                emb_mat[feature.intent_or_slot_id, feature.value_id] = embedding
-            else:
-                emb_mat[feature.intent_or_slot_id] = embedding
+        if labels:
+            losses = self.define_loss(features, labels, outputs)
+            return (outputs, losses)
+        else:
+            return (outputs, )
