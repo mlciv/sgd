@@ -174,8 +174,8 @@ class TopTransformerModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         assert schema_attention_mask.size()[-1] == max_length, "schema_attention_mask has wrong shape:{}".format(schema_attention_mask.size())
         assert schema_token_type_ids.size()[-1] == max_length, "schema_token_type_ids has wrong shape:{}".format(schema_token_type_ids.size())
 
-        logger.info("input_ids:{}, attention_mask:{}, token_type_ids :{}".format(
-            schema_input_ids.size(), schema_attention_mask.size(), schema_token_type_ids.size()))
+        # logger.info("input_ids:{}, attention_mask:{}, token_type_ids :{}".format(
+        #    schema_input_ids.size(), schema_attention_mask.size(), schema_token_type_ids.size()))
         output = self.encoder(
             input_ids=schema_input_ids.view(-1, schema_input_ids.size()[-1]),
             attention_mask=schema_attention_mask.view(-1, schema_input_ids.size()[-1]),

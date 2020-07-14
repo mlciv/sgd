@@ -1051,8 +1051,8 @@ def main():
     # Training
     if args.do_train:
         train_dataset = load_and_cache_examples(args, processor, mode="train", output_examples=False)
-        with torch.autograd.detect_anomaly():
-            global_step, tr_loss = train(args, config, train_dataset, model, processor)
+        # with torch.autograd.detect_anomaly():
+        global_step, tr_loss = train(args, config, train_dataset, model, processor)
         logger.info(" global_step = %s, average loss = %s", global_step, tr_loss)
 
     # Save the trained model and the tokenizer
