@@ -76,69 +76,80 @@ class TopTransformerModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
         self.token_dropout = torch.nn.Dropout(self.config.token_dropout)
+        if self.embedding_dim == self.config.d_model:
+            self.projection_layer = torch.nn.Sequential()
+        else:
+            self.projection_layer = nn.Linear(self.embedding_dim, self.config.d_model)
+
         self.intent_matching_layer = torch.nn.TransformerEncoder(
-            encoder_layer=torch.nn.TransformerEncoderLayer(self.embedding_dim, self.config.nhead),
+            encoder_layer=torch.nn.TransformerEncoderLayer(self.config.d_model, self.config.nhead, self.config.dim_feedforward),
             num_layers=self.config.num_matching_layer,
-            norm=torch.nn.LayerNorm(self.embedding_dim))
+            norm=torch.nn.LayerNorm(self.config.d_model)
+        )
 
-        self.requested_slots_matching_layer = nn.TransformerEncoder(
-            encoder_layer=nn.TransformerEncoderLayer(self.embedding_dim, self.config.nhead),
+        self.requested_slots_matching_layer = torch.nn.TransformerEncoder(
+            encoder_layer=torch.nn.TransformerEncoderLayer(self.config.d_model, self.config.nhead, self.config.dim_feedforward),
             num_layers=self.config.num_matching_layer,
-            norm=nn.LayerNorm(self.embedding_dim))
+            norm=torch.nn.LayerNorm(self.config.d_model)
+        )
 
-        self.categorical_slots_status_matching_layer = nn.TransformerEncoder(
-            encoder_layer=nn.TransformerEncoderLayer(self.embedding_dim, self.config.nhead),
+        self.categorical_slots_status_matching_layer = torch.nn.TransformerEncoder(
+            encoder_layer=torch.nn.TransformerEncoderLayer(self.config.d_model, self.config.nhead, self.config.dim_feedforward),
             num_layers=self.config.num_matching_layer,
-            norm=torch.nn.LayerNorm(self.embedding_dim))
+            norm=torch.nn.LayerNorm(self.config.d_model)
+        )
 
-        self.categorical_slots_values_matching_layer = nn.TransformerEncoder(
-            encoder_layer=nn.TransformerEncoderLayer(self.embedding_dim, self.config.nhead),
+        self.categorical_slots_values_matching_layer = torch.nn.TransformerEncoder(
+            encoder_layer=torch.nn.TransformerEncoderLayer(self.config.d_model, self.config.nhead, self.config.dim_feedforward),
             num_layers=self.config.num_matching_layer,
-            norm=nn.LayerNorm(self.embedding_dim))
+            norm=torch.nn.LayerNorm(self.config.d_model)
+        )
 
         self.noncategorical_slots_status_matching_layer = torch.nn.TransformerEncoder(
-            encoder_layer=nn.TransformerEncoderLayer(self.embedding_dim, self.config.nhead),
+            encoder_layer=torch.nn.TransformerEncoderLayer(self.config.d_model, self.config.nhead, self.config.dim_feedforward),
             num_layers=self.config.num_matching_layer,
-            norm=nn.LayerNorm(self.embedding_dim))
+            norm=torch.nn.LayerNorm(self.config.d_model)
+        )
+
         # Project the combined embeddings to obtain logits.
         # for intent, one logits
         self.intent_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.embedding_dim, int(self.embedding_dim/2)),
+            torch.nn.Linear(self.config.d_model, int(self.config.d_model/2)),
             torch.nn.GELU(),
-            torch.nn.Linear(int(self.embedding_dim/2), 1)
+            torch.nn.Linear(int(self.config.d_model/2), 1)
         )
 
         # for requested slots, one logits
         self.requested_slots_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.embedding_dim, int(self.embedding_dim/2)),
+            torch.nn.Linear(self.config.d_model, int(self.config.d_model/2)),
             torch.nn.GELU(),
-            torch.nn.Linear(int(self.embedding_dim/2), 1)
+            torch.nn.Linear(int(self.config.d_model/2), 1)
         )
 
         # for categorical_slots, 3 logits
         self.categorical_slots_status_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.embedding_dim, int(self.embedding_dim/2)),
+            torch.nn.Linear(self.config.d_model, int(self.config.d_model/2)),
             torch.nn.GELU(),
-            torch.nn.Linear(int(self.embedding_dim/2), 3)
+            torch.nn.Linear(int(self.config.d_model/2), 3)
         )
 
         # for categorical_slot_values,
         self.categorical_slots_values_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.embedding_dim, int(self.embedding_dim/2)),
+            torch.nn.Linear(self.config.d_model, int(self.config.d_model/2)),
             torch.nn.GELU(),
-            torch.nn.Linear(int(self.embedding_dim/2), 1)
+            torch.nn.Linear(int(self.config.d_model/2), 1)
         )
 
         # for non-categorical_slots, 3 logits
         self.noncategorical_slots_status_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.embedding_dim, int(self.embedding_dim/2)),
+            torch.nn.Linear(self.config.d_model, int(self.config.d_model/2)),
             torch.nn.GELU(),
-            torch.nn.Linear(int(self.embedding_dim/2), 3)
+            torch.nn.Linear(int(self.config.d_model/2), 3)
         )
         self.noncat_span_layer = nn.Sequential(
-            nn.Linear(self.embedding_dim, int(self.embedding_dim/2)),
-            nn.GELU(),
-            nn.Linear(int(self.embedding_dim/2), 2),
+            torch.nn.Linear(self.config.d_model, int(self.config.d_model/2)),
+            torch.nn.GELU(),
+            torch.nn.Linear(int(self.config.d_model/2), 1)
         )
         # for non-categorical span value
         if not args.no_cuda:
@@ -227,9 +238,10 @@ class TopTransformerModel(PreTrainedModel, DSTC8BaselineOutputInterface):
             (expanded_utterance_mask, element_mask),
             dim=2).view(-1, max_total_len).bool()
 
+        projected_utterance_element_pair_emb = self.projection_layer(utterance_element_pair_emb.transpose(0, 1))
         # trans_output: (batch_size * num_elements, max_total_len, dim)
         trans_output = matching_layer(
-            utterance_element_pair_emb.transpose(0, 1),
+            projected_utterance_element_pair_emb,
             src_key_padding_mask=utterance_element_pair_mask).transpose(0, 1)
         # use the first [CLS] for classification
         output = final_proj(trans_output[ :, 0, :])
@@ -295,6 +307,7 @@ class TopTransformerModel(PreTrainedModel, DSTC8BaselineOutputInterface):
             _encoded_tokens, utterance_mask,
             self.categorical_slots_status_matching_layer,
             self.categorical_slots_status_final_proj)
+        # logger.info("status_logits:{}, utterance_mask:{}".format(status_logits.size(), utterance_mask.size()))
         # Predict the goal value.
         # Shape: (batch_size, max_categorical_slots, max_categorical_values,
         # embedding_dim).
