@@ -71,7 +71,9 @@ class TopTransformerModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         self.config = config
         self.tokenizer = EncoderUtils.create_tokenizer(self.config)
         self.encoder = EncoderUtils.create_encoder(self.config)
-        setattr(self, self.base_model_prefix, self.encoder)
+        # set a dummy basemodel, which is required for PreTrainedModel
+        # you also can remove this buy using saving model in pytorch instead of the huggingface interface
+        setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.embedding_dim = self.config.schema_embedding_dim
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
@@ -114,42 +116,30 @@ class TopTransformerModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         # Project the combined embeddings to obtain logits.
         # for intent, one logits
         self.intent_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.config.d_model, int(self.config.d_model/2)),
-            torch.nn.GELU(),
-            torch.nn.Linear(int(self.config.d_model/2), 1)
+            torch.nn.Linear(int(self.config.d_model), 1)
         )
 
         # for requested slots, one logits
         self.requested_slots_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.config.d_model, int(self.config.d_model/2)),
-            torch.nn.GELU(),
-            torch.nn.Linear(int(self.config.d_model/2), 1)
+            torch.nn.Linear(int(self.config.d_model), 1)
         )
 
         # for categorical_slots, 3 logits
         self.categorical_slots_status_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.config.d_model, int(self.config.d_model/2)),
-            torch.nn.GELU(),
-            torch.nn.Linear(int(self.config.d_model/2), 3)
+            torch.nn.Linear(int(self.config.d_model), 3)
         )
 
         # for categorical_slot_values,
         self.categorical_slots_values_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.config.d_model, int(self.config.d_model/2)),
-            torch.nn.GELU(),
-            torch.nn.Linear(int(self.config.d_model/2), 1)
+            torch.nn.Linear(int(self.config.d_model), 1)
         )
 
         # for non-categorical_slots, 3 logits
         self.noncategorical_slots_status_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.config.d_model, int(self.config.d_model/2)),
-            torch.nn.GELU(),
-            torch.nn.Linear(int(self.config.d_model/2), 3)
+            torch.nn.Linear(int(self.config.d_model), 3)
         )
         self.noncat_span_layer = nn.Sequential(
-            torch.nn.Linear(self.config.d_model, int(self.config.d_model/2)),
-            torch.nn.GELU(),
-            torch.nn.Linear(int(self.config.d_model/2), 1)
+            torch.nn.Linear(int(self.config.d_model), 1)
         )
         # for non-categorical span value
         if not args.no_cuda:

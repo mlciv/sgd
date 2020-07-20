@@ -71,5 +71,7 @@ class DSTC8BaselineTopTransModel(TopTransformerModel, DSTC8BaselineOutputInterfa
 
     def _encode_schema(self, features, schema_type, is_training):
         """Directly read from precomputed schema embedding."""
-        # TODO: whether dropout
-        return None, features[SchemaInputFeatures.get_embedding_tensor_name(schema_type)]
+        encoded_schema_tokens = features[SchemaInputFeatures.get_embedding_tensor_name(schema_type)]
+        if is_training:
+            encoded_schema_tokens = self.utterance_dropout(encoded_schema_tokens)
+        return None, encoded_schema_tokens
