@@ -541,13 +541,15 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
         args.use_fuzzy_match,
         args.joint_acc_across_turn)
 
-    logger.info("Model_step: {}, Dialog metrics: {}".format(step, str(all_metric_aggregate[evaluate_utils.ALL_SERVICES])))
+    logger.info("Model_step: {}, Dialog metrics: {}, {}, {}".format(
+        step,
+        str(all_metric_aggregate[evaluate_utils.ALL_SERVICES]),
+        str(all_metric_aggregate[evaluate_utils.SEEN_SERVICES]),
+        str(all_metric_aggregate[evaluate_utils.UNSEEN_SERVICES]))
+    )
     metric_time = timeit.default_timer() - start_time
     logger.info("  Metrics done in total %f secs (%f sec per example)",
                 metric_time, metric_time / len(dataset))
-    # ALL_SERVICES = "#ALL_SERVICES"
-    # SEEN_SERVICES = "#SEEN_SERVICES"
-    # UNSEEN_SERVICES = "#UNSEEN_SERVICES"
     return all_metric_aggregate, all_predictions
 
 
