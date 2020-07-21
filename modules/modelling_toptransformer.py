@@ -79,9 +79,17 @@ class TopTransformerModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
         self.token_dropout = torch.nn.Dropout(self.config.token_dropout)
         if self.embedding_dim == self.config.d_model:
-            self.projection_layer = torch.nn.Sequential()
+            self.utterance_projection_layer = torch.nn.Sequential()
+            if self.config.model_type == "toptrans":
+                self.schema_projection_layer = torch.nn.Sequential()
+            else:
+                self.schema_projection_layer = self.utterance_projection_layer
         else:
-            self.projection_layer = nn.Linear(self.embedding_dim, self.config.d_model)
+            self.utterance_projection_layer = nn.Linear(self.embedding_dim, self.config.d_model)
+            if self.config.model_type == "toptrans":
+                self.schema_projection_layer = nn.Linear(self.embedding_dim, self.config.d_model)
+            else:
+                self.schema_projection_layer = self.utterance_projection_layer
 
         self.intent_matching_layer = torch.nn.TransformerEncoder(
             encoder_layer=torch.nn.TransformerEncoderLayer(self.config.d_model, self.config.nhead, self.config.dim_feedforward),
@@ -177,18 +185,37 @@ class TopTransformerModel(PreTrainedModel, DSTC8BaselineOutputInterface):
 
         # logger.info("input_ids:{}, attention_mask:{}, token_type_ids :{}".format(
         #    schema_input_ids.size(), schema_attention_mask.size(), schema_token_type_ids.size()))
-        output = self.encoder(
-            input_ids=schema_input_ids.view(-1, schema_input_ids.size()[-1]),
-            attention_mask=schema_attention_mask.view(-1, schema_input_ids.size()[-1]),
-            token_type_ids=schema_token_type_ids.view(-1, schema_input_ids.size()[-1]))
+        # when batchsize is too large,try to split and batch.
+        # It tends that it may not help for the memory. It may help for the bert finetuning(batchsize, not sure yet)
+        total_schema_input_ids = schema_input_ids.view(-1, schema_input_ids.size()[-1])
+        total_batch_size = total_schema_input_ids.size()[0]
+        total_schema_attention_mask = schema_attention_mask.view(-1, schema_input_ids.size()[-1])
+        total_schema_token_type_ids = schema_token_type_ids.view(-1, schema_input_ids.size()[-1])
 
-        encoded_schema_cls = output[0][:, 0, :]
-        embedding_dim = encoded_schema_cls.size()[-1]
+        i = 0
+        split_schema_cls = []
+        split_schema_tokens = []
+        while(i * self.config.schema_batch_size < total_batch_size):
+            left = i * self.config.schema_batch_size
+            right = min((i+1)*self.config.schema_batch_size, total_batch_size)
+            i = i + 1
+            # logger.info("encoding {} input: {} - {}".format(schema_type, left, right))
+            output = self.encoder(
+                input_ids=total_schema_input_ids[left:right, :],
+                attention_mask=total_schema_attention_mask[left:right, :],
+                token_type_ids=total_schema_token_type_ids[left:right, :])
+
+            split_schema_cls.append(output[0][:, 0, :])
+            split_schema_tokens.append(output[0])
+
+        # concat
+        encoded_schema_cls = torch.cat(split_schema_cls, dim=0)
+        encoded_schema_tokens = torch.cat(split_schema_tokens, dim=0)
         # adding the last dim
+        embedding_dim = encoded_schema_cls.size()[-1]
         schema_cls_shape = schema_input_shape[:-1]
         schema_cls_shape.append(embedding_dim)
         schema_input_shape.append(embedding_dim)
-        encoded_schema_tokens = output[0]
         # Apply dropout in training mode.
         if is_training:
             encoded_schema_cls = self.utterance_dropout(encoded_schema_cls)
@@ -210,9 +237,9 @@ class TopTransformerModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         logits.
         """
         batch_size1, num_elements, max_seq_length, element_emb_dim = element_embeddings.size()
-        batch_size2, max_u_len, u_emb_len = _encoded_tokens.size()
+        batch_size2, max_u_len, utterance_dim = _encoded_tokens.size()
         assert batch_size1 == batch_size2, "batch_size not match between element_emb and utterance_emb"
-        assert element_emb_dim == u_emb_len, "dim not much element_emb={} and utterance_emb={}".format(element_emb_dim, u_emb_len)
+        assert element_emb_dim == utterance_dim, "dim not much element_emb={} and utterance_emb={}".format(element_emb_dim, utterance_dim)
         # (batch_size, num_elements, max_seq_length, dim)
         expanded_encoded_tokens = _encoded_tokens.unsqueeze(1).expand(-1, num_elements, -1, -1)
         expanded_utterance_mask = utterance_mask.unsqueeze(1).expand(-1, num_elements, -1)
@@ -222,16 +249,15 @@ class TopTransformerModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         max_total_len = max_u_len + max_seq_length
         # (batch_size * num_elements, max_total_len, dim)
         utterance_element_pair_emb = torch.cat(
-            (expanded_encoded_tokens, element_embeddings), dim=2).view(-1, max_total_len, u_emb_len)
+            (self.utterance_projection_layer(expanded_encoded_tokens), self.schema_projection_layer(element_embeddings)), dim=2).view(-1, max_total_len, self.config.d_model)
         # (batch_size, num_elements, max_u_len+max_seq_length)
         utterance_element_pair_mask = torch.cat(
             (expanded_utterance_mask, element_mask),
             dim=2).view(-1, max_total_len).bool()
 
-        projected_utterance_element_pair_emb = self.projection_layer(utterance_element_pair_emb.transpose(0, 1))
         # trans_output: (batch_size * num_elements, max_total_len, dim)
         trans_output = matching_layer(
-            projected_utterance_element_pair_emb,
+            utterance_element_pair_emb.transpose(0, 1),
             src_key_padding_mask=utterance_element_pair_mask).transpose(0, 1)
         # use the first [CLS] for classification
         output = final_proj(trans_output[ :, 0, :])
