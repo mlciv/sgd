@@ -74,7 +74,7 @@ class TopTransformerModel(PreTrainedModel, DSTC8BaselineOutputInterface):
             self.encoder = encoder
         else:
             self.encoder = EncoderUtils.create_encoder(self.config)
-            EncoderUtils.set_encoder_finetuning_status(self.encoder, args.finetuning_encoder)
+            EncoderUtils.set_encoder_finetuning_status(self.encoder, args.encoder_finetuning)
         # set a dummy basemodel, which is required for PreTrainedModel
         # you also can remove this buy using saving model in pytorch instead of the huggingface interface
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
