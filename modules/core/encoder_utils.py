@@ -42,6 +42,7 @@ class EncoderUtils(object):
         else:
             for param in encoder.parameters():
                 param.requires_grad = False
+        logger.info("set encoder finetuning status: {}".format(finetuning))
 
 
     @staticmethod
