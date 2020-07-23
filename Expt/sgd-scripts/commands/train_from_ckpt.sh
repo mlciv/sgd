@@ -35,6 +35,7 @@ pargs="--do_train \
 --model_type=$MODEL_TYPE \
 --config_name=$CONFIG_NAME \
 --encoder_config_name=$ENCODER_CONFIG_NAME \
+--encoder_finetuning=$ENCODER_FINETUNING \
 --model_name_or_path=$2 \
 --encoder_model_name_or_path=$ENCODER_MODEL_NAME_PATH \
 --task_name=$TASK_NAME \

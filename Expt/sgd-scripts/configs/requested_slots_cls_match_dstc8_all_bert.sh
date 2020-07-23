@@ -51,3 +51,5 @@ USE_FUZZY_MATCH=x
 MAX_SEQ_LENGTH=80
 # warmup_step
 WARMUP_PORTION=0.1
+# whether finetuning the encoder
+ENCODER_FINETUNING=x

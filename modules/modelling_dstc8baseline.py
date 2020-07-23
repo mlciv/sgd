@@ -70,6 +70,7 @@ class DSTC8BaselineModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         self.config = config
         self.tokenizer = EncoderUtils.create_tokenizer(self.config)
         self.encoder = EncoderUtils.create_encoder(self.config)
+        EncoderUtils.set_encoder_finetuning_status(self.encoder, args.finetuning_encoder)
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.embedding_dim = self.config.schema_embedding_dim
         self.utterance_embedding_dim = self.config.utterance_embedding_dim

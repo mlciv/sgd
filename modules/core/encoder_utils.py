@@ -34,6 +34,17 @@ class EncoderUtils(object):
         return model
 
     @staticmethod
+    def set_encoder_finetuning_status(encoder, finetuning):
+        if finetuning:
+            # It’s a bit confusing, but model.train(False) doesn’t change param.requires_grad. It only changes the behavior of nn.Dropout and nn.BatchNorm (and maybe a few other modules) to use the inference-mode behavior.
+            # it is not setting with model.train()
+            pass
+        else:
+            for param in encoder.parameters():
+                param.requires_grad = False
+
+
+    @staticmethod
     def create_tokenizer(config):
         """
         config is object of PretrainedConfig, which hasattr enc_model_type and enc_checkpoint

@@ -810,6 +810,12 @@ def main():
         "--encoder_config_name", default="", type=str,
         help="Pretrained encoder_config name or path if not the same as model_name"
     )
+
+    parser.add_argument(
+        "--encoder_finetuning", default=True, type=bool,
+        help="Whether finetuning pretrained encoder_config name"
+    )
+
     parser.add_argument(
         "--tokenizer_name",
         default="",

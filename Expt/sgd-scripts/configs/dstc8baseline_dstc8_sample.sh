@@ -46,3 +46,5 @@ JOINT_ACC_ACROSS_TURN=
 # USE_FUZZY_MATCH
 USE_FUZZY_MATCH=x
 
+# whether finetuning the encoder
+ENCODER_FINETUNING=x
