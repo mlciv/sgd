@@ -169,45 +169,53 @@ class DSTC8BaselineOutputInterface(object):
         # Scores are output for each intent.
         # Note that the intent indices are shifted by 1 to account for NONE intent.
         # [batch_size, num_intent + 1]
-        predictions["intent_status"] = torch.argmax(
-            outputs["logit_intent_status"], dim=-1)
+        if "logit_intent_status" in outputs:
+            predictions["intent_status"] = torch.argmax(
+                outputs["logit_intent_status"], dim=-1)
 
         # Scores are output for each requested slot.
-        predictions["req_slot_status"] = torch.sigmoid(
-            outputs["logit_req_slot_status"])
+        if "logit_req_slot_status" in outputs:
+            predictions["req_slot_status"] = torch.sigmoid(
+                outputs["logit_req_slot_status"])
 
         # For categorical slots, the status of each slot and the predicted value are
         # output.
-        predictions["cat_slot_status"] = torch.argmax(
-            outputs["logit_cat_slot_status"], dim=-1)
-        predictions["cat_slot_value"] = torch.argmax(
-            outputs["logit_cat_slot_value"], dim=-1)
+        if "logit_cat_slot_status" in outputs:
+            predictions["cat_slot_status"] = torch.argmax(
+                outputs["logit_cat_slot_status"], dim=-1)
+
+        if "logit_cat_slot_value" in outputs:
+            predictions["cat_slot_value"] = torch.argmax(
+                outputs["logit_cat_slot_value"], dim=-1)
 
         # For non-categorical slots, the status of each slot and the indices for
         # spans are output.
-        predictions["noncat_slot_status"] = torch.argmax(
-            outputs["logit_noncat_slot_status"], dim=-1)
-        start_scores = torch.nn.functional.softmax(outputs["logit_noncat_slot_start"], dim=-1)
-        end_scores = torch.nn.functional.softmax(outputs["logit_noncat_slot_end"], dim=-1)
-        _, max_num_slots, max_num_tokens = end_scores.size()
-        batch_size = end_scores.size()[0]
-        # Find the span with the maximum sum of scores for start and end indices.
-        total_scores = (
-            start_scores.unsqueeze(3) +
-            end_scores.unsqueeze(2))
-        # Mask out scores where start_index > end_index.
-        # exclusive
-        start_idx = torch.arange(0, max_num_tokens, device=total_scores.device).view(1, 1, -1, 1)
-        end_idx = torch.arange(0, max_num_tokens, device=total_scores.device).view(1, 1, 1, -1)
-        invalid_index_mask = (start_idx > end_idx).expand(batch_size, max_num_slots, -1, -1)
-        # logger.info("invalid_index_mask:{}, total_scores:{}".format(invalid_index_mask.size(), total_scores.size()))
-        total_scores = torch.where(invalid_index_mask, torch.zeros_like(total_scores), total_scores)
-        max_span_index = torch.argmax(total_scores.view(-1, max_num_slots, max_num_tokens**2), dim=-1)
-        span_start_index = (max_span_index.float() / max_num_tokens).floor().long()
-        span_end_index = torch.fmod(max_span_index.float(), max_num_tokens).floor().long()
-        predictions["noncat_slot_start"] = span_start_index
-        predictions["noncat_slot_end"] = span_end_index
-        # Add inverse alignments.
-        predictions["noncat_alignment_start"] = features["noncat_alignment_start"]
-        predictions["noncat_alignment_end"] = features["noncat_alignment_end"]
+        if "noncat_slot_status" in outputs:
+            predictions["noncat_slot_status"] = torch.argmax(
+                outputs["logit_noncat_slot_status"], dim=-1)
+
+        if "logit_noncat_slot_start" in outputs:
+            start_scores = torch.nn.functional.softmax(outputs["logit_noncat_slot_start"], dim=-1)
+            end_scores = torch.nn.functional.softmax(outputs["logit_noncat_slot_end"], dim=-1)
+            _, max_num_slots, max_num_tokens = end_scores.size()
+            batch_size = end_scores.size()[0]
+            # Find the span with the maximum sum of scores for start and end indices.
+            total_scores = (
+                start_scores.unsqueeze(3) +
+                end_scores.unsqueeze(2))
+            # Mask out scores where start_index > end_index.
+            # exclusive
+            start_idx = torch.arange(0, max_num_tokens, device=total_scores.device).view(1, 1, -1, 1)
+            end_idx = torch.arange(0, max_num_tokens, device=total_scores.device).view(1, 1, 1, -1)
+            invalid_index_mask = (start_idx > end_idx).expand(batch_size, max_num_slots, -1, -1)
+            # logger.info("invalid_index_mask:{}, total_scores:{}".format(invalid_index_mask.size(), total_scores.size()))
+            total_scores = torch.where(invalid_index_mask, torch.zeros_like(total_scores), total_scores)
+            max_span_index = torch.argmax(total_scores.view(-1, max_num_slots, max_num_tokens**2), dim=-1)
+            span_start_index = (max_span_index.float() / max_num_tokens).floor().long()
+            span_end_index = torch.fmod(max_span_index.float(), max_num_tokens).floor().long()
+            predictions["noncat_slot_start"] = span_start_index
+            predictions["noncat_slot_end"] = span_end_index
+            # Add inverse alignments.
+            predictions["noncat_alignment_start"] = features["noncat_alignment_start"]
+            predictions["noncat_alignment_end"] = features["noncat_alignment_end"]
         return predictions

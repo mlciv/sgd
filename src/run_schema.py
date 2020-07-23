@@ -41,6 +41,10 @@ from transformers.configuration_auto import ALL_PRETRAINED_CONFIG_ARCHIVE_MAP
 from modules.core.schemadst_configuration import SchemaDSTConfig
 from modules.core.encoder_configuration import EncoderConfig
 from modules.core.encoder_utils import EncoderUtils
+from modules.active_intent_cls_match_model import ActiveIntentCLSMatchModel
+from modules.requested_slots_cls_match_model import RequestedSlotsCLSMatchModel
+from modules.cat_slots_cls_match_model import CatSlotsCLSMatchModel
+from modules.noncat_slots_cls_match_model import NonCatSlotsCLSMatchModel
 from modules.modelling_dstc8baseline import DSTC8BaselineModel
 from modules.modelling_dstc8baseline_toptrans import DSTC8BaselineTopTransModel
 from modules.modelling_toptransformer import TopTransformerModel
@@ -68,6 +72,10 @@ ALL_ENCODER_MODELS = ALL_PRETRAINED_CONFIG_ARCHIVE_MAP.keys()
 # model classes to use
 MODEL_CLASSES = {
     "dstc8baseline": (DSTC8BaselineModel),
+    "active_intent_cls_match": (ActiveIntentCLSMatchModel),
+    "requested_slots_cls_match": (RequestedSlotsCLSMatchModel),
+    "cat_slots_cls_match": (CatSlotsCLSMatchModel),
+    "noncat_slots_cls_match": (NonCatSlotsCLSMatchModel),
     "toptrans": (TopTransformerModel),
     "dstc8baseline_toptrans": (DSTC8BaselineTopTransModel),
     }
@@ -158,7 +166,9 @@ def train(args, config, train_dataset, model, processor):
     logger.info("  Total optimization steps = %d", t_total)
     logger.info("  Warmup portion = %f, warmup steps = %d", args.warmup_portion, args.warmup_steps)
     logger.info("  Model Type = %s", args.model_type)
-    if args.model_type in ["dstc8baseline", "dstc8baseline_toptrans", "toptrans"]:
+    if args.model_type in ["dstc8baseline", "active_intent_cls_match",
+                           "requested_slots_cls_match", "cat_slots_cls_match", "noncat_slots_cls_match",
+                           "dstc8baseline_toptrans", "toptrans"]:
         schema_tensors = SchemaEmbeddingGenerator.create_or_load_schema_embedding(
             args,
             config,
@@ -358,7 +368,7 @@ def train(args, config, train_dataset, model, processor):
                                     metrics_for_key[v_key] = (v_value, global_step)
                                     # We only save the model for core metrics
                                     if key in evaluate_utils.CORE_METRIC_KEYS and \
-                                       v_key in evaluate_utils.CORE_METRIC_SUBKEYS:
+                                       v_key in evaluate_utils.IMPORTANT_METRIC_SUBKEYS:
                                         if old_path:
                                             shutil.rmtree(old_path)
                                         save_checkpoint(args, model, processor._tokenizer,
@@ -421,7 +431,10 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
     logger.info("  Num examples = %d", len(dataset))
     logger.info("  Batch size = %d", args.eval_batch_size)
     # schame embededing should be done before the training
-    if args.model_type in ["dstc8baseline", "dstc8baseline_toptrans", "toptrans"]:
+    logger.info("  Model Type = %s", args.model_type)
+    if args.model_type in ["dstc8baseline", "active_intent_cls_match",
+                           "requested_slots_cls_match", "cat_slots_cls_match", "noncat_slots_cls_match",
+                           "dstc8baseline_toptrans", "toptrans"]:
         schema_tensors = SchemaEmbeddingGenerator.create_or_load_schema_embedding(
             args,
             config,
@@ -714,7 +727,35 @@ def main():
         "--model_name_or_path",
         default=None,
         type=str,
-        help="Path to pretrained model or model identifier from huggingface.co/models",
+        help="Path to pretrained model or model identifier",
+    )
+
+    parser.add_argument(
+        "--intent_model_name_or_path",
+        default=None,
+        type=str,
+        help="Path to pretrained intent model or model identifier",
+    )
+
+    parser.add_argument(
+        "--req_slots_model_name_or_path",
+        default=None,
+        type=str,
+        help="Path to pretrained requested_slots model or model identifier",
+    )
+
+    parser.add_argument(
+        "--cat_slots_model_name_or_path",
+        default=None,
+        type=str,
+        help="Path to pretrained cat_slots model or model identifier",
+    )
+
+    parser.add_argument(
+        "--noncat_slots_model_name_or_path",
+        default=None,
+        type=str,
+        help="Path to pretrained noncat_slots model or model identifier",
     )
 
     parser.add_argument(
@@ -1024,12 +1065,13 @@ def main():
         model = model_class.from_pretrained(
             args.model_name_or_path,
             from_tf=bool(".ckpt" in args.model_name_or_path),
+            encoder=None,
             config=config,
             args=args
         )
     else:
         logger.info("{} is not existed, training model from scratch".format(args.model_name_or_path))
-        model = model_class(config=config, args=args)
+        model = model_class(encoder=None, config=config, args=args)
 
     if args.local_rank == 0:
         # Make sure only the first process in distributed training will download model & vocab

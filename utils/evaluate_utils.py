@@ -47,6 +47,11 @@ CORE_METRIC_SUBKEYS = [
     metrics.JOINT_NONCAT_ACCURACY
 ]
 
+IMPORTANT_METRIC_SUBKEYS = [
+    metrics.JOINT_GOAL_ACCURACY,
+    metrics.AVERAGE_GOAL_ACCURACY,
+]
+
 # Name of the file containing all predictions and their corresponding frame
 # metrics.
 PER_FRAME_OUTPUT_FILENAME = "dialogues_and_metrics.json"

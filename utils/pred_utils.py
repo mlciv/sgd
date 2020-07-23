@@ -68,46 +68,53 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
 
                 # Add prediction for active intent. Offset is subtracted to account for
                 # NONE intent.
-                active_intent_id = predictions["intent_status"]
-                state["active_intent"] = (
-                    service_schema.get_intent_from_id(active_intent_id - 1)
-                    if active_intent_id else "NONE")
+                active_intent = "NONE"
+                if "intent_status" in predictions:
+                    active_intent_id = predictions["intent_status"]
+                    active_intent = (
+                        service_schema.get_intent_from_id(active_intent_id - 1)
+                        if active_intent_id else "NONE")
+                state["active_intent"] = active_intent
 
                 # Add prediction for requested slots.
                 requested_slots = []
-                for slot_idx, slot in enumerate(service_schema.slots):
-                    if predictions["req_slot_status"][slot_idx] > REQ_SLOT_THRESHOLD:
-                        requested_slots.append(slot)
+                if "req_slot_status" in predictions:
+                    for slot_idx, slot in enumerate(service_schema.slots):
+                        if predictions["req_slot_status"][slot_idx] > REQ_SLOT_THRESHOLD:
+                            requested_slots.append(slot)
                 state["requested_slots"] = requested_slots
 
                 # Add prediction for user goal (slot values).
                 # Categorical slots.
-                for slot_idx, slot in enumerate(service_schema.categorical_slots):
-                    slot_status = predictions["cat_slot_status"][slot_idx]
-                    if slot_status == utils_schema.STATUS_DONTCARE:
-                        slot_values[slot] = utils_schema.STR_DONTCARE
-                    elif slot_status == utils_schema.STATUS_ACTIVE:
-                        value_idx = predictions["cat_slot_value"][slot_idx]
-                        slot_values[slot] = (
-                            service_schema.get_categorical_slot_values(slot)[value_idx])
+                slot_values = {}
+                if "cat_slot_status" in predictions:
+                    for slot_idx, slot in enumerate(service_schema.categorical_slots):
+                        slot_status = predictions["cat_slot_status"][slot_idx]
+                        if slot_status == utils_schema.STATUS_DONTCARE:
+                            slot_values[slot] = utils_schema.STR_DONTCARE
+                        elif slot_status == utils_schema.STATUS_ACTIVE:
+                            value_idx = predictions["cat_slot_value"][slot_idx]
+                            slot_values[slot] = (
+                                service_schema.get_categorical_slot_values(slot)[value_idx])
 
                 # Non-categorical slots.
-                for slot_idx, slot in enumerate(service_schema.non_categorical_slots):
-                    slot_status = predictions["noncat_slot_status"][slot_idx]
-                    if slot_status == utils_schema.STATUS_DONTCARE:
-                        slot_values[slot] = utils_schema.STR_DONTCARE
-                    elif slot_status == utils_schema.STATUS_ACTIVE:
-                        tok_start_idx = predictions["noncat_slot_start"][slot_idx]
-                        tok_end_idx = predictions["noncat_slot_end"][slot_idx]
-                        ch_start_idx = predictions["noncat_alignment_start"][tok_start_idx]
-                        ch_end_idx = predictions["noncat_alignment_end"][tok_end_idx]
-                        if ch_start_idx < 0 and ch_end_idx < 0:
-                            # Add span from the system utterance.
-                            slot_values[slot] = (
-                                system_utterance[-ch_start_idx - 1:-ch_end_idx])
-                        elif ch_start_idx > 0 and ch_end_idx > 0:
-                            # Add span from the user utterance.
-                            slot_values[slot] = (user_utterance[ch_start_idx - 1:ch_end_idx])
+                if "noncat_slot_status" in predictions:
+                    for slot_idx, slot in enumerate(service_schema.non_categorical_slots):
+                        slot_status = predictions["noncat_slot_status"][slot_idx]
+                        if slot_status == utils_schema.STATUS_DONTCARE:
+                            slot_values[slot] = utils_schema.STR_DONTCARE
+                        elif slot_status == utils_schema.STATUS_ACTIVE:
+                            tok_start_idx = predictions["noncat_slot_start"][slot_idx]
+                            tok_end_idx = predictions["noncat_slot_end"][slot_idx]
+                            ch_start_idx = predictions["noncat_alignment_start"][tok_start_idx]
+                            ch_end_idx = predictions["noncat_alignment_end"][tok_end_idx]
+                            if ch_start_idx < 0 and ch_end_idx < 0:
+                                # Add span from the system utterance.
+                                slot_values[slot] = (
+                                    system_utterance[-ch_start_idx - 1:-ch_end_idx])
+                            elif ch_start_idx > 0 and ch_end_idx > 0:
+                                # Add span from the user utterance.
+                                slot_values[slot] = (user_utterance[ch_start_idx - 1:ch_end_idx])
                 # Create a new dict to avoid overwriting the state in previous turns
                 # because of use of same objects.
                 state["slot_values"] = {s: [v] for s, v in slot_values.items()}
@@ -116,6 +123,9 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
 
 
 def get_predictions_index_dict(predictions, ):
+    """
+    get the prediction indexed into a dict
+    """
     all_predictions = {}
     for idx, prediction in enumerate(predictions):
         if idx % 500 == 0:
