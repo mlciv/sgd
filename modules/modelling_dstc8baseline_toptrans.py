@@ -66,7 +66,7 @@ class DSTC8BaselineTopTransModel(TopTransformerModel, DSTC8BaselineOutputInterfa
 
     pretrained_model_archieve_map = CLS_PRETRAINED_MODEL_ARCHIVE_MAP
 
-    def __init__(self, config=None, args=None):
+    def __init__(self, encoder=None, config=None, args=None):
         super(DSTC8BaselineTopTransModel, self).__init__(config=config, args=args)
 
     def _encode_schema(self, features, schema_type, is_training):

@@ -64,13 +64,16 @@ class DSTC8BaselineModel(PreTrainedModel, DSTC8BaselineOutputInterface):
 
     pretrained_model_archieve_map = CLS_PRETRAINED_MODEL_ARCHIVE_MAP
 
-    def __init__(self, config=None, args=None):
+    def __init__(self, encoder=None, config=None, args=None):
         super(DSTC8BaselineModel, self).__init__(config=config)
         # config is the configuration for pretrained model
         self.config = config
         self.tokenizer = EncoderUtils.create_tokenizer(self.config)
-        self.encoder = EncoderUtils.create_encoder(self.config)
-        EncoderUtils.set_encoder_finetuning_status(self.encoder, args.finetuning_encoder)
+        if encoder:
+            self.encoder = encoder
+        else:
+            self.encoder = EncoderUtils.create_encoder(self.config)
+            EncoderUtils.set_encoder_finetuning_status(self.encoder, args.finetuning_encoder)
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.embedding_dim = self.config.schema_embedding_dim
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
