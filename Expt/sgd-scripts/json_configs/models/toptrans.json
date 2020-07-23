@@ -1,0 +1,14 @@
+{
+  "utterance_dropout": 0.3,
+  "token_dropout": 0.3,
+  "schema_embedding_file_name": "pretrained_schema_feature.npy",
+  "schema_embedding_type": "feature",
+  "schema_embedding_dim": 768,
+  "schema_max_seq_length": 80,
+  "utterance_embedding_dim": 768,
+  "d_model": 128,
+  "num_matching_layer": 2,
+  "nhead": 2,
+  "dim_feedforward": 256,
+  "schema_batch_size": 65535
+}
