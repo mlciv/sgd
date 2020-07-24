@@ -368,7 +368,7 @@ def train(args, config, train_dataset, model, processor):
                                     metrics_for_key[v_key] = (v_value, global_step)
                                     # We only save the model for core metrics
                                     if key in evaluate_utils.CORE_METRIC_KEYS and \
-                                       v_key in evaluate_utils.IMPORTANT_METRIC_SUBKEYS:
+                                       v_key in evaluate_utils.CORE_METRIC_SUBKEYS:
                                         if old_path:
                                             shutil.rmtree(old_path)
                                         save_checkpoint(args, model, processor._tokenizer,
@@ -1071,13 +1071,13 @@ def main():
         model = model_class.from_pretrained(
             args.model_name_or_path,
             from_tf=bool(".ckpt" in args.model_name_or_path),
-            encoder=None,
             config=config,
-            args=args
+            args=args,
+            encoder=None
         )
     else:
         logger.info("{} is not existed, training model from scratch".format(args.model_name_or_path))
-        model = model_class(encoder=None, config=config, args=args)
+        model = model_class(config=config, args=args, encoder=None)
 
     if args.local_rank == 0:
         # Make sure only the first process in distributed training will download model & vocab

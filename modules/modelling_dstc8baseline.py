@@ -64,7 +64,7 @@ class DSTC8BaselineModel(PreTrainedModel, DSTC8BaselineOutputInterface):
 
     pretrained_model_archieve_map = CLS_PRETRAINED_MODEL_ARCHIVE_MAP
 
-    def __init__(self, encoder=None, config=None, args=None):
+    def __init__(self, config=None, args=None, encoder=None):
         super(DSTC8BaselineModel, self).__init__(config=config)
         # config is the configuration for pretrained model
         self.config = config
