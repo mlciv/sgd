@@ -1,0 +1,11 @@
+{
+  "utterance_dropout": 0.3,
+  "token_dropout": 0.3,
+  "schema_embedding_file_name": "pretrained_schema_seq2_feature_embedding.npy",
+  "schema_max_seq_length": 80,
+  "dialog_cxt_length": 15,
+  "schema_embedding_type": "seq2_feature",
+  "schema_embedding_dim": 768,
+  "schema_finetuning_type": "bert_snt_pair",
+  "utterance_embedding_dim": 768
+}

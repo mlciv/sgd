@@ -18,6 +18,7 @@ from modules.core.encoder_utils import EncoderUtils
 from modules.core.schemadst_configuration import SchemaDSTConfig
 from modules.dstc8baseline_output_interface import DSTC8BaselineOutputInterface
 from modules.schema_embedding_generator import SchemaInputFeatures
+import modules.core.schema_constants as schema_constants
 from src import utils_schema
 from utils import (
     torch_ext,
@@ -74,6 +75,8 @@ class NonCatSlotsCLSMatchModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         else:
             self.encoder = EncoderUtils.create_encoder(self.config)
             EncoderUtils.set_encoder_finetuning_status(self.encoder, args.encoder_finetuning)
+
+        EncoderUtils.add_special_tokens(self.tokenizer, encoder, schema_constants.USER_AGENT_SPECIAL_TOKENS)
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.embedding_dim = self.config.schema_embedding_dim
         self.utterance_embedding_dim = self.config.utterance_embedding_dim

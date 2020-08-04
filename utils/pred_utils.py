@@ -24,6 +24,8 @@ import collections
 import json
 import os
 import logging
+import torch
+import modules.core.schema_constants as schema_constants
 
 from utils import schema
 from src import utils_schema
@@ -31,6 +33,7 @@ from src import utils_schema
 logger = logging.getLogger(__name__)
 
 REQ_SLOT_THRESHOLD = 0.5
+ACTIVE_INTENT_THRESHOLD = 0.5
 
 
 def get_predicted_dialog(dialog, all_predictions, schemas):
@@ -48,11 +51,13 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
     dialog_id = dialog["dialogue_id"]
     # The slot values tracked for each service.
     all_slot_values = collections.defaultdict(dict)
+    # concatenating without any token
+    global_utterance_for_index = ''.join([t["utterance"] for t in dialog["turns"]])
     for turn_idx, turn in enumerate(dialog["turns"]):
         if turn["speaker"] == "USER":
-            user_utterance = turn["utterance"]
-            system_utterance = (
-                dialog["turns"][turn_idx - 1]["utterance"] if turn_idx else "")
+            # user_utterance = turn["utterance"]
+            # system_utterance = (
+            #    dialog["turns"][turn_idx - 1]["utterance"] if turn_idx else "")
             for frame in turn["frames"]:
                 predictions = all_predictions[(dialog_id, turn_idx, frame["service"])]
                 # logger.info("dial_id:{}, turn_idx:{}, predictions:{}".format(dialog_id, turn_idx, predictions))
@@ -70,10 +75,20 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                 # NONE intent.
                 active_intent = "NONE"
                 if "intent_status" in predictions:
-                    active_intent_id = predictions["intent_status"]
-                    active_intent = (
-                        service_schema.get_intent_from_id(active_intent_id - 1)
-                        if active_intent_id else "NONE")
+                    if isinstance(predictions["intent_status"], int):
+                        active_intent_id = predictions["intent_status"]
+                        active_intent = (
+                            service_schema.get_intent_from_id(active_intent_id - 1)
+                            if active_intent_id else "NONE")
+                    else:
+                        # like req_slot using sigmoid
+                        has_intent = any([p_active > ACTIVE_INTENT_THRESHOLD for p_active in predictions["intent_status"]])
+                        if has_intent:
+                            # add negative score for padding, to make sure the intent ids are valid
+                            active_intent_id = torch.argmax(predictions["intent_status"])
+                            active_intent = service_schema.get_intent_from_id(active_intent_id)
+                        else:
+                            active_intent = "NONE"
                 state["active_intent"] = active_intent
 
                 # Add prediction for requested slots.
@@ -86,13 +101,12 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
 
                 # Add prediction for user goal (slot values).
                 # Categorical slots.
-                slot_values = {}
                 if "cat_slot_status" in predictions:
                     for slot_idx, slot in enumerate(service_schema.categorical_slots):
                         slot_status = predictions["cat_slot_status"][slot_idx]
-                        if slot_status == utils_schema.STATUS_DONTCARE:
-                            slot_values[slot] = utils_schema.STR_DONTCARE
-                        elif slot_status == utils_schema.STATUS_ACTIVE:
+                        if slot_status == schema_constants.STATUS_DONTCARE:
+                            slot_values[slot] = schema_constants.STR_DONTCARE
+                        elif slot_status == schema_constants.STATUS_ACTIVE:
                             value_idx = predictions["cat_slot_value"][slot_idx]
                             slot_values[slot] = (
                                 service_schema.get_categorical_slot_values(slot)[value_idx])
@@ -101,20 +115,24 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                 if "noncat_slot_status" in predictions:
                     for slot_idx, slot in enumerate(service_schema.non_categorical_slots):
                         slot_status = predictions["noncat_slot_status"][slot_idx]
-                        if slot_status == utils_schema.STATUS_DONTCARE:
-                            slot_values[slot] = utils_schema.STR_DONTCARE
-                        elif slot_status == utils_schema.STATUS_ACTIVE:
+                        if slot_status == schema_constants.STATUS_DONTCARE:
+                            slot_values[slot] = schema_constants.STR_DONTCARE
+                        elif slot_status == schema_constants.STATUS_ACTIVE:
                             tok_start_idx = predictions["noncat_slot_start"][slot_idx]
                             tok_end_idx = predictions["noncat_slot_end"][slot_idx]
                             ch_start_idx = predictions["noncat_alignment_start"][tok_start_idx]
                             ch_end_idx = predictions["noncat_alignment_end"][tok_end_idx]
-                            if ch_start_idx < 0 and ch_end_idx < 0:
-                                # Add span from the system utterance.
-                                slot_values[slot] = (
-                                    system_utterance[-ch_start_idx - 1:-ch_end_idx])
-                            elif ch_start_idx > 0 and ch_end_idx > 0:
-                                # Add span from the user utterance.
-                                slot_values[slot] = (user_utterance[ch_start_idx - 1:ch_end_idx])
+                            # shift the char index by one
+                            slot_values[slot] = global_utterance_for_index[ch_start_idx-1:ch_end_idx]
+                            # TO SUPPORT old utternace features
+                            #if ch_start_idx < 0 and ch_end_idx < 0:
+                            #    # Add span from the system utterance.
+                            #    slot_values[slot] = (
+                            #        system_utterance[-ch_start_idx - 1:-ch_end_idx])
+                            #elif ch_start_idx > 0 and ch_end_idx > 0:
+                            #    # Add span from the user utterance.
+                            #    slot_values[slot] = (user_utterance[ch_start_idx - 1:ch_end_idx])
+                            # directly use global offset
                 # Create a new dict to avoid overwriting the state in previous turns
                 # because of use of same objects.
                 state["slot_values"] = {s: [v] for s, v in slot_values.items()}

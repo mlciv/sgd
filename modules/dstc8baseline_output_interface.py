@@ -190,7 +190,7 @@ class DSTC8BaselineOutputInterface(object):
 
         # For non-categorical slots, the status of each slot and the indices for
         # spans are output.
-        if "noncat_slot_status" in outputs:
+        if "logit_noncat_slot_status" in outputs:
             predictions["noncat_slot_status"] = torch.argmax(
                 outputs["logit_noncat_slot_status"], dim=-1)
 

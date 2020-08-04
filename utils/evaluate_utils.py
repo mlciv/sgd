@@ -164,7 +164,8 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services, u
                 frame["service"]: frame for frame in turn_hyp["frames"]
             }
 
-            # logger.info("turn_ref:{}, turn_hyp:{}".format(turn_ref, turn_hyp))
+            #logger.info("turn_ref:{}".format(turn_ref))
+            #logger.info("turn_hyp:{}".format(turn_hyp))
             # Calculate metrics for each frame in each user turn.
             for frame_ref in turn_ref["frames"]:
                 service_name = frame_ref["service"]

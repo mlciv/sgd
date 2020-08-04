@@ -1,6 +1,6 @@
 # Time-stamp: <2020-06-03>
 # --------------------------------------------------------------------
-# File Name          : pretrain_utils.py
+# File Name          : encoder_utils.py
 # Original Author    : jiessie.cao@gmail.com
 # Description        : encoder utils for initializing a model or load a
 # models from a enc_checkpoint
@@ -56,3 +56,12 @@ class EncoderUtils(object):
         else:
             raise NotImplementedError("{} is not supported".format(config.enc_model_type))
         return tokenizer
+
+    @staticmethod
+    def add_special_tokens(tokenizer, model, special_tokens_dict):
+        previous_tokens = len(tokenizer)
+        num_added_toks = tokenizer.add_special_tokens(special_tokens_dict)
+        if model:
+            model.resize_token_embeddings(len(tokenizer))
+        logger.info("adding special tokens to the dict {}, num_added_toks:{}, total_tokens:{} -> {}".format(
+            special_tokens_dict, num_added_toks, previous_tokens, len(tokenizer)))

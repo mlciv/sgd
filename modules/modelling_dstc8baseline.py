@@ -74,6 +74,7 @@ class DSTC8BaselineModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         else:
             self.encoder = EncoderUtils.create_encoder(self.config)
             EncoderUtils.set_encoder_finetuning_status(self.encoder, args.encoder_finetuning)
+        EncoderUtils.add_special_tokens(self.tokenizer, self.encoder, schema_constants.USER_AGENT_SPECIAL_TOKENS)
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.embedding_dim = self.config.schema_embedding_dim
         self.utterance_embedding_dim = self.config.utterance_embedding_dim

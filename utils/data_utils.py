@@ -20,10 +20,19 @@ from __future__ import division
 
 import re
 import logging
+import json
 
 
 logger = logging.getLogger(__name__)
 
+
+def load_dialogues(dialog_json_filepaths):
+    """Obtain the list of all dialogues from specified json files."""
+    dialogs = []
+    for dialog_json_filepath in sorted(dialog_json_filepaths):
+        with open(dialog_json_filepath) as f:
+            dialogs.extend(json.load(f))
+    return dialogs
 
 def normalize_list_length(input_list, target_len, padding_unit):
     """Post truncate or pad the input list in place to be of target length.
@@ -42,6 +51,34 @@ def normalize_list_length(input_list, target_len, padding_unit):
         del input_list[target_len:]
         assert len(input_list) == target_len
 
+def _tokenize(utterance, bert_tokenizer):
+    """Tokenize the utterance using word-piece tokenization used by BERT.
+       Args:
+       utterance: A string containing the utterance to be tokenized.
+       Returns:
+       bert_tokens: A list of tokens obtained by word-piece tokenization of the
+       utterance.
+       alignments: A dict mapping indices of characters corresponding to start
+       and end positions of words (not subwords) to corresponding indices in
+       bert_tokens list.
+       inverse_alignments: A list of size equal to bert_tokens. Each element is a
+       tuple containing the index of the starting and inclusive ending
+       character of the word corresponding to the subword. This list is used
+       during inference to map word-piece indices to spans in the original
+       utterance.
+       """
+    # After _naive_tokenize, spaces and punctuation marks are all retained, i.e.
+    # direct concatenation of all the tokens in the sequence will be the
+    # original string.
+    tokens = _naive_tokenize(utterance)
+    # Filter out empty tokens and obtain aligned character index for each token.
+    bert_tokens = []
+    for token in tokens:
+        if token.strip():
+            subwords = bert_tokenizer.tokenize(token)
+            bert_tokens.extend(subwords)
+            # The inclusive ending character index corresponding to the word.
+    return bert_tokens
 
 def _naive_tokenize(s):
     """Tokenize a string, separating words, spaces and punctuations."""
