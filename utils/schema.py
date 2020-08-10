@@ -20,7 +20,10 @@ from __future__ import division
 from __future__ import print_function
 
 import json
+import logging
+import argparse
 
+logger = logging.getLogger(__name__)
 
 class ServiceSchema(object):
     """
@@ -204,6 +207,7 @@ class Schema(object):
         """
         Load the schema from the json file.
         """
+        self.schema_json_path = schema_json_path
         with open(schema_json_path) as f:
             schemas = json.load(f)
         self._services = sorted(schema["service_name"] for schema in schemas)
@@ -249,3 +253,46 @@ class Schema(object):
         """
         with open(file_path, "w") as f:
             json.dump(self._schemas, f, indent=2)
+
+    def gen_name_only_description(self):
+        for schema in self._schemas:
+            schema["description"] = schema["service_name"]
+            for slot in schema["slots"]:
+                slot['description'] = slot["name"]
+            for intent in schema["intents"]:
+                intent['description'] = intent["name"]
+
+        self.save_to_file(self.schema_json_path + ".name_only")
+
+def main():
+    # Setup logging
+    logging.basicConfig(
+        format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
+        datefmt="%m/%d/%Y %H:%M:%S",
+        level=logging.INFO
+    )
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--schema_json_path",
+        default=None,
+        type=str,
+        required=True,
+        help="Directory in which all prediction folder are listed")
+
+    parser.add_argument(
+        "--task_name",
+        default=None,
+        type=str,
+        required=True,
+        choices=["name_only", "qa_template", "back_translation"],
+        help="for evaluation.")
+
+    args = parser.parse_args()
+    logger.info("args:{}".format(args))
+    schema = Schema(args.schema_json_path)
+    if args.task_name == "name_only":
+        schema.gen_name_only_description()
+
+if __name__ == "__main__":
+    main()

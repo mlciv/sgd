@@ -7,6 +7,8 @@
   "schema_max_seq_length": 80,
   "utterance_embedding_dim": 768,
   "schema_batch_size": 64,
+  "d_model": 768,
   "num_matching_layer": 2,
-  "nhead": 4
+  "nhead": 4,
+  "dim_feedforward": 2048
 }

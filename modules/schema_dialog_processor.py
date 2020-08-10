@@ -88,19 +88,17 @@ class SchemaDialogProcessor(DataProcessor):
         ]
         return dialog_paths
 
-    @staticmethod
-    def get_schema_file(data_dir, dataset):
+    def get_schema_file(self, data_dir, dataset):
         """
         return the schema file given the data_dir and split
         """
-        return os.path.join(data_dir, dataset, "schema.json")
+        return os.path.join(data_dir, dataset, self._dataset_config.schema_file)
 
-    @staticmethod
-    def get_schemas(data_dir, dataset):
+    def get_schemas(self, data_dir, dataset):
         """
         get all the schema given data_dir and datasplit
         """
-        schema_path = SchemaDialogProcessor.get_schema_file(data_dir, dataset)
+        schema_path = self.get_schema_file(data_dir, dataset)
         schemas = schema.Schema(schema_path)
         return schemas
 
@@ -113,7 +111,7 @@ class SchemaDialogProcessor(DataProcessor):
         examples: a list of `SchemaDSTExample`s.
         """
         dialogs = self.get_whole_dialogs(data_dir, dataset)
-        schemas = SchemaDialogProcessor.get_schemas(data_dir, dataset)
+        schemas = self.get_schemas(data_dir, dataset)
 
         examples = []
         for dialog_idx, dialog in enumerate(dialogs):

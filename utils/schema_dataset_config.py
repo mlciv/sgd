@@ -27,7 +27,7 @@ import collections
 # max_num_intent: Maximum allowed number of intents for a service.
 DatasetConfig = collections.namedtuple("DatasetConfig", [
     "file_ranges", "max_num_cat_slot", "max_num_noncat_slot",
-    "max_num_value_per_cat_slot", "max_num_intent"
+    "max_num_value_per_cat_slot", "max_num_intent", "schema_file"
 ])
 
 DATASET_CONFIG = {
@@ -41,7 +41,9 @@ DATASET_CONFIG = {
             max_num_cat_slot=6,
             max_num_noncat_slot=12,
             max_num_value_per_cat_slot=12,
-            max_num_intent=4),
+            max_num_intent=4,
+            schema_file="schema.json"
+        ),
     "dstc8_single_domain":
         DatasetConfig(
             file_ranges={
@@ -52,7 +54,9 @@ DATASET_CONFIG = {
             max_num_cat_slot=6,
             max_num_noncat_slot=12,
             max_num_value_per_cat_slot=12,
-            max_num_intent=4),
+            max_num_intent=4,
+            schema_file="schema.json"
+        ),
     "dstc8_multi_domain":
         DatasetConfig(
             file_ranges={
@@ -63,7 +67,9 @@ DATASET_CONFIG = {
             max_num_cat_slot=6,
             max_num_noncat_slot=12,
             max_num_value_per_cat_slot=12,
-            max_num_intent=4),
+            max_num_intent=4,
+            schema_file="schema.json"
+        ),
     "dstc8_all":
         DatasetConfig(
             file_ranges={
@@ -74,7 +80,48 @@ DATASET_CONFIG = {
             max_num_cat_slot=6,
             max_num_noncat_slot=12,
             max_num_value_per_cat_slot=12,
-            max_num_intent=4),
+            max_num_intent=4,
+            schema_file="schema.json"
+        ),
+    "dstc8_name_only":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 128),
+                "dev": range(1, 21),
+                "test": range(1, 35)
+            },
+            max_num_cat_slot=6,
+            max_num_noncat_slot=12,
+            max_num_value_per_cat_slot=12,
+            max_num_intent=4,
+            schema_file="schema.json.name_only"
+        ),
+    "dstc8_qa_template":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 128),
+                "dev": range(1, 21),
+                "test": range(1, 35)
+            },
+            max_num_cat_slot=6,
+            max_num_noncat_slot=12,
+            max_num_value_per_cat_slot=12,
+            max_num_intent=4,
+            schema_file="schema.json.qa_template"
+        ),
+    "dstc8_enrich":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 128),
+                "dev": range(1, 21),
+                "test": range(1, 35)
+            },
+            max_num_cat_slot=6,
+            max_num_noncat_slot=12,
+            max_num_value_per_cat_slot=12,
+            max_num_intent=4,
+            schema_file="schema.json.enrich"
+        ),
     "multiwoz21_all":
         DatasetConfig(
             file_ranges={
@@ -85,5 +132,7 @@ DATASET_CONFIG = {
             max_num_cat_slot=9,
             max_num_noncat_slot=4,
             max_num_value_per_cat_slot=47,
-            max_num_intent=1)
+            max_num_intent=1,
+            schema_file="schema.json"
+        ),
 }

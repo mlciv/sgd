@@ -65,8 +65,8 @@ class FlatActiveIntentTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface
 
     pretrained_model_archieve_map = CLS_PRETRAINED_MODEL_ARCHIVE_MAP
 
-    def __init__(self, config=None, args=None, utt_encoder=None, schema_encoder=None):
-        super(FlatActiveIntentTopTrans, self).__init__(config=config)
+    def __init__(self, config=None, args=None, encoder=None, utt_encoder=None, schema_encoder=None):
+        super(FlatActiveIntentTopTransModel, self).__init__(config=config)
         # config is the configuration for pretrained model
         self.config = config
         self.tokenizer = EncoderUtils.create_tokenizer(self.config)
@@ -108,7 +108,7 @@ class FlatActiveIntentTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface
             norm=torch.nn.LayerNorm(self.config.d_model)
         )
 
-        self.intent_final_dropout = torch.nn.Dropout(self.config.intent_final_dropout)
+        self.intent_final_dropout = torch.nn.Dropout(self.config.final_dropout)
         # Project the combined embeddings to obtain logits.
         # then max p_active, if all p_active < 0.5, then it is null
         self.intent_final_proj = torch.nn.Sequential(
@@ -153,7 +153,7 @@ class FlatActiveIntentTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface
         # TODO: for model type
         final_cls = trans_output[:, 0, :]
         if is_training:
-            final_cls = self.final_dropout(final_cls)
+            final_cls = self.intent_final_dropout(final_cls)
         # TODO: use the first [CLS] for classification, if XLNET, it is the last one
         output = final_proj(final_cls)
         return output
@@ -161,10 +161,10 @@ class FlatActiveIntentTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface
     def _get_intents(self, features, is_training):
         """Obtain logits for intents."""
         # we only use cls token for matching, either finetuned cls and fixed cls
-        encoded_utt_cls, encoded_utt_tokens, encoded_utt_mask = self._encode_utterance(
-            self.tokenizer, self.encoder, features, self.utterance_dropout, is_training)
+        encoded_utt_cls, encoded_utt_tokens, encoded_utt_mask = self._encode_utterances(
+            self.tokenizer, self.utt_encoder, features, self.utterance_dropout, is_training)
         encoded_schema_cls, encoded_schema_tokens, encoded_schema_mask = self._encode_schema(
-            self.tokenizer, self.encoder, features, self.schema_dropout, "intent", is_training)
+            self.tokenizer, self.schema_encoder, features, self.schema_dropout, "intent", is_training)
         logits = self._get_logits(
             encoded_schema_tokens, encoded_schema_mask,
             encoded_utt_tokens, encoded_utt_mask,
