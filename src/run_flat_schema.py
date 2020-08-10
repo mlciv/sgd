@@ -52,6 +52,7 @@ from modules.flat_active_intent_toptrans import FlatActiveIntentTopTransModel
 from modules.flat_requested_slots_bert_snt_pair_match import FlatRequestedSlotsBERTSntPairMatchModel
 from modules.flat_requested_slots_toptrans import FlatRequestedSlotsTopTrans
 from modules.flat_cat_slots_bert_snt_pair_match import FlatCatSlotsBERTSntPairMatchModel
+from modules.flat_cat_slots_toptrans import FlatCatSlotsTopTransModel
 from modules.flat_noncat_slots_bert_snt_pair_match import FlatNonCatSlotsBERTSntPairMatchModel
 from modules.flat_noncat_slots_toptrans import FlatNonCatSlotsTopTransModel
 from modules.schema_embedding_generator import SchemaEmbeddingGenerator
@@ -85,7 +86,8 @@ MODEL_CLASSES = {
     "flat_noncat_slots_bert_snt_pair_match": (FlatNonCatSlotsBERTSntPairMatchModel, SchemaNonCatSlotProcessor),
     "flat_active_intent_toptrans": (FlatActiveIntentTopTransModel, SchemaIntentProcessor),
     "flat_requested_slots_toptrans": (FlatRequestedSlotsTopTrans, SchemaReqSlotProcessor),
-    "flat_noncat_slots_toptrans": (FlatRequestedSlotsTopTrans, SchemaNonCatSlotProcessor)
+    "flat_cat_slots_toptrans": (FlatCatSlotsTopTransModel, SchemaCatSlotProcessor),
+    "flat_noncat_slots_toptrans": (FlatNonCatSlotsTopTransModel, SchemaNonCatSlotProcessor)
 }
 
 NO_EMBEDDING_CLASSES = []
