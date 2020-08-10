@@ -142,6 +142,11 @@ class SchemaEmbeddingGenerator(nn.Module):
                         schemas,
                         schema_embedding_file,
                         args.dataset_config)
+                elif config.schema_embedding_type == "flat_seq2_feature":
+                    schema_data = schema_emb_generator.save_flat_seq2_feature_tensors(
+                        schemas,
+                        schema_embedding_file,
+                        args.dataset_config)
                 else:
                     raise NotImplementedError(
                         "config.schema_embedding_type {} is not implemented".format(config.schema_embedding_type))
@@ -381,7 +386,8 @@ class SchemaEmbeddingGenerator(nn.Module):
                     nl_seq, "cat_slot_value",
                     service_schema.service_id, slot_id, value_id))
         return features
-    def _get_cat_slots_and_values_input_features(self, service_schema):
+
+    def _get_cat_slots_and_values_input_flat_seq2_features(self, service_schema):
         """Get BERT input features for all goal slots and categorical values.
         We use "[service description] ||| [slot name] [slot description]" as a
         slot's full description.
@@ -402,16 +408,23 @@ class SchemaEmbeddingGenerator(nn.Module):
 
         for slot_id, slot in enumerate(service_schema.categorical_slots):
             nl_seq = " ".join(
-                [service_des, _NL_SEPARATOR, slot, slot_descriptions[slot]])
-            features.append(self._create_feature(
+                [service_des, slot, slot_descriptions[slot]])
+            features.append(self._create_seq2_feature(
                 nl_seq, "cat_slot",
                 service_schema.service_id, slot_id))
             for value_id, value in enumerate(
                     service_schema.get_categorical_slot_values(slot)):
-                nl_seq = " ".join([slot, slot_descriptions[slot], _NL_SEPARATOR, value])
-                features.append(self._create_feature(
+                nl_seq = " ".join([slot, slot_descriptions[slot], value])
+                features.append(self._create_seq2_feature(
                     nl_seq, "cat_slot_value",
-                    service_schema.service_id, slot_id, value_id))
+                    service_schema.service_id, slot_id, value_id + self.special_cat_value_offset))
+            # after all values, adding STR_DONTCARE
+            # value_id always the last one
+            nl_seq = " ".join([slot, slot_descriptions[slot], schema_constants.STR_DONTCARE])
+            features.append(self._create_seq2_feature(
+                nl_seq, "cat_slot_value",
+                service_schema.service_id, slot_id, self.dontcare_value_id))
+
         return features
 
     def _get_cat_slots_and_values_input_seq2_features(self, service_schema):
@@ -518,6 +531,23 @@ class SchemaEmbeddingGenerator(nn.Module):
         noncat_slot_features = self._get_noncat_slots_input_features(service_schema)
         return cat_slot_features + noncat_slot_features
 
+    def _get_goal_slots_and_values_input_flat_seq2_features(self, service_schema):
+        """Get BERT input features for all goal slots and categorical values.
+        We use "[service description] ||| [slot name] [slot description]" as a
+        slot's full description.
+        We use ""[slot name] [slot description] ||| [value name]" as a categorical
+        slot value's full description.
+        Args:
+        service_schema: A ServiceSchema object containing the schema for the
+        corresponding service.
+        Returns:
+        A list of InputFeatures containing features to be given as input to the
+        BERT model.
+        """
+        cat_slot_features = self._get_cat_slots_and_values_input_flat_seq2_features(service_schema)
+        noncat_slot_features = self._get_noncat_slots_input_seq2_features(service_schema)
+        return cat_slot_features + noncat_slot_features
+
     def _get_goal_slots_and_values_input_seq2_features(self, service_schema):
         """Get BERT input features for all goal slots and categorical values.
         We use "[service description] ||| [slot name] [slot description]" as a
@@ -553,6 +583,23 @@ class SchemaEmbeddingGenerator(nn.Module):
         return features
 
     def _get_input_schema_seq2_features(self, schemas):
+        """Get the input function to compute schema element embeddings.
+        Args:
+        schemas: A wrapper for all service schemas in the dataset to be embedded.
+        Returns:
+        The input_fn to be passed to the estimator.
+        """
+        # Obtain all the features.
+        features = []
+        for service in schemas.services:
+            service_schema = schemas.get_service_schema(service)
+            features.extend(self._get_intents_input_seq2_features(service_schema))
+            features.extend(self._get_req_slots_input_seq2_features(service_schema))
+            features.extend(
+                self._get_goal_slots_and_values_input_seq2_features(service_schema))
+        return features
+
+    def _get_input_schema_flat_seq2_features(self, schemas):
         """Get the input function to compute schema element embeddings.
         Args:
         schemas: A wrapper for all service schemas in the dataset to be embedded.
@@ -746,6 +793,30 @@ class SchemaEmbeddingGenerator(nn.Module):
         logger.info("Schema Feature Tensors saved into {}".format(output_file))
         return schema_input_features
 
+    def _populate_schema_flat_seq2_feature_tensors(self, schemas, schema_features):
+        """Run the BERT estimator and populate all schema embeddings."""
+        features = self._get_input_schema_flat_seq2_features(schemas)
+        # prepare features into tensor dataset
+        completed_services = set()
+        # not batch or sampler
+        for feature in features:
+            service = schemas.get_service_from_id(feature.service_id)
+            if service not in completed_services:
+                logger.info("Generating schema feature for service %s.", service)
+                completed_services.add(service)
+            schema_type = feature.schema_type
+            input_ids_mat = schema_features[feature.service_id][feature.input_ids_tensor_name]
+            input_mask_mat = schema_features[feature.service_id][feature.input_mask_tensor_name]
+            input_type_ids_mat = schema_features[feature.service_id][feature.input_type_ids_tensor_name]
+            if schema_type == "cat_slot_value":
+                input_ids_mat[feature.intent_or_slot_id, feature.value_id] = feature.input_ids
+                input_mask_mat[feature.intent_or_slot_id, feature.value_id] = feature.input_mask
+                input_type_ids_mat[feature.intent_or_slot_id, feature.value_id] = feature.input_type_ids
+            else:
+                input_ids_mat[feature.intent_or_slot_id] = feature.input_ids
+                input_mask_mat[feature.intent_or_slot_id] = feature.input_mask
+                input_type_ids_mat[feature.intent_or_slot_id] = feature.input_type_ids
+
     def _populate_schema_seq2_feature_tensors(self, schemas, schema_features):
         """Run the BERT estimator and populate all schema embeddings."""
         features = self._get_input_schema_seq2_features(schemas)
@@ -802,4 +873,43 @@ class SchemaEmbeddingGenerator(nn.Module):
         with open(output_file, "wb") as f_s:
             np.save(f_s, schema_input_features)
         logger.info("Schema Feature Seq2 Tensors saved into {}".format(output_file))
+        return schema_input_features
+
+    def save_flat_seq2_feature_tensors(self, schemas, output_file, dataset_config):
+        """Generate schema input tensors and save it as a numpy file."""
+        schema_input_features = []
+        max_num_intent = dataset_config.max_num_intent
+        max_num_cat_slot = dataset_config.max_num_cat_slot
+        max_num_noncat_slot = dataset_config.max_num_noncat_slot
+        max_num_slot = max_num_cat_slot + max_num_noncat_slot
+        max_num_value = dataset_config.max_num_value_per_cat_slot
+        # with dontcare
+        max_aug_num_value = max_num_value + 1
+        # the first cat value is 0, all other value id shift by 1
+        self.dontcare_value_id = schema_constants.VALUE_DONTCARE_ID
+        self.special_cat_value_offset = schema_constants.SPECIAL_CAT_VALUE_OFFSET
+        max_seq_length = self.max_seq_length
+        for _ in schemas.services:
+            schema_input_features.append({
+                "intent_input_ids": np.zeros([max_num_intent, max_seq_length]),
+                "intent_input_mask": np.zeros([max_num_intent, max_seq_length]),
+                "intent_input_type_ids": np.zeros([max_num_intent, max_seq_length]),
+                "req_slot_input_ids": np.zeros([max_num_slot, max_seq_length]),
+                "req_slot_input_mask": np.zeros([max_num_slot, max_seq_length]),
+                "req_slot_input_type_ids": np.zeros([max_num_slot, max_seq_length]),
+                "cat_slot_input_ids": np.zeros([max_num_cat_slot, max_seq_length]),
+                "cat_slot_input_mask": np.zeros([max_num_cat_slot, max_seq_length]),
+                "cat_slot_input_type_ids": np.zeros([max_num_cat_slot, max_seq_length]),
+                "cat_slot_value_input_ids": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
+                "cat_slot_value_input_mask": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
+                "cat_slot_value_input_type_ids": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
+                "noncat_slot_input_ids": np.zeros([max_num_noncat_slot, max_seq_length]),
+                "noncat_slot_input_mask": np.zeros([max_num_noncat_slot, max_seq_length]),
+                "noncat_slot_input_type_ids": np.zeros([max_num_noncat_slot, max_seq_length]),
+            })
+        # Populate the embeddings based on bert inference results and save them.
+        self._populate_schema_flat_seq2_feature_tensors(schemas, schema_input_features)
+        with open(output_file, "wb") as f_s:
+            np.save(f_s, schema_input_features)
+        logger.info("Schema Feature Flat Seq2 Tensors saved into {}".format(output_file))
         return schema_input_features

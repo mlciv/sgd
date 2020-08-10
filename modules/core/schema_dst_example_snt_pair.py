@@ -19,13 +19,13 @@ class BaseBertExample(object):
                  example_id,
                  service_id,
                  input_ids,
-                 input_mask,
-                 input_seg):
+                 input_masks,
+                 input_token_type_ids):
         self.example_id = example_id
         self.service_id = service_id
         self.input_ids = input_ids
-        self.input_mask = input_mask
-        self.input_seg = input_seg
+        self.input_mask = input_masks
+        self.input_token_type_ids = input_token_type_ids
 
 class ActiveIntentExample(BaseBertExample):
     """
@@ -35,16 +35,16 @@ class ActiveIntentExample(BaseBertExample):
                  example_id,
                  service_id,
                  input_ids,
-                 input_mask,
-                 input_seg,
+                 input_masks,
+                 input_token_type_ids,
                  intent_id,
                  intent_status):
-        super(ActiveIntentExample, self).__init__(example_id, service_id, input_ids, input_mask, input_seg)
+        super(ActiveIntentExample, self).__init__(example_id, service_id, input_ids, input_masks, input_token_type_ids)
         self.example_id = example_id
         self.service_id = service_id
         self.input_ids = input_ids
-        self.input_mask = input_mask
-        self.input_seg = input_seg
+        self.input_mask = input_masks
+        self.input_token_type_ids = input_token_type_ids
         self.intent_id = intent_id
         self.intent_status = intent_status
 
@@ -56,16 +56,16 @@ class RequestedSlotExample(BaseBertExample):
                  example_id,
                  service_id,
                  input_ids,
-                 input_mask,
-                 input_seg,
+                 input_masks,
+                 input_token_type_ids,
                  requested_slot_id,
                  requested_slot_status):
-        super(RequestedSlotExample, self).__init__(example_id, service_id, input_ids, input_mask, input_seg)
+        super(RequestedSlotExample, self).__init__(example_id, service_id, input_ids, input_masks, input_token_type_ids)
         self.example_id = example_id
         self.service_id = service_id
         self.input_ids = input_ids
-        self.input_mask = input_mask
-        self.input_token_type_ids = input_seg
+        self.input_mask = input_masks
+        self.input_token_type_ids = input_token_type_ids
         self.requested_slot_id = requested_slot_id
         self.requested_slot_status = requested_slot_status
 
@@ -77,21 +77,21 @@ class CatSlotExample(BaseBertExample):
                  example_id,
                  service_id,
                  input_ids,
-                 input_mask,
-                 input_seg,
+                 input_masks,
+                 input_token_type_ids,
                  cat_slot_id,
                  cat_slot_status,
                  cat_slot_value_id,
                  cat_slot_value_status):
-        super(CatSlotExample, self).__init__(example_id, service_id, input_ids, input_mask, input_seg)
+        super(CatSlotExample, self).__init__(example_id, service_id, input_ids, input_masks, input_token_type_ids)
         self.example_id = example_id
         self.service_id = service_id
         self.input_ids = input_ids
-        self.input_mask = input_mask
-        self.input_seg = input_seg
+        self.input_mask = input_masks
+        self.input_token_type_ids = input_token_type_ids
         self.cat_slot_id = cat_slot_id
-        self.cat_slot_value_id = cat_slot_value_id
         self.cat_slot_status = cat_slot_status
+        self.cat_slot_value_id = cat_slot_value_id
         self.cat_slot_value_status = cat_slot_value_status
         # adding doncare and off two value, change it to binary check
 
@@ -103,27 +103,22 @@ class NonCatSlotExample(BaseBertExample):
                  example_id,
                  service_id,
                  input_ids,
-                 input_mask,
-                 input_seg,
+                 input_masks,
+                 input_token_type_ids,
                  noncat_slot_id,
-                 noncat_start_char_idx,
-                 noncat_end_char_idx,
                  noncat_slot_status,
                  noncat_slot_value_start,
                  noncat_slot_value_end):
-        super(NonCatSlotExample, self).__init__(example_id, service_id, input_ids, input_mask, input_seg)
+        super(NonCatSlotExample, self).__init__(example_id, service_id, input_ids, input_masks, input_token_type_ids)
         self.example_id = example_id
         self.service_id = service_id
         self.input_ids = input_ids
-        self.input_mask = input_mask
-        self.input_seg = input_seg
+        self.input_mask = input_masks
+        self.input_token_type_ids = input_token_type_ids
         self.noncat_slot_id = noncat_slot_id
-        self.noncat_start_char_idx = noncat_start_char_idx
-        self.noncat_end_char_idx = noncat_end_char_idx
         self.noncat_slot_status = noncat_slot_status
         self.noncat_slot_value_start = noncat_slot_value_start
         self.noncat_slot_value_end = noncat_slot_value_end
-
 
 class SchemaDSTExample(object):
     """
@@ -579,6 +574,10 @@ class SchemaDSTExample(object):
         """
         categorical_slots = self.service_schema.categorical_slots
         self.num_categorical_slots = len(categorical_slots)
+        slot_descriptions = {
+            s["name"]: s["description"] for s in self.service_schema.schema_json["slots"]
+        }
+        service_des = self.service_schema.description
         cat_slot_examples = []
         for slot_idx, slot in enumerate(categorical_slots):
             values = state_update.get(slot, [])
@@ -592,11 +591,17 @@ class SchemaDSTExample(object):
                 # all slot value is off, but the slot value off is on
                 for v in slot_values:
                     # skip doncare and off
-                    v_id = self.service_schema.get_categorical_slot_value_id(slot, v) + schema_constants.SPECIAL_CAT_VALUE_OFFSET
-                    tmp_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, v_id, schema_constants.STATUS_OFF)
+                    nl_seq = " ".join(
+                        [service_des, slot, slot_descriptions[slot], v])
+                    paired_input_ids, paired_mask, paired_seg = self.create_context_schema_features(nl_seq)
+                    v_id = self.service_schema.get_categorical_slot_value_id(slot, v) + 2
+                    tmp_cat_slot_example = CatSlotExample(self.example_id, self.service_id, paired_input_ids, paired_mask, paired_seg, slot_idx, cat_slot_status, v_id, schema_constants.STATUS_OFF)
                     cat_slot_examples.append(tmp_cat_slot_example)
                 # make doncare value as OFF
-                donotcare_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, schema_constants.VALUE_DONTCARE_ID, schema_constants.STATUS_OFF)
+                dontcare_nl_seq = " ".join(
+                    [service_des, slot, slot_descriptions[slot], schema_constants.STR_DONTCARE])
+                dontcare_paired_input_ids, dontcare_paired_mask, dontcare_paired_seg = self.create_context_schema_features(dontcare_nl_seq)
+                donotcare_cat_slot_example = CatSlotExample(self.example_id, self.service_id, dontcare_paired_input_ids, dontcare_paired_mask, dontcare_paired_seg, slot_idx, cat_slot_status, 0, schema_constants.STATUS_OFF)
                 cat_slot_examples.append(donotcare_cat_slot_example)
             elif values[0] == schema_constants.STR_DONTCARE:
                 # use a spaecial value dontcare
@@ -605,13 +610,19 @@ class SchemaDSTExample(object):
 # all slot value is off, but the slot value off is on
                 for v in slot_values:
                     # skip doncare and off
-                    v_id = self.service_schema.get_categorical_slot_value_id(slot, v) + schema_constants.SPECIAL_CAT_VALUE_OFFSET
+                    nl_seq = " ".join(
+                        [service_des, slot, slot_descriptions[slot], v])
+                    paired_input_ids, paired_mask, paired_seg = self.create_context_schema_features(nl_seq)
+                    v_id = self.service_schema.get_categorical_slot_value_id(slot, v) + 2
                     tmp_cat_slot_example = CatSlotExample(
-                        self.example_id, self.service_id, self.utterance_ids,
-                        self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, v_id, schema_constants.STATUS_OFF)
+                        self.example_id, self.service_id, paired_input_ids,
+                        paired_mask, paired_seg, slot_idx, cat_slot_status, v_id, schema_constants.STATUS_OFF)
                     cat_slot_examples.append(tmp_cat_slot_example)
                 # make doncare value as OFF
-                donotcare_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, schema_constants.VALUE_DONTCARE_ID, schema_constants.STATUS_ACTIVE)
+                dontcare_nl_seq = " ".join(
+                    [service_des, slot, slot_descriptions[slot], schema_constants.STR_DONTCARE])
+                dontcare_paired_input_ids, dontcare_paired_mask, dontcare_paired_seg = self.create_context_schema_features(dontcare_nl_seq)
+                donotcare_cat_slot_example = CatSlotExample(self.example_id, self.service_id, dontcare_paired_input_ids, dontcare_paired_mask, dontcare_paired_seg, slot_idx, cat_slot_status, 0, schema_constants.STATUS_ACTIVE)
                 cat_slot_examples.append(donotcare_cat_slot_example)
             else:
                 self.categorical_slot_status[slot_idx] = schema_constants.STATUS_ACTIVE
@@ -622,15 +633,21 @@ class SchemaDSTExample(object):
                 # all slot value is off,  except value[0]
                 for v in slot_values:
                     # skip doncare and off
-                    v_id = self.service_schema.get_categorical_slot_value_id(slot, v) + schema_constants.SPECIAL_CAT_VALUE_OFFSET
+                    nl_seq = " ".join(
+                        [service_des, slot, slot_descriptions[slot], v])
+                    paired_input_ids, paired_mask, paired_seg = self.create_context_schema_features(nl_seq)
+                    v_id = self.service_schema.get_categorical_slot_value_id(slot, v) + 2
                     if v != values[0]:
-                        tmp_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, v_id, schema_constants.STATUS_OFF)
+                        tmp_cat_slot_example = CatSlotExample(self.example_id, self.service_id, paired_input_ids, paired_mask, paired_seg, slot_idx, cat_slot_status, v_id, schema_constants.STATUS_OFF)
                         cat_slot_examples.append(tmp_cat_slot_example)
                     else:
-                        tmp_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, v_id, schema_constants.STATUS_ACTIVE)
+                        tmp_cat_slot_example = CatSlotExample(self.example_id, self.service_id, paired_input_ids, paired_mask, paired_seg, slot_idx, cat_slot_status, v_id, schema_constants.STATUS_ACTIVE)
                         cat_slot_examples.append(tmp_cat_slot_example)
                 # make doncare value as OFF
-                donotcare_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, schema_constants.VALUE_DONTCARE_ID, schema_constants.STATUS_OFF)
+                dontcare_nl_seq = " ".join(
+                    [service_des, slot, slot_descriptions[slot], schema_constants.STR_DONTCARE])
+                dontcare_paired_input_ids, dontcare_paired_mask, dontcare_paired_seg = self.create_context_schema_features(dontcare_nl_seq)
+                donotcare_cat_slot_example = CatSlotExample(self.example_id, self.service_id, dontcare_paired_input_ids, dontcare_paired_mask, dontcare_paired_seg, slot_idx, cat_slot_status, 0, schema_constants.STATUS_OFF)
                 cat_slot_examples.append(donotcare_cat_slot_example)
 
         return cat_slot_examples
@@ -643,6 +660,10 @@ class SchemaDSTExample(object):
         """
         noncategorical_slots = self.service_schema.non_categorical_slots
         self.num_noncategorical_slots = len(noncategorical_slots)
+        slot_descriptions = {
+            s["name"]: s["description"] for s in self.service_schema.schema_json["slots"]
+        }
+        service_des = self.service_schema.description
         noncat_slot_examples = []
         for slot_idx, slot in enumerate(noncategorical_slots):
             values = state_update.get(slot, [])
@@ -720,11 +741,13 @@ class SchemaDSTExample(object):
                 self.noncategorical_slot_value_start[slot_idx] = start
                 self.noncategorical_slot_value_end[slot_idx] = end
 
+            nl_seq = " ".join(
+                [service_des, slot, slot_descriptions[slot]])
+            paired_input_ids, paired_mask, paired_seg = self.create_context_schema_features(nl_seq)
             noncat_slot_example = NonCatSlotExample(
                 self.example_id, self.service_id,
-                self.utterance_ids, self.utterance_mask, self.utterance_segment,
-                slot_idx, self.start_char_idx, self.end_char_idx,
-                noncat_slot_status, start, end
+                paired_input_ids, paired_mask, paired_seg,
+                slot_idx, noncat_slot_status, start, end
             )
             noncat_slot_examples.append(noncat_slot_example)
         return noncat_slot_examples
@@ -735,6 +758,10 @@ class SchemaDSTExample(object):
         """
         all_slots = self.service_schema.slots
         self.num_slots = len(all_slots)
+        slot_descriptions = {
+            s["name"]: s["description"] for s in self.service_schema.schema_json["slots"]
+        }
+        service_des = self.service_schema.description
         req_slot_examples = []
         for slot_idx, slot in enumerate(all_slots):
             if slot in frame["state"]["requested_slots"]:
@@ -742,9 +769,12 @@ class SchemaDSTExample(object):
                 req_slot_status = schema_constants.STATUS_ACTIVE
             else:
                 req_slot_status = schema_constants.STATUS_OFF
+            nl_seq = " ".join(
+                [service_des, slot, slot_descriptions[slot]])
+            paired_input_ids, paired_mask, paired_seg = self.create_context_schema_features(nl_seq)
             req_slot_example = RequestedSlotExample(
                 self.example_id, self.service_id,
-                self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, req_slot_status)
+                paired_input_ids, paired_mask, paired_seg, slot_idx, req_slot_status)
             req_slot_examples.append(req_slot_example)
         return req_slot_examples
 
@@ -754,6 +784,11 @@ class SchemaDSTExample(object):
         """
         all_intents = self.service_schema.intents
         self.num_intents = len(all_intents)
+        intent_descriptions = {
+            i["name"]: i["description"]
+            for i in self.service_schema.schema_json["intents"]
+        }
+        service_des = self.service_schema.description
         active_intent_examples = []
         for intent_idx, intent in enumerate(all_intents):
             if intent == frame["state"]["active_intent"]:
@@ -761,60 +796,63 @@ class SchemaDSTExample(object):
                 intent_status = schema_constants.STATUS_ACTIVE
             else:
                 intent_status = schema_constants.STATUS_OFF
+            nl_seq = " ".join(
+                [service_des, intent, intent_descriptions[intent]])
+            paired_input_ids, paired_mask, paired_seg = self.create_context_schema_features(nl_seq)
             active_intent_example = ActiveIntentExample(
-                self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, intent_idx, intent_status)
+                self.example_id, self.service_id, paired_input_ids, paired_mask, paired_seg, intent_idx, intent_status)
             active_intent_examples.append(active_intent_example)
         return active_intent_examples
 
-#    def create_context_schema_features(self, nl_seq):
-#        """
-#        create seq2 schema feature first, then concatenate it with unpadded untterance features.
-#        """
-#        schema_ids, schema_seg, schema_mask = self.create_schema_seq2_features(nl_seq)
-#        paired_input_ids = []
-#        paired_input_ids.extend(self.unpadded_utterance_ids)
-#        paired_input_ids.extend(schema_ids)
-#        paired_mask = []
-#        paired_mask.extend(self.unpadded_utterance_mask)
-#        paired_mask.extend(schema_mask)
-#        paired_seg = []
-#        paired_seg.extend(self.unpadded_utterance_segment)
-#        paired_seg.extend(schema_seg)
-#
-#        # Zero-pad up to the BERT input sequence length.
-#        while len(paired_input_ids) < self._max_seq_length:
-#            paired_input_ids.append(self._tokenizer.pad_token_id)
-#            paired_seg.append(self._tokenizer.pad_token_type_id)
-#            paired_mask.append(0)
-#
-#        return paired_input_ids, paired_seg, paired_mask
-#
-#    def create_schema_seq2_features(self, input_line):
-#        """
-#        given a schema description line, create the features.
-#        """
-#        line = input_line.strip()
-#        bert_tokens = data_utils._tokenize(line, self._tokenizer)
-#        # Construct the tokens, segment mask and valid token mask which will be
-#        # input to BERT, using the tokens for system utterance (sequence A) and
-#        # user utterance (sequence B).
-#        schema_subword = []
-#        schema_seg = []
-#        schema_mask = []
-#
-#        if isinstance(self._tokenizer, RobertaTokenizer):
-#            schema_subword.append(self._tokenizer.cls_token)
-#            schema_seg.append(1)
-#            schema_mask.append(1)
-#
-#        for subword_idx, subword in enumerate(bert_tokens):
-#            schema_subword.append(subword)
-#            schema_seg.append(1)
-#            schema_mask.append(1)
-#
-#        schema_subword.append(self._tokenizer.sep_token)
-#        schema_seg.append(1)
-#        schema_mask.append(1)
-#        # convert subwords to ids
-#        schema_ids = self._tokenizer.convert_tokens_to_ids(schema_subword)
-#        return schema_ids, schema_seg, schema_mask
+    def create_context_schema_features(self, nl_seq):
+        """
+        create seq2 schema feature first, then concatenate it with unpadded untterance features.
+        """
+        schema_ids, schema_seg, schema_mask = self.create_schema_seq2_features(nl_seq)
+        paired_input_ids = []
+        paired_input_ids.extend(self.unpadded_utterance_ids)
+        paired_input_ids.extend(schema_ids)
+        paired_mask = []
+        paired_mask.extend(self.unpadded_utterance_mask)
+        paired_mask.extend(schema_mask)
+        paired_seg = []
+        paired_seg.extend(self.unpadded_utterance_segment)
+        paired_seg.extend(schema_seg)
+
+        # Zero-pad up to the BERT input sequence length.
+        while len(paired_input_ids) < self._max_seq_length:
+            paired_input_ids.append(self._tokenizer.pad_token_id)
+            paired_seg.append(self._tokenizer.pad_token_type_id)
+            paired_mask.append(0)
+
+        return paired_input_ids, paired_seg, paired_mask
+
+    def create_schema_seq2_features(self, input_line):
+        """
+        given a schema description line, create the features.
+        """
+        line = input_line.strip()
+        bert_tokens = data_utils._tokenize(line, self._tokenizer)
+        # Construct the tokens, segment mask and valid token mask which will be
+        # input to BERT, using the tokens for system utterance (sequence A) and
+        # user utterance (sequence B).
+        schema_subword = []
+        schema_seg = []
+        schema_mask = []
+
+        if isinstance(self._tokenizer, RobertaTokenizer):
+            schema_subword.append(self._tokenizer.cls_token)
+            schema_seg.append(1)
+            schema_mask.append(1)
+
+        for subword_idx, subword in enumerate(bert_tokens):
+            schema_subword.append(subword)
+            schema_seg.append(1)
+            schema_mask.append(1)
+
+        schema_subword.append(self._tokenizer.sep_token)
+        schema_seg.append(1)
+        schema_mask.append(1)
+        # convert subwords to ids
+        schema_ids = self._tokenizer.convert_tokens_to_ids(schema_subword)
+        return schema_ids, schema_seg, schema_mask

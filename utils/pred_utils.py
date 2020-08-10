@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 
 REQ_SLOT_THRESHOLD = 0.5
 ACTIVE_INTENT_THRESHOLD = 0.5
+CAT_VALUE_THRESHOLD = 0.5
 
 
 def get_predicted_dialog(dialog, all_predictions, schemas):
@@ -52,20 +53,30 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
     # The slot values tracked for each service.
     all_slot_values = collections.defaultdict(dict)
     # concatenating without any token
-    global_utterance_for_index = ''.join([t["utterance"] for t in dialog["turns"]])
+    global_utterance_for_index = ''
     for turn_idx, turn in enumerate(dialog["turns"]):
+        # inclusive
+        current_utt_start_char_index = len(global_utterance_for_index)
+        global_utterance_for_index = global_utterance_for_index + turn["utterance"]
+        # exclusive
+        current_utt_end_char_index = len(global_utterance_for_index)
         if turn["speaker"] == "USER":
             # user_utterance = turn["utterance"]
             # system_utterance = (
             #    dialog["turns"][turn_idx - 1]["utterance"] if turn_idx else "")
             for frame in turn["frames"]:
-                predictions = all_predictions[(dialog_id, turn_idx, frame["service"])]
+                dial_key = (dialog_id, turn_idx, frame["service"])
+                if dial_key in all_predictions:
+                    predictions = all_predictions[(dialog_id, turn_idx, frame["service"])]
+                else:
+                    logger.warn("{} not found in predictions".format(dial_key))
+                    continue
                 # logger.info("dial_id:{}, turn_idx:{}, predictions:{}".format(dialog_id, turn_idx, predictions))
                 slot_values = all_slot_values[frame["service"]]
                 service_schema = schemas.get_service_schema(frame["service"])
                 # Remove the slot spans and state if present.
-                frame.pop("slots", None)
-                frame.pop("state", None)
+                gd_slots = frame.pop("slots", None)
+                gd_state = frame.pop("state", None)
 
                 # The baseline model doesn't predict slot spans. Only state predictions
                 # are added.
@@ -85,7 +96,7 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                         has_intent = any([p_active > ACTIVE_INTENT_THRESHOLD for p_active in predictions["intent_status"]])
                         if has_intent:
                             # add negative score for padding, to make sure the intent ids are valid
-                            active_intent_id = torch.argmax(predictions["intent_status"])
+                            active_intent_id = torch.argmax(predictions["intent_status"]) if isinstance(predictions["intent_status"], torch.Tensor) else torch.argmax(torch.FloatTensor(predictions["intent_status"]))
                             active_intent = service_schema.get_intent_from_id(active_intent_id)
                         else:
                             active_intent = "NONE"
@@ -108,10 +119,30 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                             slot_values[slot] = schema_constants.STR_DONTCARE
                         elif slot_status == schema_constants.STATUS_ACTIVE:
                             value_idx = predictions["cat_slot_value"][slot_idx]
-                            slot_values[slot] = (
-                                service_schema.get_categorical_slot_values(slot)[value_idx])
+                            if value_idx >= 0:
+                                slot_values[slot] = (
+                                    service_schema.get_categorical_slot_values(slot)[value_idx])
+                elif "cat_slot_value_status" in predictions:
+                    # for flattent case
+                    for slot_idx, slot in enumerate(service_schema.categorical_slots):
+                        # value is shifted by SPECIAL_CAT_VALUE_OFFSET
+                        has_value = any([p_active > CAT_VALUE_THRESHOLD for p_active in predictions["cat_slot_value_status"][slot_idx]])
+                        if has_value:
+                            # add negative score for padding, to make sure the intent ids are valid
+                            value_id = torch.argmax(torch.FloatTensor(predictions["cat_slot_value_status"][slot_idx]))
+                            value_idx = value_id - schema_constants.SPECIAL_CAT_VALUE_OFFSET
+                            cat_values = service_schema.get_categorical_slot_values(slot)
+                            # logger.info("{} has value: predictions['cat_slots_value_status']={}, slot_idx={}, slot={}, cat_values={}, value_id={}, gd_value={}".format(dial_key, predictions["cat_slot_value_status"][slot_idx], slot_idx, slot, cat_values, value_id, gd_state["slot_values"].get(slot, "NONE")))
+                            if value_id == schema_constants.VALUE_DONTCARE_ID:
+                                # dontcare
+                                slot_values[slot] = schema_constants.STR_DONTCARE
+                            else:
+                                if 0 <= value_idx < len(cat_values):
+                                    slot_values[slot] = cat_values[value_idx]
 
+                # We didn't do turn-level slot tagging F1 here.
                 # Non-categorical slots.
+                slots = []
                 if "noncat_slot_status" in predictions:
                     for slot_idx, slot in enumerate(service_schema.non_categorical_slots):
                         slot_status = predictions["noncat_slot_status"][slot_idx]
@@ -120,10 +151,20 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                         elif slot_status == schema_constants.STATUS_ACTIVE:
                             tok_start_idx = predictions["noncat_slot_start"][slot_idx]
                             tok_end_idx = predictions["noncat_slot_end"][slot_idx]
-                            ch_start_idx = predictions["noncat_alignment_start"][tok_start_idx]
-                            ch_end_idx = predictions["noncat_alignment_end"][tok_end_idx]
+                            if tok_start_idx < 0 or tok_end_idx < 0:
+                                continue
+                            ch_start_idx = predictions["noncat_alignment_start"][tok_start_idx].item()
+                            ch_end_idx = predictions["noncat_alignment_end"][tok_end_idx].item()
+                            if ch_start_idx >= current_utt_start_char_index and ch_end_idx <= current_utt_end_char_index:
+                                # this slot is in the current utterance
+                                slot_span = {}
+                                slot_span["slot"] = slot
+                                slot_span["start"] = ch_start_idx - current_utt_start_char_index
+                                slot_span["exclusive_end"] = ch_end_idx - current_utt_start_char_index
+                                slots.append(slot_span)
+
                             # shift the char index by one
-                            slot_values[slot] = global_utterance_for_index[ch_start_idx-1:ch_end_idx]
+                            slot_values[slot] = global_utterance_for_index[ch_start_idx - 1:ch_end_idx]
                             # TO SUPPORT old utternace features
                             #if ch_start_idx < 0 and ch_end_idx < 0:
                             #    # Add span from the system utterance.
@@ -135,7 +176,9 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                             # directly use global offset
                 # Create a new dict to avoid overwriting the state in previous turns
                 # because of use of same objects.
+                frame["slots"] = slots
                 state["slot_values"] = {s: [v] for s, v in slot_values.items()}
+                # logger.info("dial_key:{}, slot_values:{}".format(dial_key, slot_values))
                 frame["state"] = state
     return dialog
 
@@ -144,14 +187,18 @@ def get_predictions_index_dict(predictions, ):
     """
     get the prediction indexed into a dict
     """
-    all_predictions = {}
-    for idx, prediction in enumerate(predictions):
-        if idx % 500 == 0:
-            logger.debug("Processed %d examples.", idx)
-        _, dialog_id, turn_id, service_name = [x.rstrip() for x in bytes(prediction["example_id"].tolist()).decode("utf-8").split("-")]
-        turn_idx = int(turn_id)
-        # logger.info("dialogue_id:{}, turn_idx,:{}, service_name:{}".format(dialog_id, turn_idx, service_name))
-        all_predictions[(dialog_id, turn_idx, service_name)] = prediction
+    if isinstance(predictions, dict):
+        # if it is already orangized as dict, just return it
+        return predictions
+    else:
+        all_predictions = {}
+        for idx, prediction in enumerate(predictions):
+            if idx % 500 == 0:
+                logger.debug("Processed %d examples.", idx)
+            _, dialog_id, turn_id, service_name = [x.rstrip() for x in bytes(prediction["example_id"].tolist()).decode("utf-8").split("-")]
+            turn_idx = int(turn_id)
+            # logger.info("dialogue_id:{}, turn_idx,:{}, service_name:{}".format(dialog_id, turn_idx, service_name))
+            all_predictions[(dialog_id, turn_idx, service_name)] = prediction
     return all_predictions
 
 

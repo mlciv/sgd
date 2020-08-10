@@ -94,7 +94,7 @@ class SchemaDSTC8Processor(SchemaDialogProcessor):
                     system_frames = {}
                 # a global turn id
                 # turnuid ="split-dialogue_id-turn_idx"
-                turn_id = "{:<5}-{:<12}-{:<3}".format(
+                turn_id = "{:<5}-{:<20}-{:<3}".format(
                     dataset, dialog_id,
                     SchemaDialogProcessor.format_turn_idx(turn_idx))
                 # create an example given current turn, user utterance, system_utterances

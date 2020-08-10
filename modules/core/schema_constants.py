@@ -2,7 +2,8 @@
 all the constant values in the schema-guided dialogue
 """
 STR_DONTCARE = "dontcare"
-STR_UNKNOWN = "unknown"
+VALUE_DONTCARE_ID = 0
+SPECIAL_CAT_VALUE_OFFSET = 1
 # The maximum total input sequence length after WordPiece tokenization.
 DEFAULT_MAX_SEQ_LENGTH = 128
 

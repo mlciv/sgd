@@ -25,26 +25,29 @@ class FlatDSTOutputInterface(object):
         losses = {}
         if "logit_intent_status" in outputs:
             # Intents.
-            # Shape: (batch_size, 2) STATUS_ACTIVE or STATUS_OFF
+            # Shape: (batch_size,) STATUS_ACTIVE or STATUS_OFF
             intent_logits = outputs["logit_intent_status"]
             # batch_size
+            # if no p_active > 0.5, it is NONE
+            # argmax(p_active)
             intent_labels = labels["intent_status"]
-            intent_loss = torch.nn.functional.cross_entropy(
+            intent_loss = torch.nn.functional.binary_cross_entropy_with_logits(
                 intent_logits,
-                intent_labels,
+                intent_labels.type_as(intent_logits),
                 reduction="mean"
             )
             losses["loss_intent"] = intent_loss
 
         # Requested slots.
         if "logit_req_slot_status" in outputs:
-            # Shape: (batch_size, 2).
+            # Shape: (batch_size, ).
+            # all p_active > 0.5 will be selected
             requested_slot_logits = outputs["logit_req_slot_status"]
             # (batch_size)
             requested_slot_labels = labels["req_slot_status"]
-            requested_slot_loss = torch.nn.functional.cross_entropy(
+            requested_slot_loss = torch.nn.functional.binary_cross_entropy_with_logits(
                 requested_slot_logits,
-                requested_slot_labels,
+                requested_slot_labels.type_as(requested_slot_logits),
                 reduction="mean"
             )
             losses["loss_requested_slot"] = requested_slot_loss
@@ -52,13 +55,18 @@ class FlatDSTOutputInterface(object):
         # Categorical slot
         if "logit_cat_slot_value_status" in outputs:
             # Categorical slot status.
-            # Shape: (batch_size, 2).
+            # adding doncare values
+            # if no value p_active > 0.5, then this slot status is non-active
+            # otherwise, doncare and any value can be the argmax
+            # Shape: (batch_size, 1).
             cat_slot_value_status_logits = outputs["logit_cat_slot_value_status"]
             # (batch_size)
             cat_slot_value_status_labels = labels["cat_slot_value_status"]
-            cat_slot_value_status_losses = torch.nn.functional.cross_entropy(
+            cat_slot_value_status_losses = torch.nn.functional.binary_cross_entropy_with_logits(
                 cat_slot_value_status_logits,
-                cat_slot_value_status_labels, reduction='mean')
+                cat_slot_value_status_labels.type_as(cat_slot_value_status_logits),
+                reduction='mean'
+            )
             losses["loss_cat_slot_value"] = cat_slot_value_status_losses
 
         # Non-categorical
@@ -69,7 +77,7 @@ class FlatDSTOutputInterface(object):
             noncat_slot_status_labels = labels["noncat_slot_status"]
             noncat_slot_status_losses = torch.nn.functional.cross_entropy(
                 noncat_slot_status_logits,
-                noncat_slot_status_labels,
+                noncat_slot_status_labels.long(),
                 reduction='mean'
             )
             # Non-categorical slot spans.
@@ -84,7 +92,7 @@ class FlatDSTOutputInterface(object):
                 span_start_labels.long(), reduction='mean')
             span_end_losses = torch.nn.functional.cross_entropy(
                 span_end_logits,
-                span_end_labels.long(), reduction='none')
+                span_end_labels.long(), reduction='mean')
             losses["loss_noncat_slot_status"] = noncat_slot_status_losses
             losses["loss_span_start"] = span_start_losses
             losses["loss_span_end"] = span_end_losses
@@ -98,35 +106,43 @@ class FlatDSTOutputInterface(object):
             "example_id": features["example_id"].cpu().numpy(),
             "service_id": features["service_id"].cpu().numpy(),
         }
+
         # Scores are output for each intent.
         # Note that the intent indices are shifted by 1 to account for NONE intent.
-        # [batch_size, num_intent + 1]
+        # [batch_size, 1]
         if "logit_intent_status" in outputs:
-            predictions["intent_status"] = torch.argmax(
-                outputs["logit_intent_status"], dim=-1)
+            predictions["intent_id"] = features["intent_id"].cpu().numpy()
+            predictions["intent_status"] = torch.sigmoid(
+                outputs["logit_intent_status"])
 
         # Scores are output for each requested slot.
         if "logit_req_slot_status" in outputs:
-            predictions["req_slot_status"] = torch.argmax(
+            predictions["req_slot_id"] = features["req_slot_id"].cpu().numpy()
+            predictions["req_slot_status"] = torch.sigmoid(
                 outputs["logit_req_slot_status"])
 
-        # For categorical slots, the status of each slot and the predicted value are
-        # output.
-        if "logit_cat_slot_status" in outputs:
-            predictions["cat_slot_status"] = torch.argmax(
-                outputs["logit_cat_slot_status"], dim=-1)
+        ## For categorical slots, the status of each slot and the predicted value are
+        ## output.
+        #if "logit_cat_slot_status" in outputs:
+        #    predictions["cat_slot_id"] = features["cat_slot_id"].cpu().numpy()
+        #    predictions["cat_slot_status"] = torch.argmax(
+        #        outputs["logit_cat_slot_status"], dim=-1)
 
-        if "logit_cat_slot_value" in outputs:
-            predictions["cat_slot_value"] = torch.argmax(
-                outputs["logit_cat_slot_value"], dim=-1)
+        if "logit_cat_slot_value_status" in outputs:
+            predictions["cat_slot_id"] = features["cat_slot_id"].cpu().numpy()
+            predictions["cat_slot_value_id"] = features["cat_slot_value_id"].cpu().numpy()
+            predictions["cat_slot_value_status"] = torch.sigmoid(
+                outputs["logit_cat_slot_value_status"])
 
         # For non-categorical slots, the status of each slot and the indices for
         # spans are output.
         if "logit_noncat_slot_status" in outputs:
+            predictions["noncat_slot_id"] = features["noncat_slot_id"].cpu().numpy()
             predictions["noncat_slot_status"] = torch.argmax(
                 outputs["logit_noncat_slot_status"], dim=-1)
 
         if "logit_noncat_slot_start" in outputs:
+            predictions["noncat_slot_id"] = features["noncat_slot_id"].cpu().numpy()
             # batch_size, max_length
             start_scores = torch.nn.functional.softmax(outputs["logit_noncat_slot_start"], dim=-1)
             # batch_size, max_length
@@ -142,7 +158,7 @@ class FlatDSTOutputInterface(object):
             end_idx = torch.arange(0, max_num_tokens, device=total_scores.device).view(1, 1, -1)
             invalid_index_mask = (start_idx > end_idx).expand(batch_size, -1, -1)
             total_scores = torch.where(invalid_index_mask, torch.zeros_like(total_scores), total_scores)
-            max_span_index = torch.argmax(total_scores.view(-1, batch_size, max_num_tokens**2), dim=-1)
+            max_span_index = torch.argmax(total_scores.view(batch_size, max_num_tokens**2), dim=-1)
             span_start_index = (max_span_index.float() / max_num_tokens).floor().long()
             span_end_index = torch.fmod(max_span_index.float(), max_num_tokens).floor().long()
             predictions["noncat_slot_start"] = span_start_index
@@ -150,4 +166,47 @@ class FlatDSTOutputInterface(object):
             # Add inverse alignments.
             predictions["noncat_alignment_start"] = features["noncat_alignment_start"]
             predictions["noncat_alignment_end"] = features["noncat_alignment_end"]
+        return predictions
+
+    @classmethod
+    def define_oracle_predictions(cls, features, labels):
+        """Define model predictions."""
+        predictions = {
+            "example_id": features["example_id"].cpu().numpy(),
+            "service_id": features["service_id"].cpu().numpy(),
+        }
+
+        # Scores are output for each intent.
+        # Note that the intent indices are shifted by 1 to account for NONE intent.
+        # [batch_size, num_intent + 1]
+        if "intent_status" in labels:
+            predictions["intent_id"] = features["intent_id"].cpu().numpy()
+            predictions["intent_status"] = labels["intent_status"]
+
+        # Scores are output for each requested slot.
+        if "req_slot_status" in labels:
+            predictions["req_slot_id"] = features["req_slot_id"].cpu().numpy()
+            predictions["req_slot_status"] = labels["req_slot_status"]
+
+        ## For categorical slots, the status of each slot and the predicted value are
+        ## output.
+        #if "cat_slot_status" in labels:
+        #    predictions["cat_slot_id"] = features["cat_slot_id"].cpu().numpy()
+        #    predictions["cat_slot_status"] = labels["cat_slot_status"]
+
+        if "cat_slot_value_status" in labels:
+            predictions["cat_slot_id"] = features["cat_slot_id"].cpu().numpy()
+            predictions["cat_slot_value_id"] = features["cat_slot_value_id"].cpu().numpy()
+            predictions["cat_slot_value_status"] = labels["cat_slot_value_status"]
+
+        # For non-categorical slots, the status of each slot and the indices for
+        # spans are output.
+        if "noncat_slot_status" in labels:
+            predictions["noncat_slot_id"] = features["noncat_slot_id"].cpu().numpy()
+            predictions["noncat_slot_status"] = labels["noncat_slot_status"]
+            predictions["noncat_slot_start"] = labels["noncat_slot_value_start"]
+            predictions["noncat_slot_end"] = labels["noncat_slot_value_end"]
+            # Add inverse alignments
+            predictions["noncat_alignment_start"] = features["noncat_alignment_start"].cpu().numpy()
+            predictions["noncat_alignment_end"] = features["noncat_alignment_end"].cpu().numpy()
         return predictions

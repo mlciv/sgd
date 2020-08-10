@@ -26,7 +26,7 @@ class SchemaIntentProcessor(SchemaDialogProcessor):
                  log_data_warnings=False, dialog_cxt_length=2):
         super(SchemaIntentProcessor, self).__init__(
             dataset_config=dataset_config, tokenizer=tokenizer, max_seq_length=max_seq_length,
-            log_data_warnings=log_data_warnings, dial_cxt_length=dial_cxt_length)
+            log_data_warnings=log_data_warnings, dialog_cxt_length=dialog_cxt_length)
 
     def _create_examples_from_dialog(self, dialog, schemas, dataset):
         """
@@ -49,7 +49,7 @@ class SchemaIntentProcessor(SchemaDialogProcessor):
                                         user_alignments, user_inv_alignments, user_frames))
                 # a global turn id
                 # turnuid ="split-dialogue_id-turn_idx"
-                turn_id = "{:<5}-{:<12}-{:<3}".format(
+                turn_id = "{:<5}-{:<20}-{:<3}".format(
                     dataset, dialog_id,
                     SchemaDialogProcessor.format_turn_idx(turn_idx))
                 turn_examples, prev_states = self._create_examples_from_turn(
@@ -98,7 +98,7 @@ class SchemaIntentProcessor(SchemaDialogProcessor):
             dial_cxt_length=self.dial_cxt_length
         )
         base_example.example_id = turn_id
-        start_turn, offsets = base_example.add_dial_history_features(utterances)
+        base_example.add_dial_history_features(utterances)
         # add utterance features
         all_intent_examples = []
         # In current user turn, it may have multiple frames

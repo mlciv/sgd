@@ -44,7 +44,8 @@ CORE_METRIC_SUBKEYS = [
     metrics.AVERAGE_NONCAT_ACCURACY,
     metrics.JOINT_GOAL_ACCURACY,
     metrics.JOINT_CAT_ACCURACY,
-    metrics.JOINT_NONCAT_ACCURACY
+    metrics.JOINT_NONCAT_ACCURACY,
+    metrics.SLOT_TAGGING_F1
 ]
 
 IMPORTANT_METRIC_SUBKEYS = [
@@ -141,6 +142,8 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services, u
         ]
         for turn_id, (turn_ref, turn_hyp) in enumerate(
                 zip(dial_ref["turns"], dial_hyp["turns"])):
+
+            dial_key = (dial_id, turn_id)
             metric_collections_per_turn = collections.defaultdict(
                 lambda: collections.defaultdict(lambda: 1.0))
             if turn_ref["speaker"] != turn_hyp["speaker"]:
@@ -164,8 +167,8 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services, u
                 frame["service"]: frame for frame in turn_hyp["frames"]
             }
 
-            #logger.info("turn_ref:{}".format(turn_ref))
-            #logger.info("turn_hyp:{}".format(turn_hyp))
+            # logger.info("dial_key:{}, turn_ref:{}".format(dial_key, turn_ref))
+            # logger.info("dial_key:{}, turn_hyp:{}".format(dial_key, turn_hyp))
             # Calculate metrics for each frame in each user turn.
             for frame_ref in turn_ref["frames"]:
                 service_name = frame_ref["service"]

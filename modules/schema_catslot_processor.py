@@ -50,7 +50,8 @@ class SchemaCatSlotProcessor(SchemaDialogProcessor):
                                         user_alignments, user_inv_alignments, user_frames))
                 # a global turn id
                 # turnuid ="split-dialogue_id-turn_idx"
-                turn_id = "{:<5}-{:<12}-{:<3}".format(
+                # in total 30
+                turn_id = "{:<5}-{:<20}-{:<3}".format(
                     dataset, dialog_id,
                     SchemaDialogProcessor.format_turn_idx(turn_idx))
                 turn_examples, prev_states = self._create_examples_from_turn(
@@ -99,7 +100,7 @@ class SchemaCatSlotProcessor(SchemaDialogProcessor):
             dial_cxt_length=self.dial_cxt_length
         )
         base_example.example_id = turn_id
-        start_turn, offsets = base_example.add_dial_history_features(utterances)
+        base_example.add_dial_history_features(utterances)
         # add utterance features
         all_cat_slot_examples = []
         # In current user turn, it may have multiple frames
@@ -110,10 +111,13 @@ class SchemaCatSlotProcessor(SchemaDialogProcessor):
             # In one turn, there will be multiple frames, usually they
             # are from different service, use the joint turn_id and
             # service
+            # extra 21, in total 51
             example.example_id = "{}-{:<20}".format(turn_id, service)
             example.service_id = service_id
             example.service_schema = schemas.get_service_schema(service)
             state = user_frame["state"]["slot_values"]
+            state_update = self._get_state_update(
+                state, prev_states.get(service, {}))
             states[service] = state
             cat_slot_examples = example.add_categorical_slots(state_update)
             all_cat_slot_examples.extend(cat_slot_examples)

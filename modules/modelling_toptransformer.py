@@ -82,7 +82,6 @@ class TopTransformerModel(PreTrainedModel, DSTC8BaselineOutputInterface):
         self.embedding_dim = self.config.schema_embedding_dim
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
-        self.token_dropout = torch.nn.Dropout(self.config.token_dropout)
         if self.embedding_dim == self.config.d_model:
             self.utterance_projection_layer = torch.nn.Sequential()
             if self.config.model_type == "toptrans":

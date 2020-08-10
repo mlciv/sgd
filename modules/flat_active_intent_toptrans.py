@@ -1,13 +1,12 @@
 # Time-stamp: <2020-06-06>
 # --------------------------------------------------------------------
-# File Name          : flat_requested_slots_bert_snt_pair_match_model.py
+# File Name          : flat_active_intent_toptrans.py
 # Original Author    : jiessie.cao@gmail.com
 # Description        : A baseline model for schema-guided dialogyem given the input,
-# to predict active_intent
+# to predict active_intent, flatten examples
 # --------------------------------------------------------------------
 
 import logging
-import copy
 import collections
 import re
 import os
@@ -37,11 +36,10 @@ CLS_PRETRAINED_MODEL_ARCHIVE_MAP = {
 
 }
 
-class FlatRequestedSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPairInterface, FlatDSTOutputInterface):
+class FlatActiveIntentTopTrans(PreTrainedModel, EncodeUttSchemaPairInterface, FlatDSTOutputInterface):
     """
     Main entry of Classifier Model
     """
-
     config_class = SchemaDSTConfig
     base_model_prefix = ""
     # see the trick in https://github.com/huggingface/transformers/blob/cae641ff269478f74b5895d36fbc686f7074f2fb/transformers/modeling_utils.py#L457
@@ -68,7 +66,7 @@ class FlatRequestedSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPa
     pretrained_model_archieve_map = CLS_PRETRAINED_MODEL_ARCHIVE_MAP
 
     def __init__(self, config=None, args=None, encoder=None):
-        super(FlatRequestedSlotsBERTSntPairMatchModel, self).__init__(config=config)
+        super(FlatActiveIntentTopTrans, self).__init__(config=config)
         # config is the configuration for pretrained model
         self.config = config
         self.tokenizer = EncoderUtils.create_tokenizer(self.config)
@@ -81,11 +79,11 @@ class FlatRequestedSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPa
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
-        self.requested_slots_utterance_proj = torch.nn.Sequential(
+        self.intent_utterance_proj = torch.nn.Sequential(
         )
         # Project the combined embeddings to obtain logits.
         # then max p_active, if all p_active < 0.5, then it is null
-        self.requested_slots_final_proj = torch.nn.Sequential(
+        self.intent_final_proj = torch.nn.Sequential(
             torch.nn.Linear(self.utterance_embedding_dim, 1)
         )
 
@@ -111,17 +109,16 @@ class FlatRequestedSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPa
         utt_schema_pair_cls = final_proj(utt_schema_pair_cls)
         return utt_schema_pair_cls
 
-    def _get_requested_slots(self, features, is_training):
+    def _get_intents(self, features, is_training):
         """Obtain logits for intents."""
         # we only use cls token for matching, either finetuned cls and fixed cls
-        utt_requested_slot_pair_cls, _ = self._encode_utterance_schema_pairs(
-            self.encoder, self.utterance_dropout, features, "req_slot", is_training)
+        utt_intent_pair_cls, _ = self._encode_utterance_schema_pairs(self.encoder, self.utterance_dropout, features, "intent", is_training)
         logits = self._get_logits(
-            utt_requested_slot_pair_cls, None,
-            self.requested_slots_utterance_proj, self.requested_slots_final_proj, is_training)
+            utt_intent_pair_cls, None,
+            self.intent_utterance_proj, self.intent_final_proj, is_training)
         # Shape: (batch_size, 1)
         logits = logits.squeeze(-1)
-        # Shape: (batch_size, )
+        # (batch_size, )
         return logits
 
     def forward(self, features, labels=None):
@@ -136,7 +133,7 @@ class FlatRequestedSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPa
         """
         is_training = (labels is not None)
         outputs = {}
-        outputs["logit_req_slot_status"] = self._get_requested_slots(features, is_training)
+        outputs["logit_intent_status"] = self._get_intents(features, is_training)
         # when it is dataparallel, the output will keep the tuple, but the content are gathered from different GPUS.
         if labels:
             losses = self.define_loss(features, labels, outputs)

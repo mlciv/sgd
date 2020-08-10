@@ -49,7 +49,8 @@ class SchemaNonCatSlotProcessor(SchemaDialogProcessor):
                                         user_alignments, user_inv_alignments, user_frames))
                 # a global turn id
                 # turnuid ="split-dialogue_id-turn_idx"
-                turn_id = "{:<5}-{:<12}-{:<3}".format(
+                # 30 in total
+                turn_id = "{:<5}-{:<20}-{:<3}".format(
                     dataset, dialog_id,
                     SchemaDialogProcessor.format_turn_idx(turn_idx))
                 turn_examples, prev_states = self._create_examples_from_turn(
@@ -98,7 +99,7 @@ class SchemaNonCatSlotProcessor(SchemaDialogProcessor):
             dial_cxt_length=self.dial_cxt_length
         )
         base_example.example_id = turn_id
-        start_turn, offsets = base_example.add_dial_history_features(utterances)
+        start_turn, start_turn_subtoken_offset, global_subtoken_offsets = base_example.add_dial_history_features(utterances)
         # add utterance features
         all_noncat_slot_examples = []
         # In current user turn, it may have multiple frames
@@ -108,7 +109,7 @@ class SchemaNonCatSlotProcessor(SchemaDialogProcessor):
             service_id = schemas.get_service_id(service)
             # In one turn, there will be multiple frames, usually they
             # are from different service, use the joint turn_id and
-            # service
+            # service, adding extra 21 tokens, in total 51
             example.example_id = "{}-{:<20}".format(turn_id, service)
             example.service_id = service_id
             example.service_schema = schemas.get_service_schema(service)
@@ -126,20 +127,21 @@ class SchemaNonCatSlotProcessor(SchemaDialogProcessor):
             # Here, we make sure that handle those slots already in the frames
             user_span_boundaries = self._find_subword_indices(
                 state_update, current_user_utterance, user_frame["slots"], current_user_alignments,
-                current_user_tokens, offsets[-1])
-            if system_frame is not None and len(offsets) > 1:
+                current_user_tokens, global_subtoken_offsets[-1])
+            if system_frame is not None and len(global_subtoken_offsets) > 1:
                 system_span_boundaries = self._find_subword_indices(
                     state_update, current_system_utterance, system_frame["slots"],
-                    current_system_alignments, current_system_tokens, offsets[-2])
+                    current_system_alignments, current_system_tokens, global_subtoken_offsets[-2])
             else:
                 system_span_boundaries = {}
 
             # TODO: may carry over cross service here, and any other resources.
+            # cross domain carry over is not easyto do here, no slot carryover relations
+            # not easy to find the slot matching.
             # Here, in future we just do the string match to find all other spans
             noncat_slot_examples = example.add_noncategorical_slots(
                 state_update,
                 system_span_boundaries,
-                user_span_boundaries)
+                user_span_boundaries, utterances, start_turn, start_turn_subtoken_offset, global_subtoken_offsets)
             all_noncat_slot_examples.extend(noncat_slot_examples)
-
         return all_noncat_slot_examples, states

@@ -78,10 +78,11 @@ class ActiveIntentSntPairInputFeatures(object):
     """
     A single set of features for active intent data
     """
-    def __init__(self, example_id, service_id,
+    def __init__(self, example_type, example_id, service_id,
                  input_ids, input_seg, input_mask,
                  intent_id, intent_status):
         # example_info
+        self.example_type = example_type
         self.example_id = example_id
         self.service_id = service_id
         self.input_ids = input_ids
@@ -94,10 +95,11 @@ class RequestedSlotSntPairInputFeatures(object):
     """
     A single set of features for req_slots data
     """
-    def __init__(self, example_id, service_id,
+    def __init__(self, example_type, example_id, service_id,
                  input_ids, input_seg, input_mask,
                  requested_slot_id, requested_slot_status):
         # example_info
+        self.example_type = example_type
         self.example_id = example_id
         self.service_id = service_id
         self.input_ids = input_ids
@@ -110,36 +112,39 @@ class CatSlotSntPairInputFeatures(object):
     """
     A single set of features for cat slot data
     """
-    def __init__(self, example_id, service_id,
+    def __init__(self, example_type, example_id, service_id,
                  input_ids, input_seg, input_mask,
-                 cat_slot_id, cat_slot_status,
-                 cat_slot_value_id, cat_slot_value_status):
+                 cat_slot_id, cat_slot_value_id, cat_slot_status, cat_slot_value_status):
         # example_info
+        self.example_type = example_type
         self.example_id = example_id
         self.service_id = service_id
         self.input_ids = input_ids
         self.input_seg = input_seg
         self.input_mask = input_mask
         self.cat_slot_id = cat_slot_id
-        self.cat_slot_status = cat_slot_status
         self.cat_slot_value_id = cat_slot_value_id
+        self.cat_slot_status = cat_slot_status
         self.cat_slot_value_status = cat_slot_value_status
 
 class NonCatSlotSntPairInputFeatures(object):
     """
     A single set of features for noncat slot data
     """
-    def __init__(self, example_id, service_id,
+    def __init__(self, example_type, example_id, service_id,
                  input_ids, input_seg, input_mask,
-                 noncat_slot_id, noncat_slot_status,
-                 noncat_slot_value_start, noncat_slot_value_end):
+                 noncat_slot_id, noncat_start_char_idx, noncat_end_char_idx,
+                 noncat_slot_status, noncat_slot_value_start, noncat_slot_value_end):
         # example_info
+        self.example_type = example_type
         self.example_id = example_id
         self.service_id = service_id
         self.input_ids = input_ids
         self.input_seg = input_seg
         self.input_mask = input_mask
         self.noncat_slot_id = noncat_slot_id
+        self.noncat_start_char_idx = noncat_start_char_idx
+        self.noncat_end_char_idx = noncat_end_char_idx
         self.noncat_slot_status = noncat_slot_status
         self.noncat_slot_value_start = noncat_slot_value_start
         self.noncat_slot_value_end = noncat_slot_value_end
@@ -156,14 +161,17 @@ def convert_noncat_slot_examples_to_features(
     features = []
     for (ex_index, ex) in enumerate(examples):
         if ex_index % 10000 == 0:
-            logger.info("Writing example %d of %d", ex_index, len(examples))
-        feature = CatSlotSntPairInputFeatures(
+            logger.info("Writing noncat_slot example %d of %d", ex_index, len(examples))
+        feature = NonCatSlotSntPairInputFeatures(
+            4,
             ex.example_id,
             ex.service_id,
             ex.input_ids,
             ex.input_seg,
             ex.input_mask,
             ex.noncat_slot_id,
+            ex.noncat_start_char_idx,
+            ex.noncat_end_char_idx,
             ex.noncat_slot_status,
             ex.noncat_slot_value_start,
             ex.noncat_slot_value_end)
@@ -172,6 +180,7 @@ def convert_noncat_slot_examples_to_features(
     if return_dataset == "pt":
         # Convert to Tensors and build dataset
         # flags or ids for the example
+        all_example_types = torch.tensor([f.example_type for f in features], dtype=torch.uint8)
         all_example_ids = torch.tensor([list(f.example_id.encode("utf-8")) for f in features], dtype=torch.uint8)
         all_service_ids = torch.tensor([f.service_id for f in features], dtype=torch.long)
 
@@ -182,6 +191,8 @@ def convert_noncat_slot_examples_to_features(
 
         # noncat slot
         all_noncat_slot_ids = torch.tensor([f.noncat_slot_id for f in features], dtype=torch.long)
+        all_noncat_alignment_start = torch.tensor([f.noncat_start_char_idx for f in features], dtype=torch.long)
+        all_noncat_alignment_end = torch.tensor([f.noncat_end_char_idx for f in features], dtype=torch.long)
         all_noncat_slot_status = torch.tensor([f.noncat_slot_status for f in features], dtype=torch.long)
         # noncat_slot_value
         all_noncat_slot_value_start = torch.tensor([f.noncat_slot_value_start for f in features], dtype=torch.long)
@@ -190,21 +201,27 @@ def convert_noncat_slot_examples_to_features(
 
         if not is_training:
             dataset = torch.utils.data.TensorDataset(
-                all_example_ids,
-                all_service_ids,
-                all_input_ids,
-                all_attention_masks,
-                all_token_type_ids,
-                all_noncat_slot_ids
-            )
-        else:
-            dataset = torch.utils.data.TensorDataset(
+                all_example_types,
                 all_example_ids,
                 all_service_ids,
                 all_input_ids,
                 all_attention_masks,
                 all_token_type_ids,
                 all_noncat_slot_ids,
+                all_noncat_alignment_start,
+                all_noncat_alignment_end,
+            )
+        else:
+            dataset = torch.utils.data.TensorDataset(
+                all_example_types,
+                all_example_ids,
+                all_service_ids,
+                all_input_ids,
+                all_attention_masks,
+                all_token_type_ids,
+                all_noncat_slot_ids,
+                all_noncat_alignment_start,
+                all_noncat_alignment_end,
                 all_noncat_slot_status,
                 all_noncat_slot_value_start,
                 all_noncat_slot_value_end
@@ -225,22 +242,24 @@ def convert_cat_slot_examples_to_features(
     features = []
     for (ex_index, ex) in enumerate(examples):
         if ex_index % 10000 == 0:
-            logger.info("Writing example %d of %d", ex_index, len(examples))
+            logger.info("Writing cat_slot example %d of %d", ex_index, len(examples))
         feature = CatSlotSntPairInputFeatures(
+            3,
             ex.example_id,
             ex.service_id,
             ex.input_ids,
             ex.input_seg,
             ex.input_mask,
             ex.cat_slot_id,
-            ex.cat_slot_status,
             ex.cat_slot_value_id,
+            ex.cat_slot_status,
             ex.cat_slot_value_status)
         features.append(feature)
 
     if return_dataset == "pt":
         # Convert to Tensors and build dataset
         # flags or ids for the example
+        all_example_types = torch.tensor([f.example_type for f in features], dtype=torch.uint8)
         all_example_ids = torch.tensor([list(f.example_id.encode("utf-8")) for f in features], dtype=torch.uint8)
         all_service_ids = torch.tensor([f.service_id for f in features], dtype=torch.long)
 
@@ -259,6 +278,7 @@ def convert_cat_slot_examples_to_features(
 
         if not is_training:
             dataset = torch.utils.data.TensorDataset(
+                all_example_types,
                 all_example_ids,
                 all_service_ids,
                 all_input_ids,
@@ -269,6 +289,7 @@ def convert_cat_slot_examples_to_features(
             )
         else:
             dataset = torch.utils.data.TensorDataset(
+                all_example_types,
                 all_example_ids,
                 all_service_ids,
                 all_input_ids,
@@ -279,7 +300,6 @@ def convert_cat_slot_examples_to_features(
                 all_cat_slot_status,
                 all_cat_slot_value_status
             )
-
         return features, dataset
 
     return features
@@ -294,20 +314,22 @@ def convert_requested_slot_examples_to_features(
     features = []
     for (ex_index, ex) in enumerate(examples):
         if ex_index % 10000 == 0:
-            logger.info("Writing example %d of %d", ex_index, len(examples))
+            logger.info("Writing req_slot example %d of %d", ex_index, len(examples))
         feature = RequestedSlotSntPairInputFeatures(
+            2,
             ex.example_id,
             ex.service_id,
             ex.input_ids,
             ex.input_seg,
             ex.input_mask,
-            ex.requested_id,
-            ex.requested_status)
+            ex.requested_slot_id,
+            ex.requested_slot_status)
         features.append(feature)
 
     if return_dataset == "pt":
         # Convert to Tensors and build dataset
         # flags or ids for the example
+        all_example_types = torch.tensor([f.example_type for f in features], dtype=torch.uint8)
         all_example_ids = torch.tensor([list(f.example_id.encode("utf-8")) for f in features], dtype=torch.uint8)
         all_service_ids = torch.tensor([f.service_id for f in features], dtype=torch.long)
 
@@ -322,6 +344,7 @@ def convert_requested_slot_examples_to_features(
 
         if not is_training:
             dataset = torch.utils.data.TensorDataset(
+                all_example_types,
                 all_example_ids,
                 all_service_ids,
                 all_input_ids,
@@ -331,6 +354,7 @@ def convert_requested_slot_examples_to_features(
             )
         else:
             dataset = torch.utils.data.TensorDataset(
+                all_example_types,
                 all_example_ids,
                 all_service_ids,
                 all_input_ids,
@@ -354,8 +378,9 @@ def convert_active_intent_examples_to_features(
     features = []
     for (ex_index, ex) in enumerate(examples):
         if ex_index % 10000 == 0:
-            logger.info("Writing example %d of %d", ex_index, len(examples))
+            logger.info("Writing active_intent example %d of %d", ex_index, len(examples))
         feature = ActiveIntentSntPairInputFeatures(
+            1,
             ex.example_id,
             ex.service_id,
             ex.input_ids,
@@ -368,6 +393,8 @@ def convert_active_intent_examples_to_features(
     if return_dataset == "pt":
         # Convert to Tensors and build dataset
         # flags or ids for the example
+        # for intent example, the flag is 1
+        all_example_types = torch.tensor([f.example_type for f in features], dtype=torch.uint8)
         all_example_ids = torch.tensor([list(f.example_id.encode("utf-8")) for f in features], dtype=torch.uint8)
         all_service_ids = torch.tensor([f.service_id for f in features], dtype=torch.long)
 
@@ -382,6 +409,7 @@ def convert_active_intent_examples_to_features(
 
         if not is_training:
             dataset = torch.utils.data.TensorDataset(
+                all_example_types,
                 all_example_ids,
                 all_service_ids,
                 all_input_ids,
@@ -391,6 +419,7 @@ def convert_active_intent_examples_to_features(
             )
         else:
             dataset = torch.utils.data.TensorDataset(
+                all_example_types,
                 all_example_ids,
                 all_service_ids,
                 all_input_ids,
@@ -418,7 +447,7 @@ def convert_schema_dst_examples_to_features(examples,
     features = []
     for (ex_index, ex) in enumerate(examples):
         if ex_index % 10000 == 0:
-            logger.info("Writing example %d of %d", ex_index, len(examples))
+            logger.info("Writing schema_dst example %d of %d", ex_index, len(examples))
         feature = InputFeatures(
             ex.example_id,
             ex.service_schema.service_id,

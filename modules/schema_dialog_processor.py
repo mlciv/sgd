@@ -149,7 +149,7 @@ class SchemaDialogProcessor(DataProcessor):
                                         user_alignments, user_inv_alignments, user_frames))
                 # a global turn id
                 # turnuid ="split-dialogue_id-turn_idx"
-                turn_id = "{:<5}-{:<12}-{:<3}".format(
+                turn_id = "{:<5}-{:<20}-{:<3}".format(
                     dataset, dialog_id,
                     SchemaDialogProcessor.format_turn_idx(turn_idx))
                 turn_examples, prev_states = self._create_examples_from_turn(

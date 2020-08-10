@@ -84,7 +84,7 @@ class FlatActiveIntentBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPair
         # Project the combined embeddings to obtain logits.
         # then max p_active, if all p_active < 0.5, then it is null
         self.intent_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.utterance_embedding_dim, 2)
+            torch.nn.Linear(self.utterance_embedding_dim, 1)
         )
 
         if not args.no_cuda:
@@ -116,7 +116,9 @@ class FlatActiveIntentBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPair
         logits = self._get_logits(
             utt_intent_pair_cls, None,
             self.intent_utterance_proj, self.intent_final_proj, is_training)
-        # Shape: (batch_size, 2)
+        # Shape: (batch_size, 1)
+        logits = logits.squeeze(-1)
+        # (batch_size, )
         return logits
 
     def forward(self, features, labels=None):

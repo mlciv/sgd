@@ -1,13 +1,12 @@
 # Time-stamp: <2020-06-06>
 # --------------------------------------------------------------------
-# File Name          : flat_requested_slots_bert_snt_pair_match_model.py
+# File Name          : flat_noncat_slots_bert_snt_pair_match_model.py
 # Original Author    : jiessie.cao@gmail.com
 # Description        : A baseline model for schema-guided dialogyem given the input,
-# to predict active_intent
+# to predict noncat_slots
 # --------------------------------------------------------------------
 
 import logging
-import copy
 import collections
 import re
 import os
@@ -37,7 +36,7 @@ CLS_PRETRAINED_MODEL_ARCHIVE_MAP = {
 
 }
 
-class FlatRequestedSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPairInterface, FlatDSTOutputInterface):
+class FlatNonCatSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPairInterface, FlatDSTOutputInterface):
     """
     Main entry of Classifier Model
     """
@@ -68,7 +67,7 @@ class FlatRequestedSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPa
     pretrained_model_archieve_map = CLS_PRETRAINED_MODEL_ARCHIVE_MAP
 
     def __init__(self, config=None, args=None, encoder=None):
-        super(FlatRequestedSlotsBERTSntPairMatchModel, self).__init__(config=config)
+        super(FlatNonCatSlotsBERTSntPairMatchModel, self).__init__(config=config)
         # config is the configuration for pretrained model
         self.config = config
         self.tokenizer = EncoderUtils.create_tokenizer(self.config)
@@ -81,12 +80,17 @@ class FlatRequestedSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPa
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
-        self.requested_slots_utterance_proj = torch.nn.Sequential(
+        self.noncategorical_slots_status_utterance_proj = torch.nn.Sequential(
         )
-        # Project the combined embeddings to obtain logits.
-        # then max p_active, if all p_active < 0.5, then it is null
-        self.requested_slots_final_proj = torch.nn.Sequential(
-            torch.nn.Linear(self.utterance_embedding_dim, 1)
+
+        # for noncategorical_slots, 3 logits
+        self.noncategorical_slots_status_final_proj = torch.nn.Sequential(
+            torch.nn.Linear(self.utterance_embedding_dim, 3)
+        )
+
+        # for noncategorical_,span layer
+        self.noncat_span_layer = torch.nn.Sequential(
+            torch.nn.Linear(self.utterance_embedding_dim, 2)
         )
 
         if not args.no_cuda:
@@ -94,35 +98,46 @@ class FlatRequestedSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPa
 
     def _get_logits(self, utt_schema_pair_cls, utt_schema_pair_tokens, utterance_proj, final_proj, is_training):
         """Get logits for elements by conditioning on utterance embedding.
-        Args:
-        element_embeddings: A tensor of shape (batch_size, num_elements,
-        embedding_dim).
-        num_classes: An int containing the number of classes for which logits are
-        to be generated.
-        Returns:
-        A tensor of shape (batch_size, num_elements, num_classes) containing the
-        logits.
+        mainly for status logits
         """
-        # logger.info("element_embeddings:{}, repeat_utterance_embeddings:{}".format(element_embeddings.size(), repeat_utterance_embeddings.size()))
-        # TODO: support different matcher
         utt_schema_pair_cls = utterance_proj(utt_schema_pair_cls)
         if is_training:
             utt_schema_pair_cls = self.utterance_dropout(utt_schema_pair_cls)
         utt_schema_pair_cls = final_proj(utt_schema_pair_cls)
         return utt_schema_pair_cls
 
-    def _get_requested_slots(self, features, is_training):
-        """Obtain logits for intents."""
-        # we only use cls token for matching, either finetuned cls and fixed cls
-        utt_requested_slot_pair_cls, _ = self._encode_utterance_schema_pairs(
-            self.encoder, self.utterance_dropout, features, "req_slot", is_training)
-        logits = self._get_logits(
-            utt_requested_slot_pair_cls, None,
-            self.requested_slots_utterance_proj, self.requested_slots_final_proj, is_training)
-        # Shape: (batch_size, 1)
-        logits = logits.squeeze(-1)
-        # Shape: (batch_size, )
-        return logits
+    def _get_noncategorical_slots_goals(self, features, is_training):
+        """Obtain logits for status and values for categorical slots."""
+        # Predict the status of all categorical slots.
+        # batch_size, max_noncat_slot, embedding_dim
+        utt_noncat_slot_pair_cls, utt_noncat_slot_pair_tokens = self._encode_utterance_schema_pairs(
+            self.encoder, self.utterance_dropout, features, "noncat_slot", is_training)
+        # batch_size, 3
+        status_logits = self._get_logits(
+            utt_noncat_slot_pair_cls,
+            None,
+            self.noncategorical_slots_status_utterance_proj,
+            self.noncategorical_slots_status_final_proj,
+            is_training
+        )
+        batch_size = features["utt"].size()[0]
+        # Shape: (batch_size, max_seq_length, 2)
+        span_logits = self.noncat_span_layer(utt_noncat_slot_pair_tokens)
+        total_max_length = span_logits.size()[1]
+        schema_attention_mask = features[SchemaInputFeatures.get_input_mask_tensor_name("noncat_slot")]
+        # all schema part should be masked as 0
+        schema_attention_mask = torch.zeros_like(schema_attention_mask.view(batch_size, -1))
+        # batch_size , max_seq_length
+        utt_schema_pair_attention_mask = torch.cat((features["utt_mask"], schema_attention_mask), dim=1)
+        assert utt_schema_pair_attention_mask.size()[1] == total_max_length, "length check"
+        tiled_attention_mask = utt_schema_pair_attention_mask.unsqueeze(2).expand(-1, -1, 2)
+        negative_logits = -0.7 * torch.ones_like(span_logits) * torch.finfo(torch.float16).max
+        span_logits = torch.where(tiled_attention_mask.bool(), span_logits, negative_logits)
+        # Shape of both tensors: (batch_size, max_seq_length).
+        span_start_logits = span_logits[:, :, 0]
+        span_end_logits = span_logits[:, :, 1]
+
+        return status_logits, span_start_logits, span_end_logits
 
     def forward(self, features, labels=None):
         """
@@ -136,7 +151,11 @@ class FlatRequestedSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPa
         """
         is_training = (labels is not None)
         outputs = {}
-        outputs["logit_req_slot_status"] = self._get_requested_slots(features, is_training)
+        noncat_slot_status, noncat_span_start, noncat_span_end = (
+            self._get_noncategorical_slots_goals(features, is_training))
+        outputs["logit_noncat_slot_status"] = noncat_slot_status
+        outputs["logit_noncat_slot_start"] = noncat_span_start
+        outputs["logit_noncat_slot_end"] = noncat_span_end
         # when it is dataparallel, the output will keep the tuple, but the content are gathered from different GPUS.
         if labels:
             losses = self.define_loss(features, labels, outputs)
