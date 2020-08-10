@@ -48,6 +48,7 @@ from modules.schema_catslot_processor import SchemaCatSlotProcessor
 from modules.schema_noncatslot_processor import SchemaNonCatSlotProcessor
 
 from modules.flat_active_intent_bert_snt_pair_match import FlatActiveIntentBERTSntPairMatchModel
+from modules.flat_active_intent_toptrans import FlatActiveIntentTopTransModel
 from modules.flat_requested_slots_bert_snt_pair_match import FlatRequestedSlotsBERTSntPairMatchModel
 from modules.flat_cat_slots_bert_snt_pair_match import FlatCatSlotsBERTSntPairMatchModel
 from modules.flat_noncat_slots_bert_snt_pair_match import FlatNonCatSlotsBERTSntPairMatchModel
@@ -79,7 +80,8 @@ MODEL_CLASSES = {
     "flat_active_intent_bert_snt_pair_match": (FlatActiveIntentBERTSntPairMatchModel, SchemaIntentProcessor),
     "flat_requested_slots_bert_snt_pair_match": (FlatRequestedSlotsBERTSntPairMatchModel, SchemaReqSlotProcessor),
     "flat_cat_slots_bert_snt_pair_match": (FlatCatSlotsBERTSntPairMatchModel, SchemaCatSlotProcessor),
-    "flat_noncat_slots_bert_snt_pair_match": (FlatNonCatSlotsBERTSntPairMatchModel, SchemaNonCatSlotProcessor)
+    "flat_noncat_slots_bert_snt_pair_match": (FlatNonCatSlotsBERTSntPairMatchModel, SchemaNonCatSlotProcessor),
+    "flat_active_intent_toptrans": (FlatActiveIntentTopTransModel, SchemaIntentProcessor)
 }
 
 NO_EMBEDDING_CLASSES = []
@@ -1110,7 +1112,7 @@ def main():
 
     parser.add_argument(
         "--encoder_finetuning", default=True, type=bool,
-        help="Whether finetuning pretrained encoder_config name"
+        help="Whether finetuning pretrained encoder"
     )
 
     parser.add_argument(

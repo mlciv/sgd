@@ -17,7 +17,7 @@ from transformers.modeling_utils import PreTrainedModel
 from modules.core.encoder_utils import EncoderUtils
 from modules.core.schemadst_configuration import SchemaDSTConfig
 from modules.flat_dst_output_interface import FlatDSTOutputInterface
-from modules.core.encode_utterance_schema_pair_interface import EncodeUttSchemaPairInterface
+from modules.core.encode_sep_utterance_schema_interface import EncodeSepUttSchemaInterface
 from modules.schema_embedding_generator import SchemaInputFeatures
 import modules.core.schema_constants as schema_constants
 from src import utils_schema
@@ -36,7 +36,7 @@ CLS_PRETRAINED_MODEL_ARCHIVE_MAP = {
 
 }
 
-class FlatActiveIntentTopTrans(PreTrainedModel, EncodeUttSchemaPairInterface, FlatDSTOutputInterface):
+class FlatActiveIntentTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface, FlatDSTOutputInterface):
     """
     Main entry of Classifier Model
     """
@@ -65,22 +65,50 @@ class FlatActiveIntentTopTrans(PreTrainedModel, EncodeUttSchemaPairInterface, Fl
 
     pretrained_model_archieve_map = CLS_PRETRAINED_MODEL_ARCHIVE_MAP
 
-    def __init__(self, config=None, args=None, encoder=None):
+    def __init__(self, config=None, args=None, utt_encoder=None, schema_encoder=None):
         super(FlatActiveIntentTopTrans, self).__init__(config=config)
         # config is the configuration for pretrained model
         self.config = config
         self.tokenizer = EncoderUtils.create_tokenizer(self.config)
-        if encoder:
-            self.encoder = encoder
+        # utt encoder
+        if utt_encoder:
+            self.utt_encoder = utt_encoder
         else:
-            self.encoder = EncoderUtils.create_encoder(self.config)
-            EncoderUtils.set_encoder_finetuning_status(self.encoder, args.encoder_finetuning)
-        EncoderUtils.add_special_tokens(self.tokenizer, self.encoder, schema_constants.USER_AGENT_SPECIAL_TOKENS)
+            self.utt_encoder = EncoderUtils.create_encoder(self.config)
+            EncoderUtils.set_encoder_finetuning_status(self.utt_encoder, args.encoder_finetuning)
+        EncoderUtils.add_special_tokens(self.tokenizer, self.utt_encoder, schema_constants.USER_AGENT_SPECIAL_TOKENS)
+        # schema_encoder
+        if schema_encoder:
+            self.schema_encoder = schema_encoder
+        else:
+            # TODO: now we don't consider a seperate encoder for schema
+            # Given the matchng layer above, it seems sharing the embedding layer and encoding is good
+            # But if the schema description is a graph or other style, we can consider a GCN or others
+            self.schema_encoder = self.utt_encoder
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
-        self.intent_utterance_proj = torch.nn.Sequential(
+        if self.utterance_embedding_dim == self.config.d_model:
+            self.utterance_projection_layer = torch.nn.Sequential()
+        else:
+            self.utterance_projection_layer = nn.Linear(self.embedding_dim, self.config.d_model)
+
+        self.schema_embedding_dim = self.config.schema_embedding_dim
+        self.schema_dropout = torch.nn.Dropout(self.config.schema_dropout)
+        if self.schema_embedding_dim == self.config.d_model:
+            self.schema_projection_layer = torch.nn.Sequential()
+        else:
+            # Here, we share the encoder with utt_encoder, hence,share the prejection too,
+            # Later, to support seperate projection layer
+            self.schema_projection_layer =  self.utterance_projection_layer
+
+        self.intent_matching_layer = torch.nn.TransformerEncoder(
+            encoder_layer=torch.nn.TransformerEncoderLayer(self.config.d_model, self.config.nhead, self.config.dim_feedforward),
+            num_layers=self.config.num_matching_layer,
+            norm=torch.nn.LayerNorm(self.config.d_model)
         )
+
+        self.intent_final_dropout = torch.nn.Dropout(self.config.intent_final_dropout)
         # Project the combined embeddings to obtain logits.
         # then max p_active, if all p_active < 0.5, then it is null
         self.intent_final_proj = torch.nn.Sequential(
@@ -90,32 +118,57 @@ class FlatActiveIntentTopTrans(PreTrainedModel, EncodeUttSchemaPairInterface, Fl
         if not args.no_cuda:
             self.cuda(args.device)
 
-    def _get_logits(self, utt_schema_pair_cls, utt_schema_pair_tokens, utterance_proj, final_proj, is_training):
+    def _get_logits(self, element_embeddings, element_mask, _encoded_tokens, utterance_mask, matching_layer, final_proj, is_training):
         """Get logits for elements by conditioning on utterance embedding.
         Args:
         element_embeddings: A tensor of shape (batch_size, num_elements,
-        embedding_dim).
+        max_seq_length, embedding_dim).
+        element_mask: (batch_size, max_seq_length)
+        _encoded_tokens: (batch_size, max_u_len, embedding_dim)
+        _utterance_mask: (batch_size, max_u_len)
         num_classes: An int containing the number of classes for which logits are
         to be generated.
         Returns:
         A tensor of shape (batch_size, num_elements, num_classes) containing the
         logits.
         """
-        # logger.info("element_embeddings:{}, repeat_utterance_embeddings:{}".format(element_embeddings.size(), repeat_utterance_embeddings.size()))
-        # TODO: support different matcher
-        utt_schema_pair_cls = utterance_proj(utt_schema_pair_cls)
+        # when it is flatten, num_elements is 1
+        batch_size1, max_seq_length, element_emb_dim = element_embeddings.size()
+        batch_size2, max_u_len, utterance_dim = _encoded_tokens.size()
+        assert batch_size1 == batch_size2, "batch_size not match between element_emb and utterance_emb"
+        assert element_emb_dim == utterance_dim, "dim not much element_emb={} and utterance_emb={}".format(element_emb_dim, utterance_dim)
+        max_total_len = max_u_len + max_seq_length
+        # (batch_size * num_elements, max_total_len, dim)
+        utterance_element_pair_emb = torch.cat(
+            (self.utterance_projection_layer(_encoded_tokens), self.schema_projection_layer(element_embeddings)), dim=1)
+        # (batch_size, max_u_len+max_seq_length)
+        utterance_element_pair_mask = torch.cat(
+            (utterance_mask, element_mask),
+            dim=1).view(-1, max_total_len).bool()
+
+        # trans_output: (batch_size, max_total_len, dim)
+        trans_output = matching_layer(
+            utterance_element_pair_emb.transpose(0, 1),
+            src_key_padding_mask=utterance_element_pair_mask).transpose(0, 1)
+        # TODO: for model type
+        final_cls = trans_output[:, 0, :]
         if is_training:
-            utt_schema_pair_cls = self.utterance_dropout(utt_schema_pair_cls)
-        utt_schema_pair_cls = final_proj(utt_schema_pair_cls)
-        return utt_schema_pair_cls
+            final_cls = self.final_dropout(final_cls)
+        # TODO: use the first [CLS] for classification, if XLNET, it is the last one
+        output = final_proj(final_cls)
+        return output
 
     def _get_intents(self, features, is_training):
         """Obtain logits for intents."""
         # we only use cls token for matching, either finetuned cls and fixed cls
-        utt_intent_pair_cls, _ = self._encode_utterance_schema_pairs(self.encoder, self.utterance_dropout, features, "intent", is_training)
+        encoded_utt_cls, encoded_utt_tokens, encoded_utt_mask = self._encode_utterance(
+            self.tokenizer, self.encoder, features, self.utterance_dropout, is_training)
+        encoded_schema_cls, encoded_schema_tokens, encoded_schema_mask = self._encode_schema(
+            self.tokenizer, self.encoder, features, self.schema_dropout, "intent", is_training)
         logits = self._get_logits(
-            utt_intent_pair_cls, None,
-            self.intent_utterance_proj, self.intent_final_proj, is_training)
+            encoded_schema_tokens, encoded_schema_mask,
+            encoded_utt_tokens, encoded_utt_mask,
+            self.intent_matching_layer, self.intent_final_proj, is_training)
         # Shape: (batch_size, 1)
         logits = logits.squeeze(-1)
         # (batch_size, )

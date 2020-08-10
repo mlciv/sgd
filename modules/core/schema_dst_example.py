@@ -306,13 +306,13 @@ class SchemaDSTExample(object):
     def add_dial_history_features(self, utterances):
         """
         utterances : an array of (utterance, tokens, alignements, frames)
+        [CLS] X [SEP], which can be directly used for single utterance encoding for bert and roberta
         """
         # In this case, max_seq_length is only counting the seq1 (dialog history part)
         offsets = []
         # Modify lengths of sys & usr utterance so that length of total utt
         # (including [CLS], ) is no more than max_utt_len,  not incluing special tokens for sequence2 here.
         # For Roberta, we need to change this.
-        # TODO: handle special tokens for seq2
         if isinstance(self._tokenizer, RobertaTokenizer):
             special_token_num = 2
         else:

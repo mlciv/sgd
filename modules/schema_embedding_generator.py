@@ -214,7 +214,12 @@ class SchemaEmbeddingGenerator(nn.Module):
             value_id=value_id)
 
     def _create_seq2_feature(self, input_line, schema_type, service_id, intent_or_slot_id, value_id=-1):
-        """Create a single InputFeatures instance."""
+        """
+        Create a single InputFeatures instance.
+        Here, we mainly prepare for seq2
+        For bert, we prepare X[SEP] here, hence, for single sentence encoder, bert model, we need to add extra CLS at the beginning
+        For RoBERTa, we prepare [CLS] X [SEP] here.
+        """
         line = input_line.strip()
 
         bert_tokens = data_utils._tokenize(line, self.tokenizer)
