@@ -598,6 +598,9 @@ class SchemaDSTExample(object):
                 # make doncare value as OFF
                 donotcare_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, schema_constants.VALUE_DONTCARE_ID, schema_constants.STATUS_OFF)
                 cat_slot_examples.append(donotcare_cat_slot_example)
+                # make the unchange vlaue as ACTIVE
+                unchanged_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, schema_constants.VALUE_UNCHANGED_ID, schema_constants.STATUS_ACTIVE)
+                cat_slot_examples.append(unchanged_cat_slot_example)
             elif values[0] == schema_constants.STR_DONTCARE:
                 # use a spaecial value dontcare
                 self.categorical_slot_status[slot_idx] = schema_constants.STATUS_DONTCARE
@@ -613,6 +616,9 @@ class SchemaDSTExample(object):
                 # make doncare value as OFF
                 donotcare_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, schema_constants.VALUE_DONTCARE_ID, schema_constants.STATUS_ACTIVE)
                 cat_slot_examples.append(donotcare_cat_slot_example)
+                # make the unchange vlaue as OFF
+                unchanged_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, schema_constants.VALUE_UNCHANGED_ID, schema_constants.STATUS_OFF)
+                cat_slot_examples.append(unchanged_cat_slot_example)
             else:
                 self.categorical_slot_status[slot_idx] = schema_constants.STATUS_ACTIVE
                 cat_slot_status = schema_constants.STATUS_ACTIVE
@@ -632,6 +638,9 @@ class SchemaDSTExample(object):
                 # make doncare value as OFF
                 donotcare_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, schema_constants.VALUE_DONTCARE_ID, schema_constants.STATUS_OFF)
                 cat_slot_examples.append(donotcare_cat_slot_example)
+                # make the unchange vlaue as OFF
+                unchanged_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, schema_constants.VALUE_UNCHANGED_ID, schema_constants.STATUS_OFF)
+                cat_slot_examples.append(unchanged_cat_slot_example)
 
         return cat_slot_examples
 

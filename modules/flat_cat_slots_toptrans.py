@@ -153,7 +153,7 @@ class FlatCatSlotsTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface, Fl
         # TODO: for model type
         final_cls = trans_output[:, 0, :]
         if is_training:
-            final_cls = self.intent_final_dropout(final_cls)
+            final_cls = self.cat_slots_final_dropout(final_cls)
         # TODO: use the first [CLS] for classification, if XLNET, it is the last one
         output = final_proj(final_cls)
         return output
@@ -164,7 +164,7 @@ class FlatCatSlotsTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface, Fl
         encoded_utt_cls, encoded_utt_tokens, encoded_utt_mask = self._encode_utterances(
             self.tokenizer, self.utt_encoder, features, self.utterance_dropout, is_training)
         encoded_schema_cls, encoded_schema_tokens, encoded_schema_mask = self._encode_schema(
-            self.tokenizer, self.schema_encoder, features, self.schema_dropout, "intent", is_training)
+            self.tokenizer, self.schema_encoder, features, self.schema_dropout, "cat_slot", is_training)
         logits = self._get_logits(
             encoded_schema_tokens, encoded_schema_mask,
             encoded_utt_tokens, encoded_utt_mask,

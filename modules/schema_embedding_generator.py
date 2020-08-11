@@ -430,6 +430,11 @@ class SchemaEmbeddingGenerator(nn.Module):
                 nl_seq, "cat_slot_value",
                 service_schema.service_id, slot_id, self.dontcare_value_id))
 
+            nl_seq = " ".join([slot, slot_descriptions[slot], schema_constants.STR_UNCHANGED])
+            features.append(self._create_seq2_feature(
+                nl_seq, "cat_slot_value",
+                service_schema.service_id, slot_id, self.unchanged_value_id))
+
         return features
 
     def _get_cat_slots_and_values_input_seq2_features(self, service_schema):
@@ -892,6 +897,7 @@ class SchemaEmbeddingGenerator(nn.Module):
         max_aug_num_value = max_num_value + 1
         # the first cat value is 0, all other value id shift by 1
         self.dontcare_value_id = schema_constants.VALUE_DONTCARE_ID
+        self.unchanged_value_id = schema_constants.VALUE_UNCHANGED_ID
         self.special_cat_value_offset = schema_constants.SPECIAL_CAT_VALUE_OFFSET
         max_seq_length = self.max_seq_length
         for _ in schemas.services:

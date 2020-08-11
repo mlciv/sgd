@@ -249,7 +249,7 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services, u
     return all_metric_aggregate, per_frame_metric
 
 
-def main(_):
+def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(

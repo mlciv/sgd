@@ -110,7 +110,7 @@ class FlatNonCatSlotsTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface,
 
         self.noncat_slots_final_dropout = torch.nn.Dropout(self.config.final_dropout)
         # for noncategorical_slots, 3 logits
-        self.noncategorical_slots_status_final_proj = torch.nn.Sequential(
+        self.noncat_slots_status_final_proj = torch.nn.Sequential(
             torch.nn.Linear(self.utterance_embedding_dim, 3)
         )
 
@@ -157,8 +157,8 @@ class FlatNonCatSlotsTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface,
         # TODO: for model type
         final_cls = trans_output[:, 0, :]
         if is_training:
-            final_cls = self.requested_slots_final_dropout(final_cls)
-            trans_output = self.requested_Slot_final_dropout(trans_output)
+            final_cls = self.noncat_slots_final_dropout(final_cls)
+            trans_output = self.noncat_slots_final_dropout(trans_output)
         # TODO: use the first [CLS] for classification, if XLNET, it is the last one
         output = final_proj(final_cls)
         return output, trans_output
@@ -169,22 +169,19 @@ class FlatNonCatSlotsTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface,
         encoded_utt_cls, encoded_utt_tokens, encoded_utt_mask = self._encode_utterances(
             self.tokenizer, self.utt_encoder, features, self.utterance_dropout, is_training)
         encoded_schema_cls, encoded_schema_tokens, encoded_schema_mask = self._encode_schema(
-            self.tokenizer, self.schema_encoder, features, self.schema_dropout, "req_slot", is_training)
+            self.tokenizer, self.schema_encoder, features, self.schema_dropout, "noncat_slot", is_training)
         status_logits, utt_noncat_slot_pair_tokens = self._get_logits(
             encoded_schema_tokens, encoded_schema_mask,
             encoded_utt_tokens, encoded_utt_mask,
-            self.non_slots_matching_layer, self.non_slots_status_final_proj, is_training)
+            self.noncat_slots_matching_layer, self.noncat_slots_status_final_proj, is_training)
         # Shape: (batch_size, 1)
         status_logits = status_logits.squeeze(-1)
         batch_size = features["utt"].size()[0]
         # Shape: (batch_size, max_seq_length, 2)
         span_logits = self.noncat_span_layer(utt_noncat_slot_pair_tokens)
         total_max_length = span_logits.size()[1]
-        schema_attention_mask = features[SchemaInputFeatures.get_input_mask_tensor_name("noncat_slot")]
-        # all schema part should be masked as 0
-        schema_attention_mask = torch.zeros_like(schema_attention_mask.view(batch_size, -1))
         # batch_size , max_seq_length
-        utt_schema_pair_attention_mask = torch.cat((features["utt_mask"], schema_attention_mask), dim=1)
+        utt_schema_pair_attention_mask = torch.cat((encoded_utt_mask, encoded_schema_mask), dim=1)
         assert utt_schema_pair_attention_mask.size()[1] == total_max_length, "length check"
         tiled_attention_mask = utt_schema_pair_attention_mask.unsqueeze(2).expand(-1, -1, 2)
         negative_logits = -0.7 * torch.ones_like(span_logits) * torch.finfo(torch.float16).max

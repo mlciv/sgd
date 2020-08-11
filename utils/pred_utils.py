@@ -125,20 +125,19 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                 elif "cat_slot_value_status" in predictions:
                     # for flattent case
                     for slot_idx, slot in enumerate(service_schema.categorical_slots):
-                        # value is shifted by SPECIAL_CAT_VALUE_OFFSET
-                        has_value = any([p_active > CAT_VALUE_THRESHOLD for p_active in predictions["cat_slot_value_status"][slot_idx]])
-                        if has_value:
-                            # add negative score for padding, to make sure the intent ids are valid
-                            value_id = torch.argmax(torch.FloatTensor(predictions["cat_slot_value_status"][slot_idx]))
-                            value_idx = value_id - schema_constants.SPECIAL_CAT_VALUE_OFFSET
-                            cat_values = service_schema.get_categorical_slot_values(slot)
-                            # logger.info("{} has value: predictions['cat_slots_value_status']={}, slot_idx={}, slot={}, cat_values={}, value_id={}, gd_value={}".format(dial_key, predictions["cat_slot_value_status"][slot_idx], slot_idx, slot, cat_values, value_id, gd_state["slot_values"].get(slot, "NONE")))
-                            if value_id == schema_constants.VALUE_DONTCARE_ID:
-                                # dontcare
-                                slot_values[slot] = schema_constants.STR_DONTCARE
-                            else:
-                                if 0 <= value_idx < len(cat_values):
-                                    slot_values[slot] = cat_values[value_idx]
+                        value_id = torch.argmax(torch.FloatTensor(predictions["cat_slot_value_status"][slot_idx]))
+                        value_idx = value_id - schema_constants.SPECIAL_CAT_VALUE_OFFSET
+                        cat_values = service_schema.get_categorical_slot_values(slot)
+                        # logger.info("{} has value: predictions['cat_slots_value_status']={}, slot_idx={}, slot={}, cat_values={}, value_id={}, gd_value={}".format(dial_key, predictions["cat_slot_value_status"][slot_idx], slot_idx, slot, cat_values, value_id, gd_state["slot_values"].get(slot, "NONE")))
+                        if value_id == schema_constants.VALUE_DONTCARE_ID:
+                            # dontcare
+                            slot_values[slot] = schema_constants.STR_DONTCARE
+                        elif value_id == schema_constants.VALUE_UNCHANGED_ID:
+                            # the previous value will be used
+                            continue
+                        else:
+                            if 0 <= value_idx < len(cat_values):
+                                slot_values[slot] = cat_values[value_idx]
 
                 # We didn't do turn-level slot tagging F1 here.
                 # Non-categorical slots.
