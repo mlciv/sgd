@@ -69,6 +69,7 @@ class EncodeSepUttSchemaInterface(object):
       else:
          schema_token_type_ids = None
 
+      # if is bert, we need to adjust it a little, by adding a begin cls
       if isinstance(tokenizer, BertTokenizer):
          # adding [CLS] in the begining
          max_total_length = 1 + max_length
