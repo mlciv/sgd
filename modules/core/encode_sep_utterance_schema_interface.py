@@ -61,7 +61,6 @@ class EncodeSepUttSchemaInterface(object):
         assert schema_attention_mask.size()[-1] == max_length, "schema_attention_mask has wrong shape:{}".format(schema_attention_mask.size())
         assert schema_token_type_ids.size()[-1] == max_length, "schema_token_type_ids has wrong shape:{}".format(schema_token_type_ids.size())
 
-        schema_input_ids = schema_input_ids.view(batch_size, max_schema_num, -1)
         schema_attention_mask = schema_attention_mask.view(batch_size, max_schema_num, -1)
         # TODO: we need judge the type of encoder
         # For single sentence, there, we consider bert and roberta, both of them are [CLS]  X [SEP]
@@ -70,24 +69,27 @@ class EncodeSepUttSchemaInterface(object):
         else:
             schema_token_type_ids = None
 
+        # if is bert, we need to adjust it a little, by adding a begin cls
         if isinstance(tokenizer, BertTokenizer):
             # adding [CLS] in the begining
             max_total_length = 1 + max_length
-            begingging_cls_ids = torch.ones(batch_size, max_schema_num, 1) * tokenizer.cls_token_id
-            beginning_cls_attention_mask = torch.ones(batch_size, max_schema_num, 1)
+            current_device = schema_input_ids.device
+            begin_cls_ids = torch.ones(batch_size, max_schema_num, 1, device=current_device).long() * tokenizer.cls_token_id
+            begin_cls_attention_mask = torch.ones(batch_size, max_schema_num, 1, device=current_device).long()
             # changing token_type to 0 in seq1 in single sentence
-            adjusted_token_type_ids = torch.zeros(batch_size, max_schema_num, max_total_length)
-            adjusted_schema_input_ids = torch.cat((beginning_cls_ids, schema_input_ids), dim=2)
-            adjusted_schema_attention_mask = torch.cat((begging_cls_attention_mask, schema_attention_mask), dim=2)
+            adjusted_schema_token_type_ids = torch.zeros(batch_size, max_schema_num, max_total_length, device=current_device).long().view(batch_size*max_schema_num, -1)
+            adjusted_schema_input_ids = torch.cat((begin_cls_ids, schema_input_ids), dim=2).long().view(batch_size*max_schema_num, -1)
+            adjusted_schema_attention_mask = torch.cat((begin_cls_attention_mask, schema_attention_mask), dim=2).view(batch_size*max_schema_num, -1)
         else:
-            adjusted_schema_input_ids = schema_input_ids
-            adjusted_schema_attention_mask = schema_attention_mask
+            adjusted_schema_input_ids = schema_input_ids.view(batch_size*max_schema_num, -1)
+            adjusted_schema_attention_mask = schema_attention_mask.view(batch_size*max_schema_num, -1)
             adjusted_schema_token_type_ids = None
 
         output = encoder(
             input_ids=adjusted_schema_input_ids,
             attention_mask=adjusted_schema_attention_mask,
-            token_type_ids=adjusted_schema_token_type_ids)
+            token_type_ids=adjusted_schema_token_type_ids
+        )
 
         cls_shape = copy.deepcopy(schema_input_shape)
         # cls ignore the length

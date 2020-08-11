@@ -153,7 +153,7 @@ class FlatCatSlotsTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface, Fl
         # TODO: for model type
         final_cls = trans_output[:, 0, :]
         if is_training:
-            final_cls = self.cat_slots_final_dropout(final_cls)
+            final_cls = self.categorical_slots_values_final_dropout(final_cls)
         # TODO: use the first [CLS] for classification, if XLNET, it is the last one
         output = final_proj(final_cls)
         return output
