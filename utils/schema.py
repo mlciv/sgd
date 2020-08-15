@@ -278,7 +278,7 @@ def main():
         default=None,
         type=str,
         required=True,
-        help="Directory in which all prediction folder are listed")
+        help="the path of schema json file")
 
     parser.add_argument(
         "--task_name",
