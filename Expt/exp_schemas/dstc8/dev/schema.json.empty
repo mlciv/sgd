@@ -1,0 +1,1775 @@
+[
+  {
+    "service_name": "Alarm_1",
+    "description": "Alarm_1",
+    "slots": [
+      {
+        "name": "alarm_time",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "alarm_name",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "new_alarm_time",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "new_alarm_name",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "GetAlarms",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {},
+        "result_slots": [
+          "alarm_time",
+          "alarm_name"
+        ]
+      },
+      {
+        "name": "AddAlarm",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "new_alarm_time"
+        ],
+        "optional_slots": {
+          "new_alarm_name": "New alarm"
+        },
+        "result_slots": [
+          "new_alarm_time",
+          "new_alarm_name"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Banks_2",
+    "description": "Banks_2",
+    "slots": [
+      {
+        "name": "account_type",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "checking",
+          "savings"
+        ]
+      },
+      {
+        "name": "recipient_account_type",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "checking",
+          "savings"
+        ]
+      },
+      {
+        "name": "account_balance",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "transfer_amount",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "recipient_name",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "transfer_time",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "CheckBalance",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "account_type"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "account_type",
+          "account_balance"
+        ]
+      },
+      {
+        "name": "TransferMoney",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "account_type",
+          "transfer_amount",
+          "recipient_name"
+        ],
+        "optional_slots": {
+          "recipient_account_type": "checking"
+        },
+        "result_slots": [
+          "account_type",
+          "recipient_account_type",
+          "transfer_amount",
+          "recipient_name",
+          "transfer_time"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Buses_1",
+    "description": "Buses_1",
+    "slots": [
+      {
+        "name": "from_location",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "to_location",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "from_station",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "to_station",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "leaving_date",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "leaving_time",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "fare",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "travelers",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ]
+      },
+      {
+        "name": "transfers",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "0",
+          "1"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "FindBus",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "from_location",
+          "to_location",
+          "leaving_date"
+        ],
+        "optional_slots": {
+          "travelers": "1"
+        },
+        "result_slots": [
+          "from_location",
+          "to_location",
+          "from_station",
+          "to_station",
+          "leaving_date",
+          "leaving_time",
+          "fare",
+          "travelers",
+          "transfers"
+        ]
+      },
+      {
+        "name": "BuyBusTicket",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "from_location",
+          "to_location",
+          "leaving_date",
+          "leaving_time",
+          "travelers"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "from_location",
+          "to_location",
+          "from_station",
+          "to_station",
+          "leaving_date",
+          "leaving_time",
+          "fare",
+          "travelers",
+          "transfers"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Events_1",
+    "description": "Events_1",
+    "slots": [
+      {
+        "name": "category",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "Music",
+          "Sports"
+        ]
+      },
+      {
+        "name": "subcategory",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "event_name",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "date",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "time",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "number_of_seats",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9"
+        ]
+      },
+      {
+        "name": "city_of_event",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "event_location",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "address_of_location",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "FindEvents",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "category",
+          "city_of_event"
+        ],
+        "optional_slots": {
+          "subcategory": "dontcare",
+          "date": "dontcare"
+        },
+        "result_slots": [
+          "category",
+          "subcategory",
+          "event_name",
+          "date",
+          "time",
+          "city_of_event",
+          "event_location",
+          "address_of_location"
+        ]
+      },
+      {
+        "name": "BuyEventTickets",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "event_name",
+          "number_of_seats",
+          "date",
+          "city_of_event"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "event_name",
+          "date",
+          "time",
+          "number_of_seats",
+          "city_of_event",
+          "event_location",
+          "address_of_location"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Flights_3",
+    "description": "Flights_3",
+    "slots": [
+      {
+        "name": "passengers",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      },
+      {
+        "name": "flight_class",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "Economy",
+          "Premium Economy",
+          "Business",
+          "First Class"
+        ]
+      },
+      {
+        "name": "origin_city",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "destination_city",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "origin_airport_name",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "destination_airport_name",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "departure_date",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "return_date",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "number_stops",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "0",
+          "1"
+        ]
+      },
+      {
+        "name": "outbound_departure_time",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "outbound_arrival_time",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "inbound_arrival_time",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "inbound_departure_time",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "price",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "number_checked_bags",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "0",
+          "1",
+          "2"
+        ]
+      },
+      {
+        "name": "airlines",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "United Airlines",
+          "American Airlines",
+          "Delta Airlines",
+          "Southwest Airlines",
+          "Alaska Airlines",
+          "British Airways",
+          "Air Canada",
+          "Air France"
+        ]
+      },
+      {
+        "name": "arrives_next_day",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "SearchOnewayFlight",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "origin_city",
+          "destination_city",
+          "departure_date"
+        ],
+        "optional_slots": {
+          "airlines": "dontcare",
+          "passengers": "1",
+          "flight_class": "Economy",
+          "number_checked_bags": "0"
+        },
+        "result_slots": [
+          "passengers",
+          "flight_class",
+          "origin_city",
+          "destination_city",
+          "origin_airport_name",
+          "destination_airport_name",
+          "departure_date",
+          "number_stops",
+          "outbound_departure_time",
+          "outbound_arrival_time",
+          "price",
+          "number_checked_bags",
+          "airlines",
+          "arrives_next_day"
+        ]
+      },
+      {
+        "name": "SearchRoundtripFlights",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "origin_city",
+          "destination_city",
+          "departure_date",
+          "return_date"
+        ],
+        "optional_slots": {
+          "airlines": "dontcare",
+          "passengers": "1",
+          "flight_class": "Economy",
+          "number_checked_bags": "0"
+        },
+        "result_slots": [
+          "passengers",
+          "flight_class",
+          "origin_city",
+          "destination_city",
+          "origin_airport_name",
+          "destination_airport_name",
+          "departure_date",
+          "return_date",
+          "number_stops",
+          "outbound_departure_time",
+          "outbound_arrival_time",
+          "inbound_arrival_time",
+          "inbound_departure_time",
+          "price",
+          "number_checked_bags",
+          "airlines",
+          "arrives_next_day"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Homes_1",
+    "description": "Homes_1",
+    "slots": [
+      {
+        "name": "area",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "address",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "property_name",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "phone_number",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "furnished",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      },
+      {
+        "name": "pets_allowed",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      },
+      {
+        "name": "rent",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "visit_date",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "number_of_beds",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      },
+      {
+        "name": "number_of_baths",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "FindApartment",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "area",
+          "number_of_beds"
+        ],
+        "optional_slots": {
+          "furnished": "dontcare",
+          "number_of_baths": "dontcare",
+          "pets_allowed": "dontcare"
+        },
+        "result_slots": [
+          "area",
+          "address",
+          "property_name",
+          "phone_number",
+          "furnished",
+          "pets_allowed",
+          "rent",
+          "number_of_beds",
+          "number_of_baths"
+        ]
+      },
+      {
+        "name": "ScheduleVisit",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "property_name",
+          "visit_date"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "address",
+          "property_name",
+          "phone_number",
+          "furnished",
+          "pets_allowed",
+          "rent",
+          "visit_date",
+          "number_of_beds",
+          "number_of_baths"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Hotels_1",
+    "description": "Hotels_1",
+    "slots": [
+      {
+        "name": "destination",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "number_of_rooms",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3"
+        ]
+      },
+      {
+        "name": "check_in_date",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "number_of_days",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "star_rating",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ]
+      },
+      {
+        "name": "hotel_name",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "street_address",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "phone_number",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "price_per_night",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "has_wifi",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "ReserveHotel",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "hotel_name",
+          "check_in_date",
+          "number_of_days",
+          "destination"
+        ],
+        "optional_slots": {
+          "number_of_rooms": "1"
+        },
+        "result_slots": [
+          "destination",
+          "number_of_rooms",
+          "check_in_date",
+          "number_of_days",
+          "star_rating",
+          "hotel_name",
+          "street_address",
+          "phone_number",
+          "price_per_night",
+          "has_wifi"
+        ]
+      },
+      {
+        "name": "SearchHotel",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "destination"
+        ],
+        "optional_slots": {
+          "has_wifi": "dontcare",
+          "star_rating": "dontcare",
+          "number_of_rooms": "dontcare"
+        },
+        "result_slots": [
+          "destination",
+          "number_of_rooms",
+          "star_rating",
+          "hotel_name",
+          "street_address",
+          "phone_number",
+          "price_per_night",
+          "has_wifi"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Hotels_4",
+    "description": "Hotels_4",
+    "slots": [
+      {
+        "name": "location",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "number_of_rooms",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3"
+        ]
+      },
+      {
+        "name": "check_in_date",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "stay_length",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "star_rating",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ]
+      },
+      {
+        "name": "place_name",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "street_address",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "phone_number",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "price_per_night",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "smoking_allowed",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "ReserveHotel",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "place_name",
+          "check_in_date",
+          "stay_length",
+          "location"
+        ],
+        "optional_slots": {
+          "number_of_rooms": "1"
+        },
+        "result_slots": [
+          "location",
+          "number_of_rooms",
+          "check_in_date",
+          "stay_length",
+          "star_rating",
+          "place_name",
+          "street_address",
+          "phone_number",
+          "price_per_night",
+          "smoking_allowed"
+        ]
+      },
+      {
+        "name": "SearchHotel",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "location"
+        ],
+        "optional_slots": {
+          "smoking_allowed": "dontcare",
+          "star_rating": "dontcare",
+          "number_of_rooms": "dontcare"
+        },
+        "result_slots": [
+          "location",
+          "number_of_rooms",
+          "star_rating",
+          "place_name",
+          "street_address",
+          "phone_number",
+          "price_per_night",
+          "smoking_allowed"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Media_2",
+    "description": "Media_2",
+    "slots": [
+      {
+        "name": "movie_name",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "genre",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "subtitle_language",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "None",
+          "English",
+          "Mandarin",
+          "Spanish"
+        ]
+      },
+      {
+        "name": "director",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "actors",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "price",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "FindMovies",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "genre"
+        ],
+        "optional_slots": {
+          "actors": "dontcare",
+          "director": "dontcare"
+        },
+        "result_slots": [
+          "movie_name",
+          "genre",
+          "subtitle_language",
+          "director",
+          "actors",
+          "price"
+        ]
+      },
+      {
+        "name": "RentMovie",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "movie_name"
+        ],
+        "optional_slots": {
+          "subtitle_language": "None"
+        },
+        "result_slots": [
+          "movie_name",
+          "genre",
+          "subtitle_language",
+          "director",
+          "actors",
+          "price"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Movies_2",
+    "description": "Movies_2",
+    "slots": [
+      {
+        "name": "title",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "genre",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "aggregate_rating",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "starring",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "director",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "FindMovies",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "starring": "dontcare",
+          "director": "dontcare",
+          "genre": "dontcare"
+        },
+        "result_slots": [
+          "title",
+          "genre",
+          "aggregate_rating",
+          "starring",
+          "director"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Music_1",
+    "description": "Music_1",
+    "slots": [
+      {
+        "name": "song_name",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "artist",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "album",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "genre",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "year",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "2010",
+          "2011",
+          "2012",
+          "2013",
+          "2014",
+          "2015",
+          "2016",
+          "2017",
+          "2018",
+          "2019"
+        ]
+      },
+      {
+        "name": "playback_device",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "TV",
+          "Kitchen speaker",
+          "Bedroom speaker"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "LookupSong",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "year": "dontcare",
+          "genre": "dontcare",
+          "artist": "dontcare",
+          "album": "dontcare"
+        },
+        "result_slots": [
+          "song_name",
+          "artist",
+          "album",
+          "genre",
+          "year"
+        ]
+      },
+      {
+        "name": "PlaySong",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "song_name"
+        ],
+        "optional_slots": {
+          "artist": "dontcare",
+          "playback_device": "TV"
+        },
+        "result_slots": [
+          "song_name",
+          "artist",
+          "album",
+          "genre",
+          "year",
+          "playback_device"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "RentalCars_1",
+    "description": "RentalCars_1",
+    "slots": [
+      {
+        "name": "type",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "Compact",
+          "Standard",
+          "Full-size"
+        ]
+      },
+      {
+        "name": "car_name",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "pickup_location",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "pickup_date",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "pickup_time",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "pickup_city",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "dropoff_date",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "total_price",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "GetCarsAvailable",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "pickup_city",
+          "pickup_date",
+          "pickup_time",
+          "dropoff_date"
+        ],
+        "optional_slots": {
+          "type": "Standard"
+        },
+        "result_slots": [
+          "type",
+          "car_name",
+          "pickup_location",
+          "pickup_date",
+          "pickup_time",
+          "pickup_city",
+          "dropoff_date",
+          "total_price"
+        ]
+      },
+      {
+        "name": "ReserveCar",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "pickup_location",
+          "pickup_date",
+          "pickup_time",
+          "dropoff_date",
+          "type"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "type",
+          "car_name",
+          "pickup_location",
+          "pickup_date",
+          "pickup_time",
+          "dropoff_date",
+          "total_price"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Restaurants_2",
+    "description": "Restaurants_2",
+    "slots": [
+      {
+        "name": "restaurant_name",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "date",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "time",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "has_seating_outdoors",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      },
+      {
+        "name": "has_vegetarian_options",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      },
+      {
+        "name": "phone_number",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "rating",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "address",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "number_of_seats",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6"
+        ]
+      },
+      {
+        "name": "price_range",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "cheap",
+          "moderate",
+          "pricey",
+          "ultra high-end"
+        ]
+      },
+      {
+        "name": "location",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "category",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "ReserveRestaurant",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "restaurant_name",
+          "location",
+          "time"
+        ],
+        "optional_slots": {
+          "number_of_seats": "2",
+          "date": "2019-03-01"
+        },
+        "result_slots": [
+          "restaurant_name",
+          "date",
+          "time",
+          "has_seating_outdoors",
+          "has_vegetarian_options",
+          "phone_number",
+          "rating",
+          "address",
+          "number_of_seats",
+          "price_range",
+          "location",
+          "category"
+        ]
+      },
+      {
+        "name": "FindRestaurants",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "category",
+          "location"
+        ],
+        "optional_slots": {
+          "price_range": "dontcare",
+          "has_seating_outdoors": "dontcare",
+          "has_vegetarian_options": "dontcare"
+        },
+        "result_slots": [
+          "restaurant_name",
+          "has_seating_outdoors",
+          "has_vegetarian_options",
+          "phone_number",
+          "rating",
+          "address",
+          "price_range",
+          "location",
+          "category"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "RideSharing_1",
+    "description": "RideSharing_1",
+    "slots": [
+      {
+        "name": "destination",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "shared_ride",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      },
+      {
+        "name": "ride_fare",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "approximate_ride_duration",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "number_of_riders",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "GetRide",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "destination",
+          "number_of_riders",
+          "shared_ride"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "destination",
+          "shared_ride",
+          "ride_fare",
+          "approximate_ride_duration",
+          "number_of_riders"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Services_4",
+    "description": "Services_4",
+    "slots": [
+      {
+        "name": "therapist_name",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "phone_number",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "address",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "city",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "appointment_date",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "appointment_time",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "type",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "Psychologist",
+          "Family Counselor",
+          "Psychiatrist"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "BookAppointment",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "therapist_name",
+          "appointment_time",
+          "appointment_date"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "therapist_name",
+          "phone_number",
+          "address",
+          "appointment_date",
+          "appointment_time"
+        ]
+      },
+      {
+        "name": "FindProvider",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "city",
+          "type"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "therapist_name",
+          "phone_number",
+          "address",
+          "city",
+          "type"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Travel_1",
+    "description": "Travel_1",
+    "slots": [
+      {
+        "name": "location",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "attraction_name",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "category",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "Place of Worship",
+          "Theme Park",
+          "Museum",
+          "Historical Landmark",
+          "Park",
+          "Tourist Attraction",
+          "Sports Venue",
+          "Shopping Area",
+          "Performing Arts Venue",
+          "Nature Preserve"
+        ]
+      },
+      {
+        "name": "phone_number",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "free_entry",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      },
+      {
+        "name": "good_for_kids",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "FindAttractions",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "location"
+        ],
+        "optional_slots": {
+          "free_entry": "dontcare",
+          "good_for_kids": "dontcare",
+          "category": "dontcare"
+        },
+        "result_slots": [
+          "location",
+          "attraction_name",
+          "category",
+          "phone_number",
+          "free_entry",
+          "good_for_kids"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Weather_1",
+    "description": "Weather_1",
+    "slots": [
+      {
+        "name": "precipitation",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "humidity",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "wind",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "temperature",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "city",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "date",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "GetWeather",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "city"
+        ],
+        "optional_slots": {
+          "date": "2019-03-01"
+        },
+        "result_slots": [
+          "precipitation",
+          "humidity",
+          "wind",
+          "temperature",
+          "city",
+          "date"
+        ]
+      }
+    ]
+  }
+]

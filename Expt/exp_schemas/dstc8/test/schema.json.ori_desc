@@ -1,0 +1,219 @@
+Manage alarms by getting and setting them easily.
+Time of the alarm.
+Name of the alarm.
+Time to set for the new alarm.
+Name to use for the new alarm.
+Get the alarms user has already set.
+Set a new alarm.
+Affordable and comfortable bus travel across the country.
+The city to depart from.
+The destination city of the trip.
+Name of station of departure.
+Name of station of arrival.
+The date of departure.
+The time of departure.
+Ticket price per passenger.
+Whether to carry excess baggage in the bus.
+The number of tickets for the trip.
+How many stops the route has.
+Search for a bus itinerary between two places on a certain date.
+Purchase the bus tickets.
+Find and book tickets to any cultural events in your area.
+Type of cultural event.
+Name of artist or play.
+Date of event.
+Start time of event.
+Number of tickets to reserve for the event.
+Price of each ticket.
+City where the event is taking place.
+Exact venue of event.
+Street address of event venue.
+Find cultural events - concerts and plays - happening in a city.
+Buy tickets for a cultural event and date in a given city.
+Find cheap flights in seconds and book flights.
+the number of flight tickets for the trip.
+The cabin seat option.
+The name of the airport or city to depart from.
+The name of the airport or city to arrive at.
+Start date of the trip.
+End date of the trip.
+Whether the flight is a direct one.
+Departure time of the flight flying to the destination.
+Arrival time of the flight flying to the destination.
+Arrival time of the flight coming back from the trip.
+Departure time of the flight coming back from the trip.
+The total cost of the flight tickets.
+The company that provides air transport services.
+Search for one way flights to the destination.
+Search for roundtrip flights for the trip.
+Service for finding properties to buy and rent.
+Whether to buy or rent a property.
+City where the property is located.
+Street address of property.
+Name of property or apartment complex.
+Contact number of property or apartment complex.
+Whether the property has a garage.
+Whether the property has in-unit laundry facilities.
+Sale price or per-month rent of property.
+Date for visit to the property.
+Number of bedrooms in the property.
+Number of bathroom in the property.
+Search for a property to rent or buy in a given city.
+Schedule a visit to a property on a given date.
+A popular service for searching and booking houses for short term stay.
+Location of the house.
+Number of people for the reservation.
+Start date for the reservation or to find the house.
+End date for the reservation or to find the house.
+Review rating of the house.
+Address of the house.
+Phone number of the house.
+Price per night of the house.
+Boolean flag indicating if the house has laundry service.
+Book the selected house for given dates and number of adults.
+Find a house at a given location.
+Accommodation searching and booking portal.
+City or town where the accommodation is located.
+Number of rooms to reserve.
+Check in date for reservation.
+Length of stay in days.
+Star rating of the accommodation.
+Name of the accommodation.
+Street address of the accommodation.
+Contact phone number of the accommodation.
+Price per night for the stay.
+Whether or not smoking is allowed inside the place.
+Reserve rooms at a selected place for given dates.
+Look for accommodation in a city of choice.
+Enjoy instant and unlimited access to best shows, movies, comedy, sports, documentaries and more..
+Title of the movie.
+Category of the content.
+Language of the subtitles.
+Celebs acting in the movie.
+Explore movies online based on your preferences.
+Watch the movie instantly online with your preferred subtitles.
+Connect and share locations with your contacts.
+Location to share with contact.
+Name of contact to send to.
+Send your location to a contact.
+A go-to provider for finding movies, searching for show times and booking tickets.
+Price per ticket.
+Number of the movie tickets to be purchased.
+Type of show.
+Name of the theatre.
+Time of the show.
+Date of the show.
+Genre of the movie.
+Address of the theatre.
+City where the theatre is located.
+Name of the movie.
+Buy movie tickets for a particular show.
+Search for movies by location, genre or other attributes.
+Get show times for a movie at a location on a given date.
+A review-aggregation website for movies and television.
+Name of the movie.
+Type of the movie.
+Average critic percentage rating.
+Actors in the movie.
+Director of the movie.
+Find out interesting movies that you like.
+A free, personalized platform that plays music you'll love. Discover new music and enjoy old favorites..
+Name of the song.
+Performer's name.
+Collection of the song.
+Type of the music.
+Year when the song was first released.
+Place or name of the media player to play the song selected.
+Play the music.
+Discover songs matching your taste.
+The fast, simple way to pay in apps, on the web, and in millions of stores.
+The source of money used for making the payment.
+The amount of money to send or request.
+Name of the contact or account to make the transaction with.
+Whether the transaction is private or not.
+Request payment from someone.
+Send money to your friends.
+A leading global provider of car rental solutions.
+Type of the car.
+Car model.
+Place to pick up the car.
+The first date to start using the rental car.
+Time for the pick-up.
+City where you want to rent the car.
+The date to return the car.
+The cost for renting the car per day.
+Whether to purchase insurance.
+Discover cars available for rent in a certain location and period.
+Make a rental car reservation.
+A popular restaurant search and reservation service.
+Name of the restaurant.
+Tentative date of restaurant reservation.
+Tentative time of restaurant reservation.
+Whether the restaurant has outdoor seating available.
+Whether the restaurant has adequate vegetarian options.
+Phone number to contact restaurant.
+Average user rating for restaurant on a scale of 5.
+Address of restaurant.
+Number of seats to reserve at the restaurant.
+Price range for the restaurant.
+City where the restaurant is located.
+The category of food offered by the restaurant.
+Make a table reservation at a restaurant.
+Find restaurants by location and by category.
+App to book a cab to any destination.
+Destination address or location for cab.
+Type of cab ride.
+Total fare for cab ride.
+Expected waiting time for pick-up by cab.
+Number of seats to reserve in the cab.
+Book a cab for any destination, number of seats and ride type.
+A widely used service for finding and reserving the hair stylist of your choice.
+Name of the hair stylist/salon.
+Phone number of the stylist/salon.
+Average review rating for the stylist/salon.
+Boolean flag indicating if the salon is unisex.
+Address of the stylist/salon.
+City where the salon is located.
+Date for the appointment.
+Time of the appointment.
+Book an appointment at a hair stylist.
+Search for a hair stylist by city and optionally other attributes.
+Discover the right therapist for you and make reservations easily.
+Name of the therapist.
+Contact number of the therapist.
+Address of the therapist.
+Area where user wants to search for a therapist.
+Date of the appointment.
+Time of the appointment.
+Type of the therapist.
+Make a reservation with the therapist based on user's wish.
+Discover therapist according to user's conditions.
+Service to find and reserve train journeys between cities.
+Starting city for train journey.
+Ending city for train journey.
+Name of station at starting city.
+Name of station at ending city.
+Date of train journey.
+Time of start of train journey.
+Total price of train reservation.
+Number of adults to reserve train tickets for.
+Fare class for train reservation.
+Whether to add trip protection to reservation, for a fee.
+Reserve tickets for train journey.
+Find trains to a given destination city.
+The biggest database of tourist attractions and points of interest.
+City or town where the attraction is located.
+Common name of the attraction.
+Category to which the attraction belongs.
+Phone number to contact the attraction.
+Boolean flag indicating whether entrance to attraction is free.
+Boolean flag indicating whether attraction is good for to take kids to.
+Browse attractions in a given city.
+Check the weather for any place and any date.
+The possibility of rain or snow in percentage.
+Percentage humidity.
+Wind speed in miles per hour.
+Temperature in Fahrenheit.
+Name of the city.
+Date for the weather.
+Get the weather of a certain location on a date.

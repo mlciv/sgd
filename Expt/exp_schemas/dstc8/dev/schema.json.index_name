@@ -1,0 +1,1775 @@
+[
+  {
+    "service_name": "Alarm_1",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_0",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_1",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_2",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_3",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_0",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {},
+        "result_slots": [
+          "alarm_time",
+          "alarm_name"
+        ]
+      },
+      {
+        "name": "intent_1",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "new_alarm_time"
+        ],
+        "optional_slots": {
+          "new_alarm_name": "New alarm"
+        },
+        "result_slots": [
+          "new_alarm_time",
+          "new_alarm_name"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Banks_2",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_4",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "checking",
+          "savings"
+        ]
+      },
+      {
+        "name": "slot_5",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "checking",
+          "savings"
+        ]
+      },
+      {
+        "name": "slot_6",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_7",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_8",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_9",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_2",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "account_type"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "account_type",
+          "account_balance"
+        ]
+      },
+      {
+        "name": "intent_3",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "account_type",
+          "transfer_amount",
+          "recipient_name"
+        ],
+        "optional_slots": {
+          "recipient_account_type": "checking"
+        },
+        "result_slots": [
+          "account_type",
+          "recipient_account_type",
+          "transfer_amount",
+          "recipient_name",
+          "transfer_time"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Buses_1",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_10",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_11",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_12",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_13",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_14",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_15",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_16",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_17",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ]
+      },
+      {
+        "name": "slot_18",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "0",
+          "1"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_4",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "from_location",
+          "to_location",
+          "leaving_date"
+        ],
+        "optional_slots": {
+          "travelers": "1"
+        },
+        "result_slots": [
+          "from_location",
+          "to_location",
+          "from_station",
+          "to_station",
+          "leaving_date",
+          "leaving_time",
+          "fare",
+          "travelers",
+          "transfers"
+        ]
+      },
+      {
+        "name": "intent_5",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "from_location",
+          "to_location",
+          "leaving_date",
+          "leaving_time",
+          "travelers"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "from_location",
+          "to_location",
+          "from_station",
+          "to_station",
+          "leaving_date",
+          "leaving_time",
+          "fare",
+          "travelers",
+          "transfers"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Events_1",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_19",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "Music",
+          "Sports"
+        ]
+      },
+      {
+        "name": "slot_20",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_21",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_22",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_23",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_24",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9"
+        ]
+      },
+      {
+        "name": "slot_25",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_26",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_27",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_6",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "category",
+          "city_of_event"
+        ],
+        "optional_slots": {
+          "subcategory": "dontcare",
+          "date": "dontcare"
+        },
+        "result_slots": [
+          "category",
+          "subcategory",
+          "event_name",
+          "date",
+          "time",
+          "city_of_event",
+          "event_location",
+          "address_of_location"
+        ]
+      },
+      {
+        "name": "intent_7",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "event_name",
+          "number_of_seats",
+          "date",
+          "city_of_event"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "event_name",
+          "date",
+          "time",
+          "number_of_seats",
+          "city_of_event",
+          "event_location",
+          "address_of_location"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Flights_3",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_28",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      },
+      {
+        "name": "slot_29",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "Economy",
+          "Premium Economy",
+          "Business",
+          "First Class"
+        ]
+      },
+      {
+        "name": "slot_30",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_31",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_32",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_33",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_34",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_35",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_36",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "0",
+          "1"
+        ]
+      },
+      {
+        "name": "slot_37",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_38",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_39",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_40",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_41",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_42",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "0",
+          "1",
+          "2"
+        ]
+      },
+      {
+        "name": "slot_43",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "United Airlines",
+          "American Airlines",
+          "Delta Airlines",
+          "Southwest Airlines",
+          "Alaska Airlines",
+          "British Airways",
+          "Air Canada",
+          "Air France"
+        ]
+      },
+      {
+        "name": "slot_44",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_8",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "origin_city",
+          "destination_city",
+          "departure_date"
+        ],
+        "optional_slots": {
+          "airlines": "dontcare",
+          "passengers": "1",
+          "flight_class": "Economy",
+          "number_checked_bags": "0"
+        },
+        "result_slots": [
+          "passengers",
+          "flight_class",
+          "origin_city",
+          "destination_city",
+          "origin_airport_name",
+          "destination_airport_name",
+          "departure_date",
+          "number_stops",
+          "outbound_departure_time",
+          "outbound_arrival_time",
+          "price",
+          "number_checked_bags",
+          "airlines",
+          "arrives_next_day"
+        ]
+      },
+      {
+        "name": "intent_9",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "origin_city",
+          "destination_city",
+          "departure_date",
+          "return_date"
+        ],
+        "optional_slots": {
+          "airlines": "dontcare",
+          "passengers": "1",
+          "flight_class": "Economy",
+          "number_checked_bags": "0"
+        },
+        "result_slots": [
+          "passengers",
+          "flight_class",
+          "origin_city",
+          "destination_city",
+          "origin_airport_name",
+          "destination_airport_name",
+          "departure_date",
+          "return_date",
+          "number_stops",
+          "outbound_departure_time",
+          "outbound_arrival_time",
+          "inbound_arrival_time",
+          "inbound_departure_time",
+          "price",
+          "number_checked_bags",
+          "airlines",
+          "arrives_next_day"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Homes_1",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_45",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_46",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_47",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_48",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_49",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      },
+      {
+        "name": "slot_50",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      },
+      {
+        "name": "slot_51",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_52",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_53",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      },
+      {
+        "name": "slot_54",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_10",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "area",
+          "number_of_beds"
+        ],
+        "optional_slots": {
+          "furnished": "dontcare",
+          "number_of_baths": "dontcare",
+          "pets_allowed": "dontcare"
+        },
+        "result_slots": [
+          "area",
+          "address",
+          "property_name",
+          "phone_number",
+          "furnished",
+          "pets_allowed",
+          "rent",
+          "number_of_beds",
+          "number_of_baths"
+        ]
+      },
+      {
+        "name": "intent_11",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "property_name",
+          "visit_date"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "address",
+          "property_name",
+          "phone_number",
+          "furnished",
+          "pets_allowed",
+          "rent",
+          "visit_date",
+          "number_of_beds",
+          "number_of_baths"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Hotels_1",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_55",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_56",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3"
+        ]
+      },
+      {
+        "name": "slot_57",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_58",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_59",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ]
+      },
+      {
+        "name": "slot_60",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_61",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_62",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_63",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_64",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_12",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "hotel_name",
+          "check_in_date",
+          "number_of_days",
+          "destination"
+        ],
+        "optional_slots": {
+          "number_of_rooms": "1"
+        },
+        "result_slots": [
+          "destination",
+          "number_of_rooms",
+          "check_in_date",
+          "number_of_days",
+          "star_rating",
+          "hotel_name",
+          "street_address",
+          "phone_number",
+          "price_per_night",
+          "has_wifi"
+        ]
+      },
+      {
+        "name": "intent_13",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "destination"
+        ],
+        "optional_slots": {
+          "has_wifi": "dontcare",
+          "star_rating": "dontcare",
+          "number_of_rooms": "dontcare"
+        },
+        "result_slots": [
+          "destination",
+          "number_of_rooms",
+          "star_rating",
+          "hotel_name",
+          "street_address",
+          "phone_number",
+          "price_per_night",
+          "has_wifi"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Hotels_4",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_65",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_66",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3"
+        ]
+      },
+      {
+        "name": "slot_67",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_68",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_69",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ]
+      },
+      {
+        "name": "slot_70",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_71",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_72",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_73",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_74",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_14",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "place_name",
+          "check_in_date",
+          "stay_length",
+          "location"
+        ],
+        "optional_slots": {
+          "number_of_rooms": "1"
+        },
+        "result_slots": [
+          "location",
+          "number_of_rooms",
+          "check_in_date",
+          "stay_length",
+          "star_rating",
+          "place_name",
+          "street_address",
+          "phone_number",
+          "price_per_night",
+          "smoking_allowed"
+        ]
+      },
+      {
+        "name": "intent_15",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "location"
+        ],
+        "optional_slots": {
+          "smoking_allowed": "dontcare",
+          "star_rating": "dontcare",
+          "number_of_rooms": "dontcare"
+        },
+        "result_slots": [
+          "location",
+          "number_of_rooms",
+          "star_rating",
+          "place_name",
+          "street_address",
+          "phone_number",
+          "price_per_night",
+          "smoking_allowed"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Media_2",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_75",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_76",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_77",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "None",
+          "English",
+          "Mandarin",
+          "Spanish"
+        ]
+      },
+      {
+        "name": "slot_78",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_79",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_80",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_16",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "genre"
+        ],
+        "optional_slots": {
+          "actors": "dontcare",
+          "director": "dontcare"
+        },
+        "result_slots": [
+          "movie_name",
+          "genre",
+          "subtitle_language",
+          "director",
+          "actors",
+          "price"
+        ]
+      },
+      {
+        "name": "intent_17",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "movie_name"
+        ],
+        "optional_slots": {
+          "subtitle_language": "None"
+        },
+        "result_slots": [
+          "movie_name",
+          "genre",
+          "subtitle_language",
+          "director",
+          "actors",
+          "price"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Movies_2",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_81",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_82",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_83",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_84",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_85",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_18",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "starring": "dontcare",
+          "director": "dontcare",
+          "genre": "dontcare"
+        },
+        "result_slots": [
+          "title",
+          "genre",
+          "aggregate_rating",
+          "starring",
+          "director"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Music_1",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_86",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_87",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_88",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_89",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_90",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "2010",
+          "2011",
+          "2012",
+          "2013",
+          "2014",
+          "2015",
+          "2016",
+          "2017",
+          "2018",
+          "2019"
+        ]
+      },
+      {
+        "name": "slot_91",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "TV",
+          "Kitchen speaker",
+          "Bedroom speaker"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_19",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "year": "dontcare",
+          "genre": "dontcare",
+          "artist": "dontcare",
+          "album": "dontcare"
+        },
+        "result_slots": [
+          "song_name",
+          "artist",
+          "album",
+          "genre",
+          "year"
+        ]
+      },
+      {
+        "name": "intent_20",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "song_name"
+        ],
+        "optional_slots": {
+          "artist": "dontcare",
+          "playback_device": "TV"
+        },
+        "result_slots": [
+          "song_name",
+          "artist",
+          "album",
+          "genre",
+          "year",
+          "playback_device"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "RentalCars_1",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_92",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "Compact",
+          "Standard",
+          "Full-size"
+        ]
+      },
+      {
+        "name": "slot_93",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_94",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_95",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_96",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_97",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_98",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_99",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_21",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "pickup_city",
+          "pickup_date",
+          "pickup_time",
+          "dropoff_date"
+        ],
+        "optional_slots": {
+          "type": "Standard"
+        },
+        "result_slots": [
+          "type",
+          "car_name",
+          "pickup_location",
+          "pickup_date",
+          "pickup_time",
+          "pickup_city",
+          "dropoff_date",
+          "total_price"
+        ]
+      },
+      {
+        "name": "intent_22",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "pickup_location",
+          "pickup_date",
+          "pickup_time",
+          "dropoff_date",
+          "type"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "type",
+          "car_name",
+          "pickup_location",
+          "pickup_date",
+          "pickup_time",
+          "dropoff_date",
+          "total_price"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Restaurants_2",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_100",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_101",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_102",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_103",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      },
+      {
+        "name": "slot_104",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      },
+      {
+        "name": "slot_105",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_106",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_107",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_108",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6"
+        ]
+      },
+      {
+        "name": "slot_109",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "cheap",
+          "moderate",
+          "pricey",
+          "ultra high-end"
+        ]
+      },
+      {
+        "name": "slot_110",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_111",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_23",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "restaurant_name",
+          "location",
+          "time"
+        ],
+        "optional_slots": {
+          "number_of_seats": "2",
+          "date": "2019-03-01"
+        },
+        "result_slots": [
+          "restaurant_name",
+          "date",
+          "time",
+          "has_seating_outdoors",
+          "has_vegetarian_options",
+          "phone_number",
+          "rating",
+          "address",
+          "number_of_seats",
+          "price_range",
+          "location",
+          "category"
+        ]
+      },
+      {
+        "name": "intent_24",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "category",
+          "location"
+        ],
+        "optional_slots": {
+          "price_range": "dontcare",
+          "has_seating_outdoors": "dontcare",
+          "has_vegetarian_options": "dontcare"
+        },
+        "result_slots": [
+          "restaurant_name",
+          "has_seating_outdoors",
+          "has_vegetarian_options",
+          "phone_number",
+          "rating",
+          "address",
+          "price_range",
+          "location",
+          "category"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "RideSharing_1",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_112",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_113",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      },
+      {
+        "name": "slot_114",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_115",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_116",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_25",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "destination",
+          "number_of_riders",
+          "shared_ride"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "destination",
+          "shared_ride",
+          "ride_fare",
+          "approximate_ride_duration",
+          "number_of_riders"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Services_4",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_117",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_118",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_119",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_120",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_121",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_122",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_123",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "Psychologist",
+          "Family Counselor",
+          "Psychiatrist"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_26",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [
+          "therapist_name",
+          "appointment_time",
+          "appointment_date"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "therapist_name",
+          "phone_number",
+          "address",
+          "appointment_date",
+          "appointment_time"
+        ]
+      },
+      {
+        "name": "intent_27",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "city",
+          "type"
+        ],
+        "optional_slots": {},
+        "result_slots": [
+          "therapist_name",
+          "phone_number",
+          "address",
+          "city",
+          "type"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Travel_1",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_124",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_125",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_126",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "Place of Worship",
+          "Theme Park",
+          "Museum",
+          "Historical Landmark",
+          "Park",
+          "Tourist Attraction",
+          "Sports Venue",
+          "Shopping Area",
+          "Performing Arts Venue",
+          "Nature Preserve"
+        ]
+      },
+      {
+        "name": "slot_127",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_128",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      },
+      {
+        "name": "slot_129",
+        "description": "",
+        "is_categorical": true,
+        "possible_values": [
+          "True",
+          "False"
+        ]
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_28",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "location"
+        ],
+        "optional_slots": {
+          "free_entry": "dontcare",
+          "good_for_kids": "dontcare",
+          "category": "dontcare"
+        },
+        "result_slots": [
+          "location",
+          "attraction_name",
+          "category",
+          "phone_number",
+          "free_entry",
+          "good_for_kids"
+        ]
+      }
+    ]
+  },
+  {
+    "service_name": "Weather_1",
+    "description": "",
+    "slots": [
+      {
+        "name": "slot_130",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_131",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_132",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_133",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_134",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      },
+      {
+        "name": "slot_135",
+        "description": "",
+        "is_categorical": false,
+        "possible_values": []
+      }
+    ],
+    "intents": [
+      {
+        "name": "intent_29",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [
+          "city"
+        ],
+        "optional_slots": {
+          "date": "2019-03-01"
+        },
+        "result_slots": [
+          "precipitation",
+          "humidity",
+          "wind",
+          "temperature",
+          "city",
+          "date"
+        ]
+      }
+    ]
+  }
+]

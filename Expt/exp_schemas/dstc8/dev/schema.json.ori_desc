@@ -1,0 +1,183 @@
+Manage alarms by getting and setting them easily.
+Time of the alarm.
+Name of the alarm.
+Time to set for the new alarm.
+Name to use for the new alarm.
+Get the alarms user has already set.
+Set a new alarm.
+Service to manage your bank accounts and finances.
+The user's account type.
+The account type of the recipient to transfer the money to.
+The balance in the specified account.
+The amount of money to transfer.
+The name of the recipient to transfer the money to.
+Number of days for the transfer to go through.
+Get the balance of an account.
+Transfer money to another user.
+Book bus journeys from the biggest bus network in the country.
+City where bus is leaving from.
+City where bus is going to.
+Station where bus is leaving from.
+Station where bus is going to.
+Date of bus leaving for journey.
+Time of bus leaving for journey.
+Fare per ticket for journey.
+Number of travelers for journey.
+Number of transfers in journey.
+Find a bus journey for a given pair of cities.
+Buy tickets for a bus journey.
+The comprehensive portal to find and reserve seats at events near you.
+Type of event.
+Subcategory of event, either a music genre or sport name.
+Name of event.
+Date of occurrence of event.
+Time when the event is scheduled to start.
+Number of seats to find event tickets for.
+City where event is happening.
+Name of event location.
+Street address of event location.
+Find events in a given city.
+Buy tickets for an event.
+Find one way and round trip flights to your favorite city.
+Number of passengers to find flight seats for.
+Fare class of flight booking.
+City in which the journey originates.
+City in which the journey ends.
+Number of the airport flying out from.
+Number of the airport flying to.
+Date of departure flight.
+Date of return flight.
+Number of stops in the itinerary.
+Local time of departure of flight from origin to destination.
+Local time of arrival of flight from origin to destination.
+Local time of arrival of flight from destination to origin.
+Local time of departure of flight from destination to origin.
+Price per passenger of the itinerary.
+Number of bags to check in.
+Name of airline operating the flight.
+Whether the flight arrives the next day.
+Search for one-way flights to the destination of choice.
+Search for round-trip flights to the destination of choice.
+A widely used service for finding apartments and scheduling visits.
+City where the apartment is located.
+Address of the apartment.
+Name of the apartment.
+Phone number of the apartment.
+Boolean flag indicating if the property is furnished.
+Boolean flag indicating if pets are allowed.
+Rent per month of the apartment.
+Date for the visit to the apartment.
+Number of bed rooms.
+Number of baths in the apartment.
+Find an apartment in a city for a given number of bedrooms.
+Schedule a visit for a given property on a particular date.
+A popular service for searching and reserving rooms in hotels.
+Location of the hotel.
+Number of rooms in the reservation.
+Start date for the reservation.
+Number of days in the reservation.
+Star rating of the hotel.
+Name of the hotel.
+Address of the hotel.
+Phone number of the hotel.
+Price per night for the reservation.
+Boolean flag indicating if the hotel has wifi.
+Reserve a selected hotel for given dates.
+Find a hotel at a given location.
+Accommodation searching and booking portal.
+City or town where the accommodation is located.
+Number of rooms to reserve.
+Check in date for reservation.
+Length of stay in days.
+Star rating of the accommodation.
+Name of the accommodation.
+Street address of the accommodation.
+Contact phone number of the accommodation.
+Price per night for the stay.
+Whether or not smoking is allowed inside the place.
+Reserve rooms at a selected place for given dates.
+Look for accommodation in a city of choice.
+The widest selection and lowest prices for movie rentals.
+Name of the movie.
+Main genre of the movie.
+Language to use for subtitles (or None for no subtitles).
+Name of the director of the movie.
+Name of an actor starring in the movie.
+Cost of renting movie.
+Find movies to watch by genre and, optionally, director or actors.
+Rent a movie to watch, with optional subtitles.
+The definitive database to discover new movies to watch.
+Title for movie.
+Genre of the movie.
+Aggregate user rating for movie, scale of 10.
+Name of actor starring in movie.
+Name of director of the movie.
+Discover movies by genre, director and actors.
+A popular provider of a wide range of music content for searching and listening.
+Name of the song.
+Artist who performed the song.
+Album the song belongs to.
+Genre of the song.
+Year in which the song was released.
+Playback device on which the song is to be played.
+Search for a song.
+Play the selected song on the device.
+Car rental service with extensive coverage of locations and cars.
+Category to which rental car belongs.
+Model name of rental car.
+Location of rental car pickup.
+Date of rental car pickup.
+Time of rental car pickup.
+City to pick up the rental car.
+Date of rental car drop-off.
+Total price of car rental.
+Search for available rental cars by city and date.
+Reserve car rental for given dates and location.
+A popular restaurant search and reservation service.
+Name of the restaurant.
+Tentative date of restaurant reservation.
+Tentative time of restaurant reservation.
+Whether the restaurant has outdoor seating available.
+Whether the restaurant has adequate vegetarian options.
+Phone number to contact restaurant.
+Average user rating for restaurant on a scale of 5.
+Address of restaurant.
+Number of seats to reserve at the restaurant.
+Price range for the restaurant.
+City where the restaurant is located.
+The category of food offered by the restaurant.
+Make a table reservation at a restaurant.
+Find restaurants by location and by category.
+On-demand taxi calling service.
+Destination for taxi ride.
+Boolean flag whether ride is shared with other passengers.
+Total fare for taxi ride.
+Approximate duration of ride to the destination.
+Number of riders to call taxi for.
+Call a taxi to head to a given destination.
+Discover the right therapist for you and make reservations easily.
+Name of the therapist.
+Contact number of the therapist.
+Address of the therapist.
+Area where user wants to search for a therapist.
+Date of the appointment.
+Time of the appointment.
+Type of the therapist.
+Make a reservation with the therapist based on user's wish.
+Discover therapist according to user's conditions.
+The biggest database of tourist attractions and points of interest.
+City or town where the attraction is located.
+Common name of the attraction.
+Category to which the attraction belongs.
+Phone number to contact the attraction.
+Boolean flag indicating whether entrance to attraction is free.
+Boolean flag indicating whether attraction is good for to take kids to.
+Browse attractions in a given city.
+Check the weather for any place and any date.
+The possibility of rain or snow in percentage.
+Percentage humidity.
+Wind speed in miles per hour.
+Temperature in Fahrenheit.
+Name of the city.
+Date for the weather.
+Get the weather of a certain location on a date.

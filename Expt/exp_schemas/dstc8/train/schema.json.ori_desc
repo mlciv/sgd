@@ -1,0 +1,294 @@
+Manage bank accounts and transfer money.
+The account type of the user.
+The account type of the recipient whom the user is transfering money to.
+The amount of money held in a bank account at a given time.
+The amount of money to transfer.
+The account name of the recipient who is to receive the transfered money.
+Check the amount of money in a user's bank account.
+Transfer money from one bank account to another user's account.
+Book bus journeys from the biggest bus network in the country.
+City where bus is leaving from.
+City where bus is going to.
+Station where bus is leaving from.
+Station where bus is going to.
+Date of bus leaving for journey.
+Time of bus leaving for journey.
+Fare per ticket for journey.
+Number of travelers for journey.
+Number of transfers in journey.
+Find a bus journey for a given pair of cities.
+Buy tickets for a bus journey.
+Find a bus to take you to the city you want.
+Origin city for journey.
+Destination city for journey.
+Name of the bus terminus at the origin.
+Name of the bus terminus at the destination.
+Date of bus departure.
+Price per ticket of the itinerary.
+Time of bus departure.
+Size of group for the booking.
+Type of fare for the booking.
+Find a bus itinerary between cities for a given date.
+Buy tickets for a bus itinerary.
+Calendar service to manage personal events and reservations.
+Date of event or for checking availability.
+Start time of event.
+Location of event.
+Title of event.
+Starting time of available time slot.
+Ending time of available time slot.
+Get list of all calendar events for the user on a given day.
+Get a list of available times for the user on a given day.
+Add event to the user's calendar.
+The comprehensive portal to find and reserve seats at events near you.
+Type of event.
+Subcategory of event, either a music genre or sport name.
+Name of event.
+Date of occurrence of event.
+Time when the event is scheduled to start.
+Number of seats to find event tickets for.
+City where event is happening.
+Name of event location.
+Street address of event location.
+Find events in a given city.
+Buy tickets for an event.
+Get tickets for the coolest concerts and sports in your area.
+Type of event.
+The sport or music subcategory.
+Name of match or artist for event.
+Date of event.
+Starting time for event.
+Number of tickets to buy for event.
+City where the event is taking place.
+Exact venue of event.
+Address of event venue.
+Find concerts and games happening in your area.
+Get dates on which a given event is taking place.
+Buy tickets for an event.
+Find your next flight.
+Number of passengers in the booking.
+Seating class for the booking.
+Starting city for the trip.
+Ending city for the trip.
+Airport at the starting city for the trip.
+Airport at the ending city for the trip.
+Start date for the trip.
+Date of the return flight.
+Number of layovers in the flight.
+Departure time for the outbound leg flight.
+Arrival time for the outbound leg flight.
+Arrival time for the return leg flight.
+Departure time for the return leg flight.
+Price of the booking per passenger.
+Whether the booking is refundable or not.
+Name of airline.
+Search for one-way flights to a destination.
+Search for round-trip flights to a destination.
+Reserve a one-way flight.
+Reserve a round-trip flight.
+Search for cheap flights across multiple providers.
+Number of passengers to book tickets for.
+Seating class for the flight tickets.
+City of origin for the flight.
+City of destination for the flight.
+Airport where the flight is departing from.
+Airport where the flight is arriving to.
+Date of departure flight on the ticket.
+Date of return flight on the ticket.
+Number of stopovers made by the flight.
+Departure time of the origin-destination flight.
+Arrival time of the origin-destination flight.
+Arrival time of the destination-origin flight.
+Departure time of the destination-origin flight.
+Ticket fare for each passenger.
+Boolean flag indicating whether the flight is a red-eye flight.
+Name of the airline to book with.
+Search for a one way flight with your set of preferences.
+Search for round trip flights with your set of preferences.
+A widely used service for finding apartments and scheduling visits.
+City where the apartment is located.
+Address of the apartment.
+Name of the apartment.
+Phone number of the apartment.
+Boolean flag indicating if the property is furnished.
+Boolean flag indicating if pets are allowed.
+Rent per month of the apartment.
+Date for the visit to the apartment.
+Number of bed rooms.
+Number of baths in the apartment.
+Find an apartment in a city for a given number of bedrooms.
+Schedule a visit for a given property on a particular date.
+A popular service for searching and reserving rooms in hotels.
+Location of the hotel.
+Number of rooms in the reservation.
+Start date for the reservation.
+Number of days in the reservation.
+Star rating of the hotel.
+Name of the hotel.
+Address of the hotel.
+Phone number of the hotel.
+Price per night for the reservation.
+Boolean flag indicating if the hotel has wifi.
+Reserve a selected hotel for given dates.
+Find a hotel at a given location.
+A popular service for searching and booking houses for short term stay.
+Location of the house.
+Number of people for the reservation.
+Start date for the reservation or to find the house.
+End date for the reservation or to find the house.
+Review rating of the house.
+Address of the house.
+Phone number of the house.
+Price per night of the house.
+Boolean flag indicating if the house has laundry service.
+Book the selected house for given dates and number of adults.
+Find a house at a given location.
+A leading provider for searching and booking hotel rooms.
+Location of the hotel.
+Number of rooms to book.
+Start date for the hotel reservation.
+End date for the hotel reservation.
+Average review rating for the hotel.
+Name of the hotel.
+Address of the hotel.
+Phone number of the hotel.
+Total price for the stay.
+Boolean flag indicating if pets are allowed in the hotel.
+Reserve a selected hotel for given dates.
+Search for a hotel based on location.
+A leading provider of movies for searching and watching on-demand.
+Title of the movie.
+Genre of the movie.
+Boolean flag indicating if subtitles are desired for this movie.
+Name of the director of the movie.
+Find movies by genre and optionally director.
+Play the selected movie.
+A go-to provider for finding movies, searching for show times and booking tickets.
+Price per ticket.
+Number of the movie tickets to be purchased.
+Type of show.
+Name of the theatre.
+Time of the show.
+Date of the show.
+Genre of the movie.
+Address of the theatre.
+City where the theatre is located.
+Name of the movie.
+Buy movie tickets for a particular show.
+Search for movies by location, genre or other attributes.
+Get show times for a movie at a location on a given date.
+A popular provider of a wide range of music content for searching and listening.
+Name of the song.
+Artist who performed the song.
+Album the song belongs to.
+Genre of the song.
+Year in which the song was released.
+Playback device on which the song is to be played.
+Search for a song.
+Play the selected song on the device.
+A widely used service for finding and playing music from a variety of genres and artists.
+Name of the song.
+Name of the artist the song is performed by.
+Album the song belongs to.
+Genre of the song.
+Playback device on which the song is to be played.
+Search for a song based on the name and optionally other attributes.
+Play a song by its name and optionally artist.
+Car rental service with extensive coverage of locations and cars.
+Category to which rental car belongs.
+Model name of rental car.
+Location of rental car pickup.
+Date of rental car pickup.
+Time of rental car pickup.
+City to pick up the rental car.
+Date of rental car drop-off.
+Total price of car rental.
+Search for available rental cars by city and date.
+Reserve car rental for given dates and location.
+Car rental service, available worldwide.
+Type of car for rental.
+Name of car model.
+Pickup location for car rental.
+Date of pickup for car rental.
+Time of pickup for car rental.
+City in which to pick up rental car.
+End date of car rental reservation.
+Total price of rental reservation.
+See available cars for rental in a particular city and a date.
+Reserve a rental car for specified pickup location and dates.
+A leading provider for restaurant search and reservations.
+Name of the restaurant.
+Date for the reservation or to find availability.
+Time for the reservation or to find availability.
+Boolean flag indicating if the restaurant serves alcohol.
+Boolean flag indicating if the restaurant has live music.
+Phone number of the restaurant.
+Address of the restaurant.
+Party size for a reservation.
+Price range for the restaurant.
+City in which the restaurant is located.
+Cuisine of food served in the restaurant.
+Reserve a table at a restaurant.
+Find a restaurant of a particular cuisine in a city.
+On-demand taxi calling service.
+Destination for taxi ride.
+Boolean flag whether ride is shared with other passengers.
+Total fare for taxi ride.
+Approximate duration of ride to the destination.
+Number of riders to call taxi for.
+Call a taxi to head to a given destination.
+App to book a cab to any destination.
+Destination address or location for cab.
+Type of cab ride.
+Total fare for cab ride.
+Expected waiting time for pick-up by cab.
+Number of seats to reserve in the cab.
+Book a cab for any destination, number of seats and ride type.
+A widely used service for finding and reserving the hair stylist of your choice.
+Name of the hair stylist/salon.
+Phone number of the stylist/salon.
+Average review rating for the stylist/salon.
+Boolean flag indicating if the salon is unisex.
+Address of the stylist/salon.
+City where the salon is located.
+Date for the appointment.
+Time of the appointment.
+Book an appointment at a hair stylist.
+Search for a hair stylist by city and optionally other attributes.
+The go-to service for finding and booking appointments with top rated dentists.
+Name of the dentist.
+Phone number of the dentist.
+Address of the dentist.
+City where the dentist is located.
+Date for the appointment.
+Time for the appointment.
+Boolean flag indicating if the dentist offers cosmetic services.
+Book an appointment at a dentist for a given time and date.
+Find a dentist by location and optionally by services offered.
+A popular provider for finding the right doctor for your needs. Also allows you to schedule your visit to the doctor.
+Name of the doctor or the medical practice.
+Contact number for the doctor or the medical practice.
+Average review rating of the doctor.
+Address of the doctor.
+City where the doctor is located.
+Date for scheduling the appointment with the doctor.
+Time for the appointment with the doctor.
+Speciality of the doctor.
+Book an appointment with a specific doctor for the given date and time.
+Find a medical service provider based on their location and speciality.
+The biggest database of tourist attractions and points of interest.
+City or town where the attraction is located.
+Common name of the attraction.
+Category to which the attraction belongs.
+Phone number to contact the attraction.
+Boolean flag indicating whether entrance to attraction is free.
+Boolean flag indicating whether attraction is good for to take kids to.
+Browse attractions in a given city.
+Check the weather for any place and any date.
+The possibility of rain or snow in percentage.
+Percentage humidity.
+Wind speed in miles per hour.
+Temperature in Fahrenheit.
+Name of the city.
+Date for the weather.
+Get the weather of a certain location on a date.

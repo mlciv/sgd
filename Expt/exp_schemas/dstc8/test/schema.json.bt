@@ -1107,7 +1107,7 @@
       },
       {
         "name": "theater_name",
-        "description": "Theatre name",
+        "description": "Theatre name"
         "is_categorical": false,
         "possible_values": [],
         "description_ori": "Name of the theatre"
@@ -2083,7 +2083,7 @@
       },
       {
         "name": "from_station",
-        "description": "Origin station of a train trip",
+        "description": Origin station of a train trip",
         "is_categorical": false,
         "possible_values": [],
         "description_ori": "Name of station at starting city"
