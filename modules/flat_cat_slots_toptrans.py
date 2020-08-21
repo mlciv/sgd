@@ -102,6 +102,18 @@ class FlatCatSlotsTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface, Fl
             # Later, to support seperate projection layer
             self.schema_projection_layer =  self.utterance_projection_layer
 
+        self.categorical_slots_status_matching_layer = torch.nn.TransformerEncoder(
+            encoder_layer=torch.nn.TransformerEncoderLayer(self.config.d_model, self.config.nhead, self.config.dim_feedforward),
+            num_layers=self.config.num_matching_layer,
+            norm=torch.nn.LayerNorm(self.config.d_model)
+        )
+
+        self.categorical_slots_status_final_dropout = torch.nn.Dropout(self.config.final_dropout)
+
+        self.categorical_slots_status_final_proj = torch.nn.Sequential(
+            torch.nn.Linear(self.utterance_embedding_dim, 3)
+        )
+
         self.categorical_slots_values_matching_layer = torch.nn.TransformerEncoder(
             encoder_layer=torch.nn.TransformerEncoderLayer(self.config.d_model, self.config.nhead, self.config.dim_feedforward),
             num_layers=self.config.num_matching_layer,
@@ -163,22 +175,40 @@ class FlatCatSlotsTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface, Fl
         # we only use cls token for matching, either finetuned cls and fixed cls
         encoded_utt_cls, encoded_utt_tokens, encoded_utt_mask = self._encode_utterances(
             self.tokenizer, self.utt_encoder, features, self.utterance_dropout, is_training)
-        encoded_schema_cls, encoded_schema_tokens, encoded_schema_mask = self._encode_schema(
+        encoded_slot_cls, encoded_slot_tokens, encoded_slot_mask = self._encode_schema(
             self.tokenizer, self.schema_encoder, features, self.schema_dropout, "cat_slot", is_training)
-        logits = self._get_logits(
-            encoded_schema_tokens, encoded_schema_mask,
+        cat_slot_status_logits = self._get_logits(
+            encoded_slot_tokens, encoded_slot_mask,
+            encoded_utt_tokens, encoded_utt_mask,
+            self.categorical_slots_status_matching_layer, self.categorical_slots_status_final_proj, is_training)
+        # Shape: (batch_size, 1)
+        cat_slot_status_logits = cat_slot_status_logits.squeeze(-1)
+
+        encoded_slot_value_cls, encoded_slot_value_tokens, encoded_slot_value_mask = self._encode_schema(
+            self.tokenizer, self.schema_encoder, features, self.schema_dropout, "cat_slot_value", is_training)
+        cat_slot_value_logits = self._get_logits(
+            encoded_slot_value_tokens, encoded_slot_value_mask,
             encoded_utt_tokens, encoded_utt_mask,
             self.categorical_slots_values_matching_layer, self.categorical_slots_values_final_proj, is_training)
         # Shape: (batch_size, 1)
-        logits = logits.squeeze(-1)
+        cat_slot_value_logits = cat_slot_value_logits.squeeze(-1)
+        max_num_values = cat_slot_value_logits.size(-1)
+        # Mask out logits for padded values because they will be
+        # softmaxed.
+        mask = torch_ext.sequence_mask(
+            features["cat_slot_value_num"] + schema_constants.SPECIAL_CAT_VALUE_OFFSET,
+            maxlen=max_num_values, device=self.device, dtype=torch.bool)
+        negative_logits = -0.7 * torch.ones_like(cat_slot_value_logits) * torch.finfo(torch.float16).max
+        cat_slot_value_logits = torch.where(mask, cat_slot_value_logits, negative_logits)
         # (batch_size, )
-        return logits
+        return cat_slot_status_logits, cat_slot_value_logits
 
     def forward(self, features, labels=None):
         is_training = (labels is not None)
         outputs = {}
-        cat_slot_value_status = self._get_categorical_slots_goals(features, is_training)
-        outputs["logit_cat_slot_value_status"] = cat_slot_value_status
+        cat_slot_status_logits, cat_slot_value_logits = self._get_categorical_slots_goals(features, is_training)
+        outputs["logit_cat_slot_status"] = cat_slot_status_logits
+        outputs["logit_cat_slot_value"] = cat_slot_value_logits
         # when it is dataparallel, the output will keep the tuple, but the content are gathered from different GPUS.
         if labels:
             losses = self.define_loss(features, labels, outputs)

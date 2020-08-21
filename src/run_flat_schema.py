@@ -20,6 +20,7 @@ import argparse
 import glob
 import logging
 import os
+import math
 import random
 import timeit
 import shutil
@@ -45,14 +46,17 @@ from modules.schema_dialog_processor import SchemaDialogProcessor
 from modules.schema_intent_processor import SchemaIntentProcessor
 from modules.schema_reqslot_processor import SchemaReqSlotProcessor
 from modules.schema_catslot_processor import SchemaCatSlotProcessor
+from modules.schema_catslot_value_processor import SchemaCatSlotValueProcessor
 from modules.schema_noncatslot_processor import SchemaNonCatSlotProcessor
 
 from modules.flat_active_intent_bert_snt_pair_match import FlatActiveIntentBERTSntPairMatchModel
 from modules.flat_active_intent_toptrans import FlatActiveIntentTopTransModel
 from modules.flat_requested_slots_bert_snt_pair_match import FlatRequestedSlotsBERTSntPairMatchModel
 from modules.flat_requested_slots_toptrans import FlatRequestedSlotsTopTrans
+from modules.flat_cat_slot_value_bert_snt_pair_match import FlatCatSlotValueBERTSntPairMatchModel
 from modules.flat_cat_slots_bert_snt_pair_match import FlatCatSlotsBERTSntPairMatchModel
 from modules.flat_cat_slots_toptrans import FlatCatSlotsTopTransModel
+from modules.flat_cat_slot_value_toptrans import FlatCatSlotValueTopTransModel
 from modules.flat_noncat_slots_bert_snt_pair_match import FlatNonCatSlotsBERTSntPairMatchModel
 from modules.flat_noncat_slots_toptrans import FlatNonCatSlotsTopTransModel
 from modules.schema_embedding_generator import SchemaEmbeddingGenerator
@@ -83,9 +87,11 @@ MODEL_CLASSES = {
     "flat_active_intent_bert_snt_pair_match": (FlatActiveIntentBERTSntPairMatchModel, SchemaIntentProcessor),
     "flat_requested_slots_bert_snt_pair_match": (FlatRequestedSlotsBERTSntPairMatchModel, SchemaReqSlotProcessor),
     "flat_cat_slots_bert_snt_pair_match": (FlatCatSlotsBERTSntPairMatchModel, SchemaCatSlotProcessor),
+    "flat_cat_slot_value_bert_snt_pair_match": (FlatCatSlotValueBERTSntPairMatchModel, SchemaCatSlotValueProcessor),
     "flat_noncat_slots_bert_snt_pair_match": (FlatNonCatSlotsBERTSntPairMatchModel, SchemaNonCatSlotProcessor),
     "flat_active_intent_toptrans": (FlatActiveIntentTopTransModel, SchemaIntentProcessor),
     "flat_requested_slots_toptrans": (FlatRequestedSlotsTopTrans, SchemaReqSlotProcessor),
+    "flat_cat_slot_value_toptrans": (FlatCatSlotValueTopTransModel, SchemaCatSlotValueProcessor),
     "flat_cat_slots_toptrans": (FlatCatSlotsTopTransModel, SchemaCatSlotProcessor),
     "flat_noncat_slots_toptrans": (FlatNonCatSlotsTopTransModel, SchemaNonCatSlotProcessor)
 }
@@ -201,7 +207,8 @@ def train(args, config, train_dataset, model, processor):
             # set global_step to gobal_step of last saved checkpoint from model path
             # "checkpoing-xxxx" or "best-model-xxxx"
             checkpoint_suffix = os.path.basename(os.path.normpath(args.model_name_or_path)).split("-")[-1]
-            global_step = int(checkpoint_suffix)
+            # global_step = int(checkpoint_suffix)
+            global_step = 0
             epochs_trained = global_step // (len(train_dataloader) // args.gradient_accumulation_steps)
             steps_trained_in_current_epoch = global_step % (len(train_dataloader) // args.gradient_accumulation_steps)
 
@@ -290,15 +297,20 @@ def train(args, config, train_dataset, model, processor):
                 else:
                     labels = None
             elif all_examples_types[0] == 3:
-                # cat slot
+                # cat slot value
                 inputs["cat_slot_id"] = batch[6]
+                # max_service_num, max_cat_slot, max_seq_length => batch_size, max_cat_slot, nax_seq_length
                 all_cat_slot_ids_in_batch = schema_tensors["cat_slot_input_ids"].to(
                     args.device).index_select(0, inputs["service_id"])
                 _, max_cat_slot_num, max_seq_length = all_cat_slot_ids_in_batch.size()
+                # batch_size => batch_size,1,max_seq_length
                 cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1).expand(-1, 1, max_seq_length)
+                # batch_size, max_cat_slot , max_seq_length => batch_size, max_seq_length
                 inputs["cat_slot_input_ids"] = all_cat_slot_ids_in_batch.gather(1, cat_slot_indices).squeeze(1)
+                # max_service_name, max_cat_slot, max_seq_length =>  base_size, max_cat_slot, nax_seq_length
                 all_cat_slot_mask_in_batch = schema_tensors["cat_slot_input_mask"].to(
                     args.device).index_select(0, inputs["service_id"])
+                # batch_size, max_seq_length
                 inputs["cat_slot_input_mask"] = all_cat_slot_mask_in_batch.gather(1, cat_slot_indices).squeeze(1)
                 all_cat_slot_seg_in_batch = schema_tensors["cat_slot_input_type_ids"].to(
                     args.device).index_select(0, inputs["service_id"])
@@ -325,11 +337,58 @@ def train(args, config, train_dataset, model, processor):
 
                 if len(batch) > 8:
                     # results
+                    all_cat_slot_value_status = batch[8]
+                    labels = {
+                        "cat_slot_value_status": all_cat_slot_value_status
+                    }
+                else:
+                    labels = None
+            elif all_examples_types[0] == 5:
+                # cat slot
+                inputs["cat_slot_id"] = batch[6]
+                inputs["cat_slot_value_num"] = batch[7]
+                all_cat_slot_ids_in_batch = schema_tensors["cat_slot_input_ids"].to(
+                    args.device).index_select(0, inputs["service_id"])
+                _, max_cat_slot_num, max_seq_length = all_cat_slot_ids_in_batch.size()
+                cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1).expand(-1, 1, max_seq_length)
+                inputs["cat_slot_input_ids"] = all_cat_slot_ids_in_batch.gather(1, cat_slot_indices).squeeze(1)
+                all_cat_slot_mask_in_batch = schema_tensors["cat_slot_input_mask"].to(
+                    args.device).index_select(0, inputs["service_id"])
+                inputs["cat_slot_input_mask"] = all_cat_slot_mask_in_batch.gather(1, cat_slot_indices).squeeze(1)
+                all_cat_slot_seg_in_batch = schema_tensors["cat_slot_input_type_ids"].to(
+                    args.device).index_select(0, inputs["service_id"])
+                inputs["cat_slot_input_type_ids"] = all_cat_slot_seg_in_batch.gather(1, cat_slot_indices).squeeze(1)
+
+                # batch_size, max_cat, max_cat_value, max_length
+                all_cat_slot_value_ids_in_batch = schema_tensors["cat_slot_value_input_ids"].to(
+                    args.device).index_select(0, inputs["service_id"])
+                _, _, max_cat_value_num, max_seq_length = all_cat_slot_value_ids_in_batch.size()
+                cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_seq_length)
+                # batch_size, max_cat_value - special_value, max_length
+                inputs["cat_slot_value_input_ids"] = all_cat_slot_value_ids_in_batch.gather(
+                    1, cat_slot_indices
+                ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
+                all_cat_slot_value_mask_in_batch = schema_tensors["cat_slot_value_input_mask"].to(
+                    args.device).index_select(0, inputs["service_id"])
+                # batch_size, max_cat_value, max_length
+                inputs["cat_slot_value_input_mask"] = all_cat_slot_value_mask_in_batch.gather(
+                    1, cat_slot_indices
+                ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
+                # batch_size, max_cat, max_cat_value, max_length
+                all_cat_slot_value_seg_in_batch = schema_tensors["cat_slot_value_input_type_ids"].to(
+                    args.device).index_select(0, inputs["service_id"])
+                # batch_size, max_cat_value, max_length
+                inputs["cat_slot_value_input_type_ids"] = all_cat_slot_value_seg_in_batch.gather(
+                    1, cat_slot_indices
+                ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
+
+                if len(batch) > 8:
+                    # results
                     all_cat_slot_status = batch[8]
-                    all_cat_slot_value_status = batch[9]
+                    all_cat_slot_value = batch[9]
                     labels = {
                         "cat_slot_status": all_cat_slot_status,
-                        "cat_slot_value_status": all_cat_slot_value_status
+                        "cat_slot_value": all_cat_slot_value
                     }
                 else:
                     labels = None
@@ -463,11 +522,15 @@ def train(args, config, train_dataset, model, processor):
                                     metrics_for_key[v_key] = (v_value, global_step)
                                     # We only save the model for core metrics
                                     if key in evaluate_utils.CORE_METRIC_KEYS and \
-                                       v_key in evaluate_utils.CORE_METRIC_SUBKEYS:
+                                       v_key in processor.metrics:
                                         if old_path:
                                             shutil.rmtree(old_path)
+                                        new_path = "best-{}-{}".format(joint_key, global_step)
                                         save_checkpoint(args, model, processor._tokenizer,
-                                                        optimizer, scheduler, "best-{}-{}".format(joint_key, global_step))
+                                                        optimizer, scheduler, new_path)
+                                        save_dir = os.path.join(args.models_dir, new_path)
+                                        output_metric_file = os.path.join(save_dir, "dev_eval_metrics.json")
+                                        evaluate_utils.write_metrics_to_file(output_metric_file, results)
 
                     tb_writer.add_scalar("lr", scheduler.get_last_lr()[0], global_step)
                     tb_writer.add_scalar("loss", (tr_loss - logging_loss) / args.logging_steps, global_step)
@@ -636,12 +699,57 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
 
             if len(batch) > 8:
                 # results
-                all_cat_slot_status = batch[8]
-                all_cat_slot_value_status = batch[9]
+                all_cat_slot_value_status = batch[8]
                 #logger.info("all_cat_slot_value_status:{}".format(all_cat_slot_value_status))
                 labels = {
-                    "cat_slot_status": all_cat_slot_status,
                     "cat_slot_value_status": all_cat_slot_value_status
+                }
+            else:
+                labels = None
+        elif all_examples_types[0] == 5:
+            # cat slot
+            inputs["cat_slot_id"] = batch[6]
+            inputs["cat_slot_value_num"] = batch[7]
+            all_cat_slot_ids_in_batch = schema_tensors["cat_slot_input_ids"].to(
+                args.device).index_select(0, inputs["service_id"])
+            _, max_cat_slot_num, max_seq_length = all_cat_slot_ids_in_batch.size()
+            cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1).expand(-1, 1, max_seq_length)
+            inputs["cat_slot_input_ids"] = all_cat_slot_ids_in_batch.gather(1, cat_slot_indices).squeeze(1)
+            all_cat_slot_mask_in_batch = schema_tensors["cat_slot_input_mask"].to(
+                args.device).index_select(0, inputs["service_id"])
+            inputs["cat_slot_input_mask"] = all_cat_slot_mask_in_batch.gather(1, cat_slot_indices).squeeze(1)
+            all_cat_slot_seg_in_batch = schema_tensors["cat_slot_input_type_ids"].to(
+                args.device).index_select(0, inputs["service_id"])
+            inputs["cat_slot_input_type_ids"] = all_cat_slot_seg_in_batch.gather(1, cat_slot_indices).squeeze(1)
+            # batch_size, max_cat, max_cat_value, max_length
+            all_cat_slot_value_ids_in_batch = schema_tensors["cat_slot_value_input_ids"].to(
+                args.device).index_select(0, inputs["service_id"])
+            _, _, max_cat_value_num, max_seq_length = all_cat_slot_value_ids_in_batch.size()
+            cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_seq_length)
+            # batch_size, max_cat_value, max_length
+            inputs["cat_slot_value_input_ids"] = all_cat_slot_value_ids_in_batch.gather(
+                1, cat_slot_indices
+            ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
+            all_cat_slot_value_mask_in_batch = schema_tensors["cat_slot_value_input_mask"].to(
+                args.device).index_select(0, inputs["service_id"])
+            # batch_size, max_cat_value, max_length
+            inputs["cat_slot_value_input_mask"] = all_cat_slot_value_mask_in_batch.gather(
+                1, cat_slot_indices
+            ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
+            all_cat_slot_value_seg_in_batch = schema_tensors["cat_slot_value_input_type_ids"].to(
+                args.device).index_select(0, inputs["service_id"])
+            # batch_size, max_cat_value, max_length
+            inputs["cat_slot_value_input_type_ids"] = all_cat_slot_value_seg_in_batch.gather(
+                1, cat_slot_indices
+            ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
+
+            if len(batch) > 8:
+                # results
+                all_cat_slot_status = batch[8]
+                all_cat_slot_value = batch[9]
+                labels = {
+                    "cat_slot_status": all_cat_slot_status,
+                    "cat_slot_value": all_cat_slot_value
                 }
             else:
                 labels = None
@@ -757,7 +865,7 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
 
                     if dial_key not in all_predictions:
                         all_predictions[dial_key] = prediction
-            elif all_examples_types[0] == 3:
+            elif all_examples_types[0] == 3 or all_examples_types[0] == 5:
                 # for each intent id, we need to merge them all
                 for i in range(len(all_examples_ids)):
                     local_prediction = {}
@@ -790,6 +898,10 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
                         cat_slot_status[local_prediction["cat_slot_id"]] = local_prediction["cat_slot_status"]
                         if "cat_slot_status" not in prediction:
                             prediction["cat_slot_status"] = cat_slot_status
+                        cat_slot_value = prediction.get("cat_slot_value", [0] * max_cat_slot_num)
+                        cat_slot_value[local_prediction["cat_slot_id"]] = local_prediction["cat_slot_value"]
+                        if "cat_slot_value" not in prediction:
+                            prediction["cat_slot_value"] = cat_slot_value
 
                     if dial_key not in all_predictions:
                         all_predictions[dial_key] = prediction
@@ -1220,6 +1332,7 @@ def main():
     )
 
     parser.add_argument("--logging_steps", type=int, default=500, help="Log every X updates steps.")
+    parser.add_argument("--few_shot_portion", type=float, default=-1, help="The portion of training dataset to use, -1 is default, no using any")
     parser.add_argument("--log_data_warnings", type=bool, default=True, help="Log the warnings when handling data.")
     parser.add_argument("--save_steps", type=int, default=500, help="Save checkpoint every X updates steps.")
     parser.add_argument(
@@ -1410,6 +1523,11 @@ def main():
     if args.do_train:
         train_dataset = load_and_cache_examples(args, processor, mode="train", output_examples=False)
         # with torch.autograd.detect_anomaly():
+        if args.few_shot_portion > 0:
+            train_length = len(train_dataset)
+            portion_length = math.ceil(train_length * args.few_shot_portion)
+            random_indices = random.sample(range(0, train_length), portion_length)
+            train_dataset = torch.utils.data.Subset(train_dataset, random_indices)
         global_step, tr_loss = train(args, config, train_dataset, model, processor)
         logger.info(" global_step = %s, average loss = %s", global_step, tr_loss)
 
@@ -1460,12 +1578,17 @@ def main():
         logging.getLogger("transformers.modeling_utils").setLevel(logging.WARN)  # Reduce model loading logs
         logger.info("Evaluate the following checkpoints: %s", checkpoints)
 
+        evaluated_global_steps = []
         for checkpoint in checkpoints:
             # Reload the model
             if checkpoint == args.models_dir:
                 global_step = -1
             else:
                 global_step = os.path.basename(os.path.normpath(checkpoint)).split("-")[-1]
+            if global_step in evaluated_global_steps:
+                logger.info("{} has been evaluated".format(global_step))
+                continue
+
             model = model_class.from_pretrained(checkpoint, args=args)  # , force_download=True)
             model.eval()
             #logger.info("Model's state_dict:")
@@ -1487,6 +1610,7 @@ def main():
 
             # Evaluate
             metrics, all_predictions = evaluate(args, config, model, processor, "test", step=global_step)
+            evaluated_global_steps.append(global_step)
             # Write predictions to file in DSTC8 format.
             dataset_mark = os.path.basename(args.data_dir)
             prediction_dir = os.path.join(

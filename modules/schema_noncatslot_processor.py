@@ -6,6 +6,7 @@ from modules.core.schema_dst_example import SchemaDSTExample
 from modules.schema_dialog_processor import SchemaDialogProcessor
 from utils import schema
 from utils import data_utils
+from utils import evaluate_utils
 import os
 import json
 
@@ -27,6 +28,7 @@ class SchemaNonCatSlotProcessor(SchemaDialogProcessor):
         super(SchemaNonCatSlotProcessor, self).__init__(
             dataset_config=dataset_config, tokenizer=tokenizer, max_seq_length=max_seq_length,
             log_data_warnings=log_data_warnings, dialog_cxt_length=dialog_cxt_length)
+        self.metrics = evaluate_utils.NONCAT_SLOTS_SUBKEYS
 
     def _create_examples_from_dialog(self, dialog, schemas, dataset):
         """

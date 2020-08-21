@@ -5,6 +5,7 @@ from modules.core.schema_constants import *
 from modules.core.schema_dst_example import SchemaDSTExample
 from utils import schema
 from utils import data_utils
+from utils import evaluate_utils
 import os
 import json
 
@@ -31,6 +32,7 @@ class SchemaDialogProcessor(DataProcessor):
         self._max_schema_seq_length = max_schema_seq_length
         # the dialogue history used(not including current user utterance)
         self.dial_cxt_length = dialog_cxt_length
+        self.metrics = evaluate_utils.CORE_METRIC_SUBKEYS
 
     @property
     def dataset_config(self):

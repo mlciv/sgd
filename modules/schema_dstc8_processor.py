@@ -9,6 +9,7 @@ from modules.core.schema_constants import *
 
 from transformers.data.processors.utils import DataProcessor
 from transformers.tokenization_roberta import RobertaTokenizer, RobertaTokenizerFast
+from modules.core.schema_dst_example import SchemaDSTExample
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +22,11 @@ class SchemaDSTC8Processor(SchemaDialogProcessor):
                  dataset_config,
                  tokenizer,
                  max_seq_length=DEFAULT_MAX_SEQ_LENGTH,
+                 max_schema_seq_length=MAX_SCHEMA_SEQ_LENGTH,
                  log_data_warnings=False, dialog_cxt_length=1):
         super(SchemaDSTC8Processor, self).__init__(
             dataset_config=dataset_config, tokenizer=tokenizer, max_seq_length=max_seq_length,
+            max_schema_seq_length=max_schema_seq_length,
             log_data_warnings=log_data_warnings, dialog_cxt_length=dialog_cxt_length)
 
     def get_example_from_tensor_dict(self, tensor_dict):
@@ -60,7 +63,7 @@ class SchemaDSTC8Processor(SchemaDialogProcessor):
         examples: a list of `SchemaDSTExample`s.
         """
         dialogs = self.get_whole_dialogs(data_dir, dataset)
-        schemas = SchemaDSTC8Processor.get_schemas(data_dir, dataset)
+        schemas = self.get_schemas(data_dir, dataset)
 
         examples = []
         for dialog_idx, dialog in enumerate(dialogs):
@@ -180,7 +183,7 @@ class SchemaDSTC8Processor(SchemaDialogProcessor):
             else:
                 system_span_boundaries = {}
 
-            example.add_noncategorical_slots(
+            example.add_noncategorical_slots_old(
                 state_update,
                 system_span_boundaries,
                 user_span_boundaries)

@@ -112,6 +112,8 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
 
                 # Add prediction for user goal (slot values).
                 # Categorical slots.
+                # used for global state not for incremental
+                new_cat_slot_values = {}
                 if "cat_slot_status" in predictions:
                     for slot_idx, slot in enumerate(service_schema.categorical_slots):
                         slot_status = predictions["cat_slot_status"][slot_idx]
@@ -123,7 +125,7 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                                 slot_values[slot] = (
                                     service_schema.get_categorical_slot_values(slot)[value_idx])
                 elif "cat_slot_value_status" in predictions:
-                    # for flattent case
+                    # for flattent case, we don't do incremental predciton, always predict the frame in current turn
                     for slot_idx, slot in enumerate(service_schema.categorical_slots):
                         value_id = torch.argmax(torch.FloatTensor(predictions["cat_slot_value_status"][slot_idx]))
                         value_idx = value_id - schema_constants.SPECIAL_CAT_VALUE_OFFSET
@@ -131,13 +133,13 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                         # logger.info("{} has value: predictions['cat_slots_value_status']={}, slot_idx={}, slot={}, cat_values={}, value_id={}, gd_value={}".format(dial_key, predictions["cat_slot_value_status"][slot_idx], slot_idx, slot, cat_values, value_id, gd_state["slot_values"].get(slot, "NONE")))
                         if value_id == schema_constants.VALUE_DONTCARE_ID:
                             # dontcare
-                            slot_values[slot] = schema_constants.STR_DONTCARE
-                        elif value_id == schema_constants.VALUE_UNCHANGED_ID:
-                            # the previous value will be used
+                            new_cat_slot_values[slot] = schema_constants.STR_DONTCARE
+                        elif value_id == schema_constants.VALUE_UNKNOWN_ID:
+                            # the current value is empty
                             continue
                         else:
                             if 0 <= value_idx < len(cat_values):
-                                slot_values[slot] = cat_values[value_idx]
+                                new_cat_slot_values[slot] = cat_values[value_idx]
 
                 # We didn't do turn-level slot tagging F1 here.
                 # Non-categorical slots.
@@ -150,7 +152,9 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                         elif slot_status == schema_constants.STATUS_ACTIVE:
                             tok_start_idx = predictions["noncat_slot_start"][slot_idx]
                             tok_end_idx = predictions["noncat_slot_end"][slot_idx]
-                            if tok_start_idx < 0 or tok_end_idx < 0:
+                            if tok_start_idx < 0 or tok_end_idx < 0 or  \
+                               tok_start_idx >= predictions["noncat_alignment_end"].size()[0] or \
+                               tok_end_idx >= predictions["noncat_alignment_end"].size()[0]:
                                 continue
                             ch_start_idx = predictions["noncat_alignment_start"][tok_start_idx].item()
                             ch_end_idx = predictions["noncat_alignment_end"][tok_end_idx].item()
@@ -158,7 +162,8 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                                 # this slot is in the current utterance
                                 slot_span = {}
                                 slot_span["slot"] = slot
-                                slot_span["start"] = ch_start_idx - current_utt_start_char_index
+                                # shift the char index by one
+                                slot_span["start"] = ch_start_idx - current_utt_start_char_index - 1
                                 slot_span["exclusive_end"] = ch_end_idx - current_utt_start_char_index
                                 slots.append(slot_span)
 
@@ -176,7 +181,12 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                 # Create a new dict to avoid overwriting the state in previous turns
                 # because of use of same objects.
                 frame["slots"] = slots
+                # logger.info("gd_slots:{}, pred_slots:{}".format(gd_slots, slots))
                 state["slot_values"] = {s: [v] for s, v in slot_values.items()}
+                if "cat_slot_value_status" in predictions:
+                    for s, v in new_cat_slot_values.items():
+                        state["slot_values"][s] = [v]
+
                 # logger.info("dial_key:{}, slot_values:{}".format(dial_key, slot_values))
                 frame["state"] = state
     return dialog

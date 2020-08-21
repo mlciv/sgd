@@ -23,7 +23,8 @@ fi
 
 ### CHECK WORK & DATA DIR
 if [ ! -e ${EXP_DIR} ]; then
-  echo ${EXP_DIR}" not exit"
+  echo ${EXP_DIR}" not exit, create now"
+  mkdir -p ${EXP_DIR}
 fi
 
 # evlauate arguments

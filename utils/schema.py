@@ -254,6 +254,45 @@ class Schema(object):
         with open(file_path, "w") as f:
             json.dump(self._schemas, f, indent=2)
 
+    def gen_empty_description(self):
+        for schema in self._schemas:
+            schema["description"] = schema["service_name"]
+            for slot in schema["slots"]:
+                slot['description'] = ""
+            for intent in schema["intents"]:
+                intent['description'] = ""
+
+        self.save_to_file(self.schema_json_path + ".empty")
+
+    def gen_enrich(self):
+        for schema in self._schemas:
+            # No change to service description
+            # schema["description"] = schema["service_name"]
+            for slot in schema["slots"]:
+                slot['ori_description'] = slot['description']
+                slot['description'] = slot["ori_description"]
+            for intent in schema["intents"]:
+                intent['ori_description'] = intent['description']
+                intent['description'] = intent["ori_description"]
+
+        self.save_to_file(self.schema_json_path + ".enrich")
+
+    def gen_random_rename(self):
+        i = 0
+        j = 0
+        for schema in self._schemas:
+            schema["description"] = ""
+            for slot in schema["slots"]:
+                slot['description'] = ""
+                slot["name"] = "slot_{}".format(i)
+                i = i + 1
+            for intent in schema["intents"]:
+                intent['description'] = ""
+                intent["name"] = "intent_{}".format(j)
+                j = j + 1
+
+        self.save_to_file(self.schema_json_path + ".index_name")
+
     def gen_name_only_description(self):
         for schema in self._schemas:
             schema["description"] = schema["service_name"]
@@ -263,6 +302,52 @@ class Schema(object):
                 intent['description'] = intent["name"]
 
         self.save_to_file(self.schema_json_path + ".name_only")
+
+    def load_back_translation_file(self, back_translation_file):
+        desc_mapping_dict = {}
+        with open(back_translation_file, "r") as f:
+            back_translations = json.load(f)
+            for bt in back_translations:
+                desc_mapping_dict[bt["source_line"][:-1]] = bt["back_translations"][0]["bt"][:-2]
+
+        for schema in self._schemas:
+            ori_service_desc = schema["description"]
+            schema["description"] = desc_mapping_dict.get(ori_service_desc, "NOT_FOUND:" + ori_service_desc)
+            schema["description_ori"] = ori_service_desc
+            for slot in schema["slots"]:
+                ori_slot_desc = slot['description']
+                slot["description_ori"] = ori_slot_desc
+                slot["description"] = desc_mapping_dict.get(ori_slot_desc, "NOT_FOUND" + ori_slot_desc)
+            for intent in schema["intents"]:
+                ori_intent_desc = intent['description']
+                intent["description_ori"] = ori_intent_desc
+                intent["description"] = desc_mapping_dict.get(ori_intent_desc, "NOT_FOUND" + ori_intent_desc)
+
+        self.save_to_file(self.schema_json_path + ".bt")
+
+
+    def gen_question_template(self):
+        slot_name = []
+        intent_name = []
+        for schema in self._schemas:
+            # No change to service description
+            # schema["description"] = schema["service_name"]
+            for slot in schema["slots"]:
+                slot['ori_description'] = slot['description']
+                slot['description'] = slot["name"]
+                slot_name.append(slot['name'])
+            for intent in schema["intents"]:
+                intent['ori_description'] = intent['description']
+                intent['description'] = intent["name"]
+                intent_name.append(intent['name'])
+
+        with open(self.schema_json_path + ".slot_name", "w") as f:
+            f.write("\n".join(slot_name))
+
+        with open(self.schema_json_path + ".intent_name", "w") as f:
+            f.write("\n".join(intent_name))
+
+        self.save_to_file(self.schema_json_path + ".question_template")
 
 def main():
     # Setup logging
@@ -285,14 +370,26 @@ def main():
         default=None,
         type=str,
         required=True,
-        choices=["name_only", "qa_template", "back_translation"],
+        choices=["empty", "name_only", "index_name", "question_template", "back_translation", "enrich"],
         help="for evaluation.")
 
     args = parser.parse_args()
     logger.info("args:{}".format(args))
     schema = Schema(args.schema_json_path)
+    if args.task_name == "empty":
+        schema.gen_empty_description()
     if args.task_name == "name_only":
         schema.gen_name_only_description()
+    elif args.task_name == "back_translation":
+        schema_description_back_translation_path = args.schema_json_path + ".ori_desc.cs.backtranslated.sorted"
+        schema.load_back_translation_file(schema_description_back_translation_path)
+    elif args.task_name == "question_template":
+        schema.gen_question_template()
+    elif args.task_name == "enrich":
+        schema.gen_enrich()
+    elif args.task_name == "index_name":
+        schema.gen_random_rename()
+
 
 if __name__ == "__main__":
     main()

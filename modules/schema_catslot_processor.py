@@ -6,6 +6,7 @@ from modules.core.schema_dst_example import SchemaDSTExample
 from modules.schema_dialog_processor import SchemaDialogProcessor
 from utils import schema
 from utils import data_utils
+from utils import evaluate_utils
 import os
 import json
 import csv
@@ -28,6 +29,7 @@ class SchemaCatSlotProcessor(SchemaDialogProcessor):
         super(SchemaCatSlotProcessor, self).__init__(
             dataset_config=dataset_config, tokenizer=tokenizer, max_seq_length=max_seq_length,
             log_data_warnings=log_data_warnings, dialog_cxt_length=dialog_cxt_length)
+        self.metrics = evaluate_utils.CAT_SLOTS_SUBKEYS
 
     def _create_examples_from_dialog(self, dialog, schemas, dataset):
         """
@@ -54,9 +56,9 @@ class SchemaCatSlotProcessor(SchemaDialogProcessor):
                 turn_id = "{:<5}-{:<20}-{:<3}".format(
                     dataset, dialog_id,
                     SchemaDialogProcessor.format_turn_idx(turn_idx))
-                turn_examples, prev_states = self._create_examples_from_turn(
+                turn_cat_slot_examples, prev_states = self._create_examples_from_turn(
                     turn_id, utterances, prev_states, schemas)
-                examples.extend(turn_examples)
+                examples.extend(turn_cat_slot_examples)
                 # dialogue history will not including the current user utterance.
             else:
                 system_utterance = turn["utterance"]
@@ -121,5 +123,4 @@ class SchemaCatSlotProcessor(SchemaDialogProcessor):
             states[service] = state
             cat_slot_examples = example.add_categorical_slots(state_update)
             all_cat_slot_examples.extend(cat_slot_examples)
-
         return all_cat_slot_examples, states

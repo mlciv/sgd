@@ -8,7 +8,7 @@
 
 import logging
 import torch
-from src import utils_schema
+import modules.core.schema_constants as schema_constants
 from utils import (
     torch_ext
 )
@@ -103,7 +103,7 @@ class DSTC8BaselineOutputInterface(object):
             # Zero out losses for categorical slot value when the slot status is not
             # active.
             # (batch_size, max_num_cat)
-            cat_loss_weight = (cat_slot_status_labels == utils_schema.STATUS_ACTIVE).type(torch.float32).view(-1)
+            cat_loss_weight = (cat_slot_status_labels == schema_constants.STATUS_ACTIVE).type(torch.float32).view(-1)
             cat_slot_value_losses = torch.nn.functional.cross_entropy(
                 cat_slot_value_logits.view(-1, max_num_slot_values),
                 cat_slot_value_labels.view(-1).long(), reduction='none')
@@ -143,7 +143,7 @@ class DSTC8BaselineOutputInterface(object):
             # Zero out losses for non-categorical slot spans when the slot status is not
             # active.
             # (batch_size, max_num_noncat_slots)
-            noncat_loss_weight = (noncat_slot_status_labels == utils_schema.STATUS_ACTIVE).type(torch.float32).view(-1)
+            noncat_loss_weight = (noncat_slot_status_labels == schema_constants.STATUS_ACTIVE).type(torch.float32).view(-1)
             active_noncat_value_weights = noncat_weights * noncat_loss_weight
             span_start_losses = torch.nn.functional.cross_entropy(
                 span_start_logits.view(-1, max_num_tokens),

@@ -69,6 +69,30 @@ class RequestedSlotExample(BaseBertExample):
         self.requested_slot_id = requested_slot_id
         self.requested_slot_status = requested_slot_status
 
+class CatSlotValueExample(BaseBertExample):
+    """
+    Example for cat slot classification
+    """
+    def __init__(self,
+                 example_id,
+                 service_id,
+                 input_ids,
+                 input_mask,
+                 input_seg,
+                 cat_slot_id,
+                 cat_slot_value_id,
+                 cat_slot_value_status):
+        super(CatSlotValueExample, self).__init__(example_id, service_id, input_ids, input_mask, input_seg)
+        self.example_id = example_id
+        self.service_id = service_id
+        self.input_ids = input_ids
+        self.input_mask = input_mask
+        self.input_seg = input_seg
+        self.cat_slot_id = cat_slot_id
+        self.cat_slot_value_id = cat_slot_value_id
+        self.cat_slot_value_status = cat_slot_value_status
+        # adding doncare and off two value, change it to binary check
+
 class CatSlotExample(BaseBertExample):
     """
     Example for cat slot classification
@@ -81,8 +105,9 @@ class CatSlotExample(BaseBertExample):
                  input_seg,
                  cat_slot_id,
                  cat_slot_status,
-                 cat_slot_value_id,
-                 cat_slot_value_status):
+                 cat_slot_value,
+                 num_cat_slot_values
+    ):
         super(CatSlotExample, self).__init__(example_id, service_id, input_ids, input_mask, input_seg)
         self.example_id = example_id
         self.service_id = service_id
@@ -90,10 +115,11 @@ class CatSlotExample(BaseBertExample):
         self.input_mask = input_mask
         self.input_seg = input_seg
         self.cat_slot_id = cat_slot_id
-        self.cat_slot_value_id = cat_slot_value_id
         self.cat_slot_status = cat_slot_status
-        self.cat_slot_value_status = cat_slot_value_status
-        # adding doncare and off two value, change it to binary check
+        # predict the cat slot status and value for this cat slot value
+        self.cat_slot_value = cat_slot_value
+        self.num_cat_slot_values = num_cat_slot_values
+
 
 class NonCatSlotExample(BaseBertExample):
     """
@@ -201,7 +227,7 @@ class SchemaDSTExample(object):
         self.num_categorical_slots = 0
         # The status of each categorical slot in the service.
         # Each slot has thress slot status: off, dontcare, active
-        # off , means no new assignment for this slot, keeping unchanged
+        # off , means no new assignment for this slot, keeping unknown
         # doncare, means no preference for the slot, hence, a special slot value doncare for it
         # active, means this slot will predict a new value and get assigned in the next stage.
         self.categorical_slot_status = [schema_constants.STATUS_OFF] * dataset_config.max_num_cat_slot
@@ -394,6 +420,7 @@ class SchemaDSTExample(object):
                 # for each subword, add its start and end char index in its local utt
                 start, end = utt_inv_alignments[subword_idx]
                 # transform the local start and end to a global start and end respect to the whole dialog
+                # here, we shift the char index by 1
                 start_char_idx.append(start + 1 + global_char_offset)
                 end_char_idx.append(end + 1 + global_char_offset)
 
@@ -534,6 +561,11 @@ class SchemaDSTExample(object):
         # convert subwords to ids
         utterance_ids = self._tokenizer.convert_tokens_to_ids(utt_subword)
 
+        unpadded_utterance_ids = copy.deepcopy(utterance_ids)
+        unpadded_utt_seg = copy.deepcopy(utt_seg)
+        unpadded_utt_mask = copy.deepcopy(utt_mask)
+        unpadded_start_char_idx = copy.deepcopy(start_char_idx)
+        unpadded_end_char_idx = copy.deepcopy(end_char_idx)
         # Zero-pad up to the BERT input sequence length.
         while len(utterance_ids) < max_utt_len:
             utterance_ids.append(self._tokenizer.pad_token_id)
@@ -541,11 +573,19 @@ class SchemaDSTExample(object):
             utt_mask.append(0)
             start_char_idx.append(0)
             end_char_idx.append(0)
+
         self.utterance_ids = utterance_ids
         self.utterance_segment = utt_seg
         self.utterance_mask = utt_mask
         self.start_char_idx = start_char_idx
         self.end_char_idx = end_char_idx
+
+        self.unpadded_utterance_ids = unpadded_utterance_ids
+        self.unpadded_utterance_segment = unpadded_utt_seg
+        self.unpadded_utterance_mask = unpadded_utt_mask
+        self.unpadded_start_char_idx = unpadded_start_char_idx
+        self.unpadded_end_cahr_idx = unpadded_end_char_idx
+
 
     def make_copy_with_utterance_features(self):
         """
@@ -571,7 +611,65 @@ class SchemaDSTExample(object):
         new_example.unpadded_utterance_mask = list(self.unpadded_utterance_mask)
         new_example.unpadded_start_char_idx = list(self.unpadded_start_char_idx)
         new_example.unpadded_end_char_idx = list(self.unpadded_end_char_idx)
+
         return new_example
+
+    def add_categorical_slot_values_full_state(self, state):
+        """
+        For every state update, Add features and labels for categorical slots.
+        """
+        categorical_slots = self.service_schema.categorical_slots
+        cat_slot_all_value_examples = []
+        for slot_idx, slot in enumerate(categorical_slots):
+            values = state.get(slot, [])
+            # Add categorical slot value features.
+            slot_values = self.service_schema.get_categorical_slot_values(slot)
+            if not values:
+                for v in slot_values:
+                    # skip doncare and off
+                    v_id = self.service_schema.get_categorical_slot_value_id(slot, v) + schema_constants.SPECIAL_CAT_VALUE_OFFSET
+                    tmp_cat_slot_value_example = CatSlotValueExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, v_id, schema_constants.STATUS_OFF)
+                    cat_slot_all_value_examples.append(tmp_cat_slot_value_example)
+                # make doncare value as OFF
+                donotcare_cat_slot_value_example = CatSlotValueExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, schema_constants.VALUE_DONTCARE_ID, schema_constants.STATUS_OFF)
+                cat_slot_all_value_examples.append(donotcare_cat_slot_value_example)
+                # make the unknown vlaue as ACTIVE
+                unknown_cat_slot_example = CatSlotValueExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, schema_constants.VALUE_UNKNOWN_ID, schema_constants.STATUS_ACTIVE)
+                cat_slot_all_value_examples.append(unknown_cat_slot_example)
+            elif values[0] == schema_constants.STR_DONTCARE:
+                # use a spaecial value dontcare
+                for v in slot_values:
+                    # skip doncare and off
+                    v_id = self.service_schema.get_categorical_slot_value_id(slot, v) + schema_constants.SPECIAL_CAT_VALUE_OFFSET
+                    tmp_cat_slot_value_example = CatSlotValueExample(
+                        self.example_id, self.service_id, self.utterance_ids,
+                        self.utterance_mask, self.utterance_segment, slot_idx, v_id, schema_constants.STATUS_OFF)
+                    cat_slot_all_value_examples.append(tmp_cat_slot_value_example)
+                # make doncare value as OFF
+                donotcare_cat_slot_value_example = CatSlotValueExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, schema_constants.VALUE_DONTCARE_ID, schema_constants.STATUS_ACTIVE)
+                cat_slot_all_value_examples.append(donotcare_cat_slot_value_example)
+                # make the unchange vlaue as OFF
+                unknown_cat_slot_value_example = CatSlotValueExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, schema_constants.VALUE_UNKNOWN_ID, schema_constants.STATUS_OFF)
+                cat_slot_all_value_examples.append(unknown_cat_slot_value_example)
+            else:
+                # all slot value is off,  except value[0]
+                for v in slot_values:
+                    # skip doncare and off
+                    v_id = self.service_schema.get_categorical_slot_value_id(slot, v) + schema_constants.SPECIAL_CAT_VALUE_OFFSET
+                    if v != values[0]:
+                        tmp_cat_slot_value_example = CatSlotValueExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, v_id, schema_constants.STATUS_OFF)
+                        cat_slot_all_value_examples.append(tmp_cat_slot_value_example)
+                    else:
+                        tmp_cat_slot_value_example = CatSlotValueExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, v_id, schema_constants.STATUS_ACTIVE)
+                        cat_slot_all_value_examples.append(tmp_cat_slot_value_example)
+                # make doncare value as OFF
+                donotcare_cat_slot_value_example = CatSlotValueExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, schema_constants.VALUE_DONTCARE_ID, schema_constants.STATUS_OFF)
+                cat_slot_all_value_examples.append(donotcare_cat_slot_value_example)
+                # make the unchange vlaue as OFF
+                unknown_cat_slot_value_example = CatSlotValueExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, schema_constants.VALUE_UNKNOWN_ID, schema_constants.STATUS_OFF)
+                cat_slot_all_value_examples.append(unknown_cat_slot_value_example)
+
+        return cat_slot_all_value_examples
 
     def add_categorical_slots(self, state_update):
         """
@@ -586,63 +684,66 @@ class SchemaDSTExample(object):
             slot_values = self.service_schema.get_categorical_slot_values(slot)
             self.num_categorical_slot_values[slot_idx] = len(slot_values)
             if not values:
-                # the status is off, it means no new assignment for the slot
+                # the status is off, it means no new assignment for the slot, the id has no shift
                 self.categorical_slot_status[slot_idx] = schema_constants.STATUS_OFF
                 cat_slot_status = schema_constants.STATUS_OFF
-                # all slot value is off, but the slot value off is on
-                for v in slot_values:
-                    # skip doncare and off
-                    v_id = self.service_schema.get_categorical_slot_value_id(slot, v) + schema_constants.SPECIAL_CAT_VALUE_OFFSET
-                    tmp_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, v_id, schema_constants.STATUS_OFF)
-                    cat_slot_examples.append(tmp_cat_slot_example)
-                # make doncare value as OFF
-                donotcare_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, schema_constants.VALUE_DONTCARE_ID, schema_constants.STATUS_OFF)
-                cat_slot_examples.append(donotcare_cat_slot_example)
-                # make the unchange vlaue as ACTIVE
-                unchanged_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, schema_constants.VALUE_UNCHANGED_ID, schema_constants.STATUS_ACTIVE)
-                cat_slot_examples.append(unchanged_cat_slot_example)
+                # here, only predict the increments
+                cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, 0, len(slot_values))
+                cat_slot_examples.append(cat_slot_example)
             elif values[0] == schema_constants.STR_DONTCARE:
                 # use a spaecial value dontcare
                 self.categorical_slot_status[slot_idx] = schema_constants.STATUS_DONTCARE
                 cat_slot_status = schema_constants.STATUS_DONTCARE
-# all slot value is off, but the slot value off is on
-                for v in slot_values:
-                    # skip doncare and off
-                    v_id = self.service_schema.get_categorical_slot_value_id(slot, v) + schema_constants.SPECIAL_CAT_VALUE_OFFSET
-                    tmp_cat_slot_example = CatSlotExample(
-                        self.example_id, self.service_id, self.utterance_ids,
-                        self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, v_id, schema_constants.STATUS_OFF)
-                    cat_slot_examples.append(tmp_cat_slot_example)
-                # make doncare value as OFF
-                donotcare_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, schema_constants.VALUE_DONTCARE_ID, schema_constants.STATUS_ACTIVE)
-                cat_slot_examples.append(donotcare_cat_slot_example)
-                # make the unchange vlaue as OFF
-                unchanged_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, schema_constants.VALUE_UNCHANGED_ID, schema_constants.STATUS_OFF)
-                cat_slot_examples.append(unchanged_cat_slot_example)
+                # here, only predict the increments, here we only make the slot value as 0, it will not paticipate the loss
+                cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, 0, len(slot_values))
+                cat_slot_examples.append(cat_slot_example)
             else:
                 self.categorical_slot_status[slot_idx] = schema_constants.STATUS_ACTIVE
                 cat_slot_status = schema_constants.STATUS_ACTIVE
+                # this value id is startin from 0, no special value ids
+                value_id = self.service_schema.get_categorical_slot_value_id(slot, values[0])
                 # here it only use the first values
-                self.categorical_slot_values[slot_idx] = (
-                    self.service_schema.get_categorical_slot_value_id(slot, values[0]))
-                # all slot value is off,  except value[0]
-                for v in slot_values:
-                    # skip doncare and off
-                    v_id = self.service_schema.get_categorical_slot_value_id(slot, v) + schema_constants.SPECIAL_CAT_VALUE_OFFSET
-                    if v != values[0]:
-                        tmp_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, v_id, schema_constants.STATUS_OFF)
-                        cat_slot_examples.append(tmp_cat_slot_example)
-                    else:
-                        tmp_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, v_id, schema_constants.STATUS_ACTIVE)
-                        cat_slot_examples.append(tmp_cat_slot_example)
-                # make doncare value as OFF
-                donotcare_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, schema_constants.VALUE_DONTCARE_ID, schema_constants.STATUS_OFF)
-                cat_slot_examples.append(donotcare_cat_slot_example)
-                # make the unchange vlaue as OFF
-                unchanged_cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, schema_constants.VALUE_UNCHANGED_ID, schema_constants.STATUS_OFF)
-                cat_slot_examples.append(unchanged_cat_slot_example)
-
+                self.categorical_slot_values[slot_idx] = value_id
+                # here, only predict the increments, here we only make the slot value as 0, it will not paticipate the loss
+                cat_slot_example = CatSlotExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, cat_slot_status, value_id, len(slot_values))
+                cat_slot_examples.append(cat_slot_example)
         return cat_slot_examples
+
+    def add_noncategorical_slots_old(self, state_update, system_span_boundaries, user_span_boundaries):
+        """
+        Add features for non-categorical slots.
+        Here only consider the spans in the last user and system turns
+        """
+        noncategorical_slots = self.service_schema.non_categorical_slots
+        self.num_noncategorical_slots = len(noncategorical_slots)
+        for slot_idx, slot in enumerate(noncategorical_slots):
+            values = state_update.get(slot, [])
+            if not values:
+                self.noncategorical_slot_status[slot_idx] = schema_constants.STATUS_OFF
+            elif values[0] == schema_constants.STR_DONTCARE:
+                self.noncategorical_slot_status[slot_idx] = schema_constants.STATUS_DONTCARE
+            else:
+                self.noncategorical_slot_status[slot_idx] = schema_constants.STATUS_ACTIVE
+                # Add indices of the start and end tokens for the first encountered
+                # value. Spans in user utterance are prioritized over the system
+                # utterance. If a span is not found, the slot value is ignored.
+                if slot in user_span_boundaries:
+                    start, end = user_span_boundaries[slot]
+                elif slot in system_span_boundaries:
+                    start, end = system_span_boundaries[slot]
+                else:
+                    # A span may not be found because the value was cropped out or because
+                    # the value was mentioned earlier in the dialogue. Since this model
+                    # only makes use of the last two utterances to predict state updates,
+                    # it will fail in such cases.
+                    if self._log_data_warnings:
+                        logger.info(
+                            "Slot values %s not found in user or system utterance in "
+                            + "example with id - %s, service_id: %s .",
+                            str(values), self.example_id, self.service_id)
+                    continue
+                self.noncategorical_slot_value_start[slot_idx] = start
+                self.noncategorical_slot_value_end[slot_idx] = end
 
     def add_noncategorical_slots(self, state_update, system_span_boundaries,
                                  user_span_boundaries, utterances, start_turn, start_turn_subtoken_offset, global_subtoken_offsets):

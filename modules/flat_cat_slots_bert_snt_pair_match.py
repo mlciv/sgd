@@ -80,7 +80,14 @@ class FlatCatSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPairInte
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
+        self.categorical_slots_status_utterance_proj = torch.nn.Sequential(
+        )
+
         self.categorical_slots_values_utterance_proj = torch.nn.Sequential(
+        )
+        # for categorical_slots, 3 logits
+        self.categorical_slots_status_final_proj = torch.nn.Sequential(
+            torch.nn.Linear(self.utterance_embedding_dim, 3)
         )
 
         # for categorical_slot_values,
@@ -108,8 +115,6 @@ class FlatCatSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPairInte
         if is_training:
             utt_schema_pair_cls = self.utterance_dropout(utt_schema_pair_cls)
         logits = final_proj(utt_schema_pair_cls)
-        # Shape: (batch_size, max_intents, 1)
-        logits = logits.squeeze(-1)
         return logits
 
     def _get_categorical_slots_goals(self, features, is_training):
@@ -118,16 +123,35 @@ class FlatCatSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPairInte
         # doncare is also one of the value
         # batch_size, embedding_dim
         # Shape: (batch_size, embedding_dim).
+        utt_cat_slot_pair_cls, _ = self._encode_utterance_schema_pairs(
+            self.encoder, self.utterance_dropout, features, "cat_slot", is_training)
+        cat_slot_status_logits = self._get_logits(
+            utt_cat_slot_pair_cls,
+            None,
+            self.categorical_slots_status_utterance_proj,
+            self.categorical_slots_status_final_proj,
+            is_training
+        )
         utt_cat_slot_value_pair_cls, _ = self._encode_utterance_schema_pairs(
             self.encoder, self.utterance_dropout, features, "cat_slot_value", is_training)
-        value_logits = self._get_logits(
+        # batch_size, max_cat_value_num
+        cat_slot_value_logits = self._get_logits(
             utt_cat_slot_value_pair_cls,
             None,
             self.categorical_slots_values_utterance_proj,
             self.categorical_slots_values_final_proj,
             is_training
-        )
-        return value_logits
+        ).squeeze(-1)
+
+        max_num_values = cat_slot_value_logits.size(-1)
+        # Mask out logits for padded values because they will be
+        # softmaxed.
+        mask = torch_ext.sequence_mask(
+            features["cat_slot_value_num"],
+            maxlen=max_num_values, device=self.device, dtype=torch.bool)
+        negative_logits = -0.7 * torch.ones_like(cat_slot_value_logits) * torch.finfo(torch.float16).max
+        cat_slot_value_logits = torch.where(mask, cat_slot_value_logits, negative_logits)
+        return cat_slot_status_logits, cat_slot_value_logits
 
     def forward(self, features, labels=None):
         """
@@ -141,8 +165,9 @@ class FlatCatSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPairInte
         """
         is_training = (labels is not None)
         outputs = {}
-        cat_slot_value_status = self._get_categorical_slots_goals(features, is_training)
-        outputs["logit_cat_slot_value_status"] = cat_slot_value_status
+        cat_slot_status_logits, cat_slot_value_logits = self._get_categorical_slots_goals(features, is_training)
+        outputs["logit_cat_slot_status"] = cat_slot_status_logits
+        outputs["logit_cat_slot_value"] = cat_slot_value_logits
         # when it is dataparallel, the output will keep the tuple, but the content are gathered from different GPUS.
         if labels:
             losses = self.define_loss(features, labels, outputs)

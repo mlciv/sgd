@@ -423,6 +423,7 @@ class SchemaEmbeddingGenerator(nn.Module):
                 features.append(self._create_seq2_feature(
                     nl_seq, "cat_slot_value",
                     service_schema.service_id, slot_id, value_id + self.special_cat_value_offset))
+
             # after all values, adding STR_DONTCARE
             # value_id always the last one
             nl_seq = " ".join([slot, slot_descriptions[slot], schema_constants.STR_DONTCARE])
@@ -430,10 +431,10 @@ class SchemaEmbeddingGenerator(nn.Module):
                 nl_seq, "cat_slot_value",
                 service_schema.service_id, slot_id, self.dontcare_value_id))
 
-            nl_seq = " ".join([slot, slot_descriptions[slot], schema_constants.STR_UNCHANGED])
+            nl_seq = " ".join([slot, slot_descriptions[slot], schema_constants.STR_UNKNOWN])
             features.append(self._create_seq2_feature(
                 nl_seq, "cat_slot_value",
-                service_schema.service_id, slot_id, self.unchanged_value_id))
+                service_schema.service_id, slot_id, self.unknown_value_id))
 
         return features
 
@@ -893,12 +894,11 @@ class SchemaEmbeddingGenerator(nn.Module):
         max_num_noncat_slot = dataset_config.max_num_noncat_slot
         max_num_slot = max_num_cat_slot + max_num_noncat_slot
         max_num_value = dataset_config.max_num_value_per_cat_slot
-        # with dontcare
-        max_aug_num_value = max_num_value + 1
-        # the first cat value is 0, all other value id shift by 1
+        # the first cat value is 0, all other value id shift by 2
         self.dontcare_value_id = schema_constants.VALUE_DONTCARE_ID
-        self.unchanged_value_id = schema_constants.VALUE_UNCHANGED_ID
+        self.unknown_value_id = schema_constants.VALUE_UNKNOWN_ID
         self.special_cat_value_offset = schema_constants.SPECIAL_CAT_VALUE_OFFSET
+        max_aug_num_value = max_num_value + self.special_cat_value_offset
         max_seq_length = self.max_seq_length
         for _ in schemas.services:
             schema_input_features.append({
