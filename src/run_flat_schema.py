@@ -46,6 +46,7 @@ from modules.schema_dialog_processor import SchemaDialogProcessor
 from modules.schema_intent_processor import SchemaIntentProcessor
 from modules.schema_reqslot_processor import SchemaReqSlotProcessor
 from modules.schema_catslot_processor import SchemaCatSlotProcessor
+from modules.schema_catslot_full_processor import SchemaCatSlotFullProcessor
 from modules.schema_catslot_value_processor import SchemaCatSlotValueProcessor
 from modules.schema_noncatslot_processor import SchemaNonCatSlotProcessor
 
@@ -55,6 +56,8 @@ from modules.flat_requested_slots_bert_snt_pair_match import FlatRequestedSlotsB
 from modules.flat_requested_slots_toptrans import FlatRequestedSlotsTopTrans
 from modules.flat_cat_slot_value_bert_snt_pair_match import FlatCatSlotValueBERTSntPairMatchModel
 from modules.flat_cat_slots_bert_snt_pair_match import FlatCatSlotsBERTSntPairMatchModel
+from modules.flat_cat_slots_bert_cls_value import FlatCatSlotsBERTCLSValueMatchModel
+from modules.flat_cat_slots_full_state_bert_snt_pair_match import FlatCatSlotsFullStateBERTSntPairMatchModel
 from modules.flat_cat_slots_toptrans import FlatCatSlotsTopTransModel
 from modules.flat_cat_slot_value_toptrans import FlatCatSlotValueTopTransModel
 from modules.flat_noncat_slots_bert_snt_pair_match import FlatNonCatSlotsBERTSntPairMatchModel
@@ -87,6 +90,9 @@ MODEL_CLASSES = {
     "flat_active_intent_bert_snt_pair_match": (FlatActiveIntentBERTSntPairMatchModel, SchemaIntentProcessor),
     "flat_requested_slots_bert_snt_pair_match": (FlatRequestedSlotsBERTSntPairMatchModel, SchemaReqSlotProcessor),
     "flat_cat_slots_bert_snt_pair_match": (FlatCatSlotsBERTSntPairMatchModel, SchemaCatSlotProcessor),
+    "flat_cat_slots_full_state_bert_snt_pair_match": (FlatCatSlotsFullStateBERTSntPairMatchModel, SchemaCatSlotFullProcessor),
+    "flat_cat_slots_bert_cls_value": (FlatCatSlotsBERTCLSValueMatchModel, SchemaCatSlotProcessor),
+    "flat_cat_slots_bert_snt_pair_match_utt2": (FlatCatSlotsBERTSntPairMatchModel, SchemaCatSlotProcessor),
     "flat_cat_slot_value_bert_snt_pair_match": (FlatCatSlotValueBERTSntPairMatchModel, SchemaCatSlotValueProcessor),
     "flat_noncat_slots_bert_snt_pair_match": (FlatNonCatSlotsBERTSntPairMatchModel, SchemaNonCatSlotProcessor),
     "flat_active_intent_toptrans": (FlatActiveIntentTopTransModel, SchemaIntentProcessor),
@@ -130,13 +136,30 @@ def train(args, config, train_dataset, model, processor):
     args.warmup_steps = args.warmup_portion * t_total
     # Prepare optimizer and schedule (linear warmup and decay)
     no_decay = ["bias", "LayerNorm.weight"]
-    optimizer_grouped_parameters = [
-        {
-            "params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
-            "weight_decay": args.weight_decay,
-        },
-        {"params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], "weight_decay": 0.0},
-    ]
+    logger.info("parameter names: {}".format([n for n, p in model.named_parameters()]))
+    if "toptrans" in args.model_type:
+        # here we use large learning rate for the top layers
+        optimizer_grouped_parameters = [
+            {
+                "params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay) and "_matching_layer" in n],
+                "weight_decay": args.weight_decay,
+                "lr": args.learning_rate * 10,
+            },
+            {
+                "params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay) and "_matching_layer" not in n],
+                "weight_decay": args.weight_decay
+            },
+            {"params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], "weight_decay": 0.0},
+        ]
+    else:
+        # Here, is diveding the paramaters into weight decay and or not.
+        optimizer_grouped_parameters = [
+            {
+                "params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
+                "weight_decay": args.weight_decay,
+            },
+            {"params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], "weight_decay": 0.0},
+        ]
     optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
     scheduler = get_linear_schedule_with_warmup(
         optimizer, num_warmup_steps=args.warmup_steps, num_training_steps=t_total
@@ -318,23 +341,37 @@ def train(args, config, train_dataset, model, processor):
                 # cat slot value
                 inputs["cat_slot_value_id"] = batch[7]
                 # max_service_num, max_cat_slot_num, max_value_num,  max_seq_lenth -> (batch_size, max_cat_slot_num, max_cat_value_num, max_seq_length)
-                all_cat_slot_value_ids_in_batch = schema_tensors["cat_slot_value_input_ids"].to(
-                    args.device).index_select(0, inputs["service_id"])
-                _, _, max_cat_value_num, max_seq_length = all_cat_slot_value_ids_in_batch.size()
-                cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_seq_length)
-                cat_slot_value_indices = inputs["cat_slot_value_id"].view(-1, 1, 1).expand(-1, 1, max_seq_length)
-                # (batch_size, max_cat_slot_num, max_value_num, max_seq_length) -> (batch_size, max_cat_value_num, max_seq_length)
-                inputs["cat_slot_value_input_ids"] = all_cat_slot_value_ids_in_batch.gather(
-                    1, cat_slot_indices).squeeze(1).gather(1, cat_slot_value_indices).squeeze(1)
-                all_cat_slot_value_mask_in_batch = schema_tensors["cat_slot_value_input_mask"].to(
-                    args.device).index_select(0, inputs["service_id"])
-                inputs["cat_slot_value_input_mask"] = all_cat_slot_value_mask_in_batch.gather(
-                    1, cat_slot_indices).squeeze(1).gather(1, cat_slot_value_indices).squeeze(1)
-                all_cat_slot_value_seg_in_batch = schema_tensors["cat_slot_value_input_type_ids"].to(
-                    args.device).index_select(0, inputs["service_id"])
-                inputs["cat_slot_value_input_type_ids"] = all_cat_slot_value_seg_in_batch.gather(
-                    1, cat_slot_indices).squeeze(1).gather(1, cat_slot_value_indices).squeeze(1)
-
+                if "cat_value_seq2_key" in model.config.__dict__:
+                    input_ids_key = model.config.cat_value_seq2_key + "_input_ids"
+                    input_mask_key = model.config.cat_value_seq2_key + "_input_mask"
+                    input_type_key = model.config.cat_value_seq2_key + "_input_type_ids"
+                    all_cat_slot_value_ids_in_batch = schema_tensors[input_ids_key].to(
+                        args.device).index_select(0, inputs["service_id"])
+                    _, _, max_cat_value_num, max_seq_length = all_cat_slot_value_ids_in_batch.size()
+                    cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_seq_length)
+                    cat_slot_value_indices = inputs["cat_slot_value_id"].view(-1, 1, 1).expand(-1, 1, max_seq_length)
+                    # (batch_size, max_cat_slot_num, max_value_num, max_seq_length) -> (batch_size, max_cat_value_num, max_seq_length)
+                    inputs[input_ids_key] = all_cat_slot_value_ids_in_batch.gather(
+                        1, cat_slot_indices).squeeze(1).gather(1, cat_slot_value_indices).squeeze(1)
+                    all_cat_slot_value_mask_in_batch = schema_tensors[input_mask_key].to(
+                        args.device).index_select(0, inputs["service_id"])
+                    inputs[input_mask_key] = all_cat_slot_value_mask_in_batch.gather(
+                        1, cat_slot_indices).squeeze(1).gather(1, cat_slot_value_indices).squeeze(1)
+                    all_cat_slot_value_seg_in_batch = schema_tensors[input_type_key].to(
+                        args.device).index_select(0, inputs["service_id"])
+                    inputs[input_type_key] = all_cat_slot_value_seg_in_batch.gather(
+                        1, cat_slot_indices).squeeze(1).gather(1, cat_slot_value_indices).squeeze(1)
+                elif "cat_value_embedding_key" in model.config.__dict__:
+                    input_embedding_key = model.config.cat_value_embedding_key + "_emb"
+                    # batch_size, max_cat, max_cat_value, max_length
+                    all_cat_slot_value_embeddings_in_batch = schema_tensors[input_embedding_key].to(
+                        args.device).index_select(0, inputs["service_id"])
+                    _, _, max_cat_value_num, embedding_dim = all_cat_slot_value_embeddings_in_batch.size()
+                    cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, embedding_dim)
+                    # batch_size, 1,  max_cat_value, dim
+                    inputs[input_embedding_key] = all_cat_slot_value_embeddings_in_batch.gather(
+                        1, cat_slot_indices
+                    ).squeeze(1)
                 if len(batch) > 8:
                     # results
                     all_cat_slot_value_status = batch[8]
@@ -343,8 +380,8 @@ def train(args, config, train_dataset, model, processor):
                     }
                 else:
                     labels = None
-            elif all_examples_types[0] == 5:
-                # cat slot
+            elif all_examples_types[0] == 6:
+                # cat_slot_full_state, predict the value directly
                 inputs["cat_slot_id"] = batch[6]
                 inputs["cat_slot_value_num"] = batch[7]
                 all_cat_slot_ids_in_batch = schema_tensors["cat_slot_input_ids"].to(
@@ -360,27 +397,103 @@ def train(args, config, train_dataset, model, processor):
                 inputs["cat_slot_input_type_ids"] = all_cat_slot_seg_in_batch.gather(1, cat_slot_indices).squeeze(1)
 
                 # batch_size, max_cat, max_cat_value, max_length
-                all_cat_slot_value_ids_in_batch = schema_tensors["cat_slot_value_input_ids"].to(
+                if "cat_value_seq2_key" in model.config.__dict__:
+                    input_ids_key = model.config.cat_value_seq2_key + "_input_ids"
+                    input_mask_key = model.config.cat_value_seq2_key + "_input_mask"
+                    input_type_key = model.config.cat_value_seq2_key + "_input_type_ids"
+                    all_cat_slot_value_ids_in_batch = schema_tensors[input_ids_key].to(
+                        args.device).index_select(0, inputs["service_id"])
+                    _, _, max_cat_value_num, max_seq_length = all_cat_slot_value_ids_in_batch.size()
+                    cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_seq_length)
+                    # batch_size, max_cat_value - special_value, max_length
+                    inputs[input_ids_key] = all_cat_slot_value_ids_in_batch.gather(
+                        1, cat_slot_indices
+                    ).squeeze(1)
+                    all_cat_slot_value_mask_in_batch = schema_tensors[input_mask_key].to(
+                        args.device).index_select(0, inputs["service_id"])
+                    # batch_size, max_cat_value, max_length
+                    inputs[input_mask_key] = all_cat_slot_value_mask_in_batch.gather(
+                        1, cat_slot_indices
+                    ).squeeze(1)
+                    # batch_size, max_cat, max_cat_value, max_length
+                    all_cat_slot_value_seg_in_batch = schema_tensors[input_type_key].to(
+                        args.device).index_select(0, inputs["service_id"])
+                    # batch_size, max_cat_value, max_length
+                    inputs[input_type_key] = all_cat_slot_value_seg_in_batch.gather(
+                        1, cat_slot_indices
+                    ).squeeze(1)
+                elif "cat_value_embedding_key" in model.config.__dict__:
+                    input_embedding_key = model.config.cat_value_embedding_key + "_emb"
+                    # batch_size, max_cat, max_cat_value, max_length
+                    all_cat_slot_value_embeddings_in_batch = schema_tensors[input_embedding_key].to(
+                        args.device).index_select(0, inputs["service_id"])
+                    _, _, max_cat_value_num, embedding_dim = all_cat_slot_value_embeddings_in_batch.size()
+                    cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, embedding_dim)
+                    # batch_size, 1,  max_cat_value, dim
+                    # batch_size, 1,  max_cat_value, dim
+                    inputs[input_embedding_key] = all_cat_slot_value_embeddings_in_batch.gather(
+                        1, cat_slot_indices
+                    ).squeeze(1)
+                if len(batch) > 8:
+                    # results
+                    all_cat_slot_value = batch[8]
+                    labels = {
+                        "cat_slot_value_full_state": all_cat_slot_value
+                    }
+                else:
+                    labels = None
+            elif all_examples_types[0] == 5:
+                # cat slot, predicting the cat slot status, and a single status value id for this cat slot
+                inputs["cat_slot_id"] = batch[6]
+                inputs["cat_slot_value_num"] = batch[7]
+                all_cat_slot_ids_in_batch = schema_tensors["cat_slot_input_ids"].to(
                     args.device).index_select(0, inputs["service_id"])
-                _, _, max_cat_value_num, max_seq_length = all_cat_slot_value_ids_in_batch.size()
-                cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_seq_length)
-                # batch_size, max_cat_value - special_value, max_length
-                inputs["cat_slot_value_input_ids"] = all_cat_slot_value_ids_in_batch.gather(
-                    1, cat_slot_indices
-                ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
-                all_cat_slot_value_mask_in_batch = schema_tensors["cat_slot_value_input_mask"].to(
+                _, max_cat_slot_num, max_seq_length = all_cat_slot_ids_in_batch.size()
+                cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1).expand(-1, 1, max_seq_length)
+                inputs["cat_slot_input_ids"] = all_cat_slot_ids_in_batch.gather(1, cat_slot_indices).squeeze(1)
+                all_cat_slot_mask_in_batch = schema_tensors["cat_slot_input_mask"].to(
                     args.device).index_select(0, inputs["service_id"])
-                # batch_size, max_cat_value, max_length
-                inputs["cat_slot_value_input_mask"] = all_cat_slot_value_mask_in_batch.gather(
-                    1, cat_slot_indices
-                ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
-                # batch_size, max_cat, max_cat_value, max_length
-                all_cat_slot_value_seg_in_batch = schema_tensors["cat_slot_value_input_type_ids"].to(
+                inputs["cat_slot_input_mask"] = all_cat_slot_mask_in_batch.gather(1, cat_slot_indices).squeeze(1)
+                all_cat_slot_seg_in_batch = schema_tensors["cat_slot_input_type_ids"].to(
                     args.device).index_select(0, inputs["service_id"])
-                # batch_size, max_cat_value, max_length
-                inputs["cat_slot_value_input_type_ids"] = all_cat_slot_value_seg_in_batch.gather(
-                    1, cat_slot_indices
-                ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
+                inputs["cat_slot_input_type_ids"] = all_cat_slot_seg_in_batch.gather(1, cat_slot_indices).squeeze(1)
+
+                if "cat_value_seq2_key" in model.config.__dict__:
+                    input_ids_key = model.config.cat_value_seq2_key + "_input_ids"
+                    input_mask_key = model.config.cat_value_seq2_key + "_input_mask"
+                    input_type_key = model.config.cat_value_seq2_key + "_input_type_ids"
+                    # batch_size, max_cat, max_cat_value, max_length
+                    all_cat_slot_value_ids_in_batch = schema_tensors[input_ids_key].to(
+                        args.device).index_select(0, inputs["service_id"])
+                    _, _, max_cat_value_num, max_seq_length = all_cat_slot_value_ids_in_batch.size()
+                    cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_seq_length)
+                    # batch_size, max_cat_value - special_value, max_length
+                    inputs[input_ids_key] = all_cat_slot_value_ids_in_batch.gather(
+                        1, cat_slot_indices
+                    ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
+                    all_cat_slot_value_mask_in_batch = schema_tensors[input_mask_key].to(
+                        args.device).index_select(0, inputs["service_id"])
+                    # batch_size, max_cat_value, max_length
+                    inputs[input_mask_key] = all_cat_slot_value_mask_in_batch.gather(
+                        1, cat_slot_indices
+                    ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
+                    # batch_size, max_cat, max_cat_value, max_length
+                    all_cat_slot_value_seg_in_batch = schema_tensors[input_type_key].to(
+                        args.device).index_select(0, inputs["service_id"])
+                    # batch_size, max_cat_value, max_length
+                    inputs[input_type_key] = all_cat_slot_value_seg_in_batch.gather(
+                        1, cat_slot_indices
+                    ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
+                elif "cat_value_embedding_key" in model.config.__dict__:
+                    input_embedding_key = model.config.cat_value_embedding_key + "_emb"
+                    all_cat_slot_value_embeddings_in_batch = schema_tensors[input_embedding_key].to(
+                        args.device).index_select(0, inputs["service_id"])
+                    _, _, max_cat_value_num, embedding_dim = all_cat_slot_value_embeddings_in_batch.size()
+                    cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, embedding_dim)
+                    # batch_size, 1,  max_cat_value, dim
+                    inputs[input_embedding_key] = all_cat_slot_value_embeddings_in_batch.gather(
+                        1, cat_slot_indices
+                    ).squeeze(1)
 
                 if len(batch) > 8:
                     # results
@@ -455,14 +568,14 @@ def train(args, config, train_dataset, model, processor):
                 except:
                     logger.error("loss_name:{}, loss:{}".format(loss_name, loss))
 
-#            logger.info("Epoch = {}, Global_step = {}, losses = {}".format(
-#                epoch, global_step, tmp_loss_dict
-#                )
-#            )
+            #logger.info("Epoch = {}, Global_step = {}, losses = {}".format(
+            #    epoch, global_step, tmp_loss_dict
+            #    )
+            #)
 
-            loss = sum(losses.values())
+            loss = sum([v for k, v in losses.items() if "loss" in k])
 
-            # loss = losses["span_start_loss"] + losses["span_end_loss"] + losses["noncat_slot_status_loss"]
+            # loss = 2*losses["loss_cat_slot_status"]/epoch + losses["loss_cat_slot_value"]
 
             if args.n_gpu > 1:
                 loss = loss.mean()  # mean() to average on multi-gpu parallel (not distributed) training
@@ -492,7 +605,7 @@ def train(args, config, train_dataset, model, processor):
                     # Only evaluate when single GPU otherwise metrics may not average well
                     if args.local_rank == -1 and args.evaluate_during_training:
                         # we need a metric here to track and save the checkpoints.
-                        results, _ = evaluate(args, config, model, processor, "dev", step=global_step, tb_writer=tb_writer)
+                        results, per_frame_metrics, _ = evaluate(args, config, model, processor, "dev", step=global_step, tb_writer=tb_writer)
 
                         for key, value in results.items():
                             # tb_writer.add_scalar("eval_{}".format(key), value, global_step)
@@ -680,22 +793,37 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
             # cat slot value
             inputs["cat_slot_value_id"] = batch[7]
             # max_service_num, max_cat_slot_num, max_value_num,  max_seq_lenth -> (batch_size, max_cat_slot_num, max_cat_value_num, max_seq_length)
-            all_cat_slot_value_ids_in_batch = schema_tensors["cat_slot_value_input_ids"].to(
-                args.device).index_select(0, inputs["service_id"])
-            _, _, max_cat_value_num, max_seq_length = all_cat_slot_value_ids_in_batch.size()
-            cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_seq_length)
-            cat_slot_value_indices = inputs["cat_slot_value_id"].view(-1, 1, 1).expand(-1, 1, max_seq_length)
-            # (batch_size, max_cat_slot_num, max_value_num, max_seq_length) -> (batch_size, max_cat_value_num, max_seq_length)
-            inputs["cat_slot_value_input_ids"] = all_cat_slot_value_ids_in_batch.gather(
-                1, cat_slot_indices).squeeze(1).gather(1, cat_slot_value_indices).squeeze(1)
-            all_cat_slot_value_mask_in_batch = schema_tensors["cat_slot_value_input_mask"].to(
-                args.device).index_select(0, inputs["service_id"])
-            inputs["cat_slot_value_input_mask"] = all_cat_slot_value_mask_in_batch.gather(
-                1, cat_slot_indices).squeeze(1).gather(1, cat_slot_value_indices).squeeze(1)
-            all_cat_slot_value_seg_in_batch = schema_tensors["cat_slot_value_input_type_ids"].to(
-                args.device).index_select(0, inputs["service_id"])
-            inputs["cat_slot_value_input_type_ids"] = all_cat_slot_value_seg_in_batch.gather(
-                1, cat_slot_indices).squeeze(1).gather(1, cat_slot_value_indices).squeeze(1)
+            if "cat_value_seq2_key" in model.config.__dict__:
+                input_ids_key = model.config.cat_value_seq2_key + "_input_ids"
+                input_mask_key = model.config.cat_value_seq2_key + "_input_mask"
+                input_type_key = model.config.cat_value_seq2_key + "_input_type_ids"
+                all_cat_slot_value_ids_in_batch = schema_tensors[input_ids_key].to(
+                    args.device).index_select(0, inputs["service_id"])
+                _, _, max_cat_value_num, max_seq_length = all_cat_slot_value_ids_in_batch.size()
+                cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_seq_length)
+                cat_slot_value_indices = inputs["cat_slot_value_id"].view(-1, 1, 1).expand(-1, 1, max_seq_length)
+                # (batch_size, max_cat_slot_num, max_value_num, max_seq_length) -> (batch_size, max_cat_value_num, max_seq_length)
+                inputs[input_ids_key] = all_cat_slot_value_ids_in_batch.gather(
+                    1, cat_slot_indices).squeeze(1).gather(1, cat_slot_value_indices).squeeze(1)
+                all_cat_slot_value_mask_in_batch = schema_tensors[input_mask_key].to(
+                    args.device).index_select(0, inputs["service_id"])
+                inputs[input_mask_key] = all_cat_slot_value_mask_in_batch.gather(
+                    1, cat_slot_indices).squeeze(1).gather(1, cat_slot_value_indices).squeeze(1)
+                all_cat_slot_value_seg_in_batch = schema_tensors[input_type_key].to(
+                    args.device).index_select(0, inputs["service_id"])
+                inputs[input_type_key] = all_cat_slot_value_seg_in_batch.gather(
+                    1, cat_slot_indices).squeeze(1).gather(1, cat_slot_value_indices).squeeze(1)
+            elif "cat_value_embedding_key" in model.config.__dict__:
+                input_embedding_key = model.config.cat_value_embedding_key + "_emb"
+                # batch_size, max_cat, max_cat_value, max_length
+                all_cat_slot_value_embeddings_in_batch = schema_tensors[input_embedding_key].to(
+                    args.device).index_select(0, inputs["service_id"])
+                _, _, max_cat_value_num, embedding_dim = all_cat_slot_value_embeddings_in_batch.size()
+                cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, embedding_dim)
+                # batch_size, 1,  max_cat_value, dim
+                inputs[input_embedding_key] = all_cat_slot_value_embeddings_in_batch.gather(
+                    1, cat_slot_indices
+                ).squeeze(1)
 
             if len(batch) > 8:
                 # results
@@ -706,8 +834,59 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
                 }
             else:
                 labels = None
+        elif all_examples_types[0] == 6:
+            # cat slots, one cat slot statu, and another a single value for the gt cat_slot_value( without special value shift)
+            inputs["cat_slot_id"] = batch[6]
+            inputs["cat_slot_value_num"] = batch[7]
+            all_cat_slot_ids_in_batch = schema_tensors["cat_slot_input_ids"].to(
+                args.device).index_select(0, inputs["service_id"])
+            # batch_size, max_cat, max_cat_value, max_length
+            if "cat_value_seq2_key" in model.config.__dict__:
+                input_ids_key = model.config.cat_value_seq2_key + "_input_ids"
+                input_mask_key = model.config.cat_value_seq2_key + "_input_mask"
+                input_type_key = model.config.cat_value_seq2_key + "_input_type_ids"
+                all_cat_slot_value_ids_in_batch = schema_tensors[input_ids_key].to(
+                    args.device).index_select(0, inputs["service_id"])
+                _, _, max_cat_value_num, max_seq_length = all_cat_slot_value_ids_in_batch.size()
+                cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_seq_length)
+                # batch_size, max_cat_value - special_value, max_length
+                inputs[input_ids_key] = all_cat_slot_value_ids_in_batch.gather(
+                    1, cat_slot_indices
+                ).squeeze(1)
+                all_cat_slot_value_mask_in_batch = schema_tensors[input_mask_key].to(
+                    args.device).index_select(0, inputs["service_id"])
+                # batch_size, max_cat_value, max_length
+                inputs[input_mask_key] = all_cat_slot_value_mask_in_batch.gather(
+                    1, cat_slot_indices
+                ).squeeze(1)
+                # batch_size, max_cat, max_cat_value, max_length
+                all_cat_slot_value_seg_in_batch = schema_tensors[input_type_key].to(
+                    args.device).index_select(0, inputs["service_id"])
+                # batch_size, max_cat_value, max_length
+                inputs[input_type_key] = all_cat_slot_value_seg_in_batch.gather(
+                    1, cat_slot_indices
+                ).squeeze(1)
+            elif "cat_value_embedding_key" in model.config.__dict__:
+                input_embedding_key = model.config.cat_value_embedding_key + "_emb"
+                # batch_size, max_cat, max_cat_value, max_length
+                all_cat_slot_value_embeddings_in_batch = schema_tensors[input_embedding_key].to(
+                    args.device).index_select(0, inputs["service_id"])
+                _, _, max_cat_value_num, embedding_dim = all_cat_slot_value_embeddings_in_batch.size()
+                cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, embedding_dim)
+                # batch_size, 1,  max_cat_value, dim
+                inputs[input_embedding_key] = all_cat_slot_value_embeddings_in_batch.gather(
+                    1, cat_slot_indices
+                ).squeeze(1)
+            if len(batch) > 8:
+                # results
+                all_cat_slot_value = batch[8]
+                labels = {
+                    "cat_slot_value_full_state": all_cat_slot_value
+                }
+            else:
+                labels = None
         elif all_examples_types[0] == 5:
-            # cat slot
+            # cat slots, one cat slot statu, and another a single value for the gt cat_slot_value( without special value shift)
             inputs["cat_slot_id"] = batch[6]
             inputs["cat_slot_value_num"] = batch[7]
             all_cat_slot_ids_in_batch = schema_tensors["cat_slot_input_ids"].to(
@@ -721,27 +900,44 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
             all_cat_slot_seg_in_batch = schema_tensors["cat_slot_input_type_ids"].to(
                 args.device).index_select(0, inputs["service_id"])
             inputs["cat_slot_input_type_ids"] = all_cat_slot_seg_in_batch.gather(1, cat_slot_indices).squeeze(1)
-            # batch_size, max_cat, max_cat_value, max_length
-            all_cat_slot_value_ids_in_batch = schema_tensors["cat_slot_value_input_ids"].to(
-                args.device).index_select(0, inputs["service_id"])
-            _, _, max_cat_value_num, max_seq_length = all_cat_slot_value_ids_in_batch.size()
-            cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_seq_length)
-            # batch_size, max_cat_value, max_length
-            inputs["cat_slot_value_input_ids"] = all_cat_slot_value_ids_in_batch.gather(
-                1, cat_slot_indices
-            ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
-            all_cat_slot_value_mask_in_batch = schema_tensors["cat_slot_value_input_mask"].to(
-                args.device).index_select(0, inputs["service_id"])
-            # batch_size, max_cat_value, max_length
-            inputs["cat_slot_value_input_mask"] = all_cat_slot_value_mask_in_batch.gather(
-                1, cat_slot_indices
-            ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
-            all_cat_slot_value_seg_in_batch = schema_tensors["cat_slot_value_input_type_ids"].to(
-                args.device).index_select(0, inputs["service_id"])
-            # batch_size, max_cat_value, max_length
-            inputs["cat_slot_value_input_type_ids"] = all_cat_slot_value_seg_in_batch.gather(
-                1, cat_slot_indices
-            ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
+
+            if "cat_value_seq2_key" in model.config.__dict__:
+                input_ids_key = model.config.cat_value_seq2_key + "_input_ids"
+                input_mask_key = model.config.cat_value_seq2_key + "_input_mask"
+                input_type_key = model.config.cat_value_seq2_key + "_input_type_ids"
+                # batch_size, max_cat, max_cat_value, max_length
+                all_cat_slot_value_ids_in_batch = schema_tensors[input_ids_key].to(
+                    args.device).index_select(0, inputs["service_id"])
+                _, _, max_cat_value_num, max_seq_length = all_cat_slot_value_ids_in_batch.size()
+                cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_seq_length)
+                # batch_size, max_cat_value - special_value, max_length
+                inputs[input_ids_key] = all_cat_slot_value_ids_in_batch.gather(
+                    1, cat_slot_indices
+                ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
+                all_cat_slot_value_mask_in_batch = schema_tensors[input_mask_key].to(
+                    args.device).index_select(0, inputs["service_id"])
+                # batch_size, max_cat_value, max_length
+                inputs[input_mask_key] = all_cat_slot_value_mask_in_batch.gather(
+                    1, cat_slot_indices
+                ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
+                # batch_size, max_cat, max_cat_value, max_length
+                all_cat_slot_value_seg_in_batch = schema_tensors[input_type_key].to(
+                    args.device).index_select(0, inputs["service_id"])
+                # batch_size, max_cat_value, max_length
+                inputs[input_type_key] = all_cat_slot_value_seg_in_batch.gather(
+                    1, cat_slot_indices
+                ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
+            elif "cat_value_embedding_key" in model.config.__dict__:
+                input_embedding_key = model.config.cat_value_embedding_key + "_emb"
+                # batch_size, max_cat, max_cat_value, max_length
+                all_cat_slot_value_embeddings_in_batch = schema_tensors[input_embedding_key].to(
+                    args.device).index_select(0, inputs["service_id"])
+                _, _, max_cat_value_num, embedding_dim = all_cat_slot_value_embeddings_in_batch.size()
+                cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_cat_value_num, embedding_dim)
+                # batch_size, 1,  max_cat_value, dim
+                inputs[input_embedding_key] = all_cat_slot_value_embeddings_in_batch.gather(
+                    1, cat_slot_indices
+                ).squeeze(1)
 
             if len(batch) > 8:
                 # results
@@ -865,7 +1061,10 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
 
                     if dial_key not in all_predictions:
                         all_predictions[dial_key] = prediction
-            elif all_examples_types[0] == 3 or all_examples_types[0] == 5:
+            elif all_examples_types[0] in [3, 5, 6]:
+                all_cat_slot_ids_in_batch = schema_tensors["cat_slot_input_ids"].to(
+                    args.device).index_select(0, inputs["service_id"])
+                _, max_cat_slot_num, max_seq_length = all_cat_slot_ids_in_batch.size()
                 # for each intent id, we need to merge them all
                 for i in range(len(all_examples_ids)):
                     local_prediction = {}
@@ -902,6 +1101,12 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
                         cat_slot_value[local_prediction["cat_slot_id"]] = local_prediction["cat_slot_value"]
                         if "cat_slot_value" not in prediction:
                             prediction["cat_slot_value"] = cat_slot_value
+
+                    if "cat_slot_value_full_state" in local_prediction:
+                        cat_slot_value = prediction.get("cat_slot_value_full_state", [0] * max_cat_slot_num)
+                        cat_slot_value[local_prediction["cat_slot_id"]] = local_prediction["cat_slot_value_full_state"]
+                        if "cat_slot_value_full_state" not in prediction:
+                            prediction["cat_slot_value_full_state"] = cat_slot_value
 
                     if dial_key not in all_predictions:
                         all_predictions[dial_key] = prediction
@@ -957,11 +1162,13 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
     ref_dialogs = processor.get_whole_dialogs(args.data_dir, file_split)
     ref_dialogue_dict = evaluate_utils.get_dialogue_dict(ref_dialogs)
     predicted_dialogue_dict = evaluate_utils.get_dialogue_dict(all_predicted_dialogues)
-    all_metric_aggregate = evaluate_utils.get_metrics_result(
+    all_metric_aggregate, per_frame_metrics = evaluate_utils.get_metrics_result(
         ref_dialogue_dict, predicted_dialogue_dict,
         args.data_dir, file_split,
         args.use_fuzzy_match,
-        args.joint_acc_across_turn)
+        args.joint_acc_across_turn,
+        args.dataset_config.schema_file
+    )
 
     if evaluate_utils.ALL_SERVICES in all_metric_aggregate:
         logger.info("Model_step: {}, ALL_SERVICES Dialog metrics: {}".format(
@@ -980,7 +1187,7 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
     metric_time = timeit.default_timer() - start_time
     logger.info("Metrics done in total %f secs (%f sec per example)",
                 metric_time, metric_time / len(dataset))
-    return all_metric_aggregate, all_predictions
+    return all_metric_aggregate, per_frame_metrics, all_predictions
 
 
 def load_and_cache_examples(args, processor, mode, output_examples=False):
@@ -1609,7 +1816,7 @@ def main():
                 log_data_warnings=args.log_data_warnings)
 
             # Evaluate
-            metrics, all_predictions = evaluate(args, config, model, processor, "test", step=global_step)
+            metrics, per_frame_metrics, all_predictions = evaluate(args, config, model, processor, "test", step=global_step)
             evaluated_global_steps.append(global_step)
             # Write predictions to file in DSTC8 format.
             dataset_mark = os.path.basename(args.data_dir)
@@ -1627,6 +1834,7 @@ def main():
 
             output_metric_file = os.path.join(prediction_dir, "eval_metrics.json")
             evaluate_utils.write_metrics_to_file(output_metric_file, metrics)
+            evaluate_utils.write_per_frame_metrics_and_splits(prediction_dir, per_frame_metrics)
             logger.info("metrics for checkpoint:{} is :{}".format(checkpoint, metrics))
             # TODO: do some error analysis
 

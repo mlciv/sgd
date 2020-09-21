@@ -8,6 +8,7 @@
 
 import logging
 import torch
+import torch.nn.functional as F
 from src import utils_schema
 import modules.core.schema_constants as schema_constants
 from utils import (
@@ -62,7 +63,7 @@ class FlatDSTOutputInterface(object):
             cat_slot_status_labels = labels["cat_slot_status"]
             cat_slot_status_loss = torch.nn.functional.cross_entropy(
                 cat_slot_status_logits,
-                cat_slot_status_labels.long(), reduction='mean')
+                cat_slot_status_labels.long(), reduction='sum')
 
             # Categorical slot values.
             # Shape: (batch_size, max_num_slot_values).
@@ -81,10 +82,46 @@ class FlatDSTOutputInterface(object):
             cat_slot_value_losses = torch.nn.functional.cross_entropy(
                 cat_slot_value_logits,
                 cat_slot_value_labels.long(), reduction='none')
+
             # batch_size, max_num_cat
             cat_slot_value_loss = (cat_slot_value_losses * cat_loss_weight).sum()
+
             losses["loss_cat_slot_status"] = cat_slot_status_loss
             losses["loss_cat_slot_value"] = cat_slot_value_loss
+
+            argmax_cat_slot_status = torch.argmax(cat_slot_status_logits, dim=-1)
+            cat_slot_status_error = (argmax_cat_slot_status != cat_slot_status_labels).sum()
+
+            # every batch is for a single slot
+            # (batch_size, max_cat_value_num) -> (batch_size)
+            argmax_cat_slot_value = torch.argmax(cat_slot_value_logits, dim=-1)
+            # batch_size
+            cat_slot_value_error = ((argmax_cat_slot_value != cat_slot_value_labels) * cat_loss_weight).sum()
+            losses["error_cat_slot_status"] = cat_slot_status_error
+            losses["error_cat_slot_value"] = cat_slot_value_error
+
+        # Categorical slot full state
+        if "logit_cat_slot_value_full_state" in outputs:
+            # Categorical slot status.
+            # Categorical slot values.
+            # Shape: (batch_size, max_num_slot_values).
+            cat_slot_value_logits = outputs["logit_cat_slot_value_full_state"]
+            # (batch_size)
+            cat_slot_value_labels = labels["cat_slot_value_full_state"]
+            # (batch_size, max_num_cat)
+            cat_slot_value_loss = torch.nn.functional.cross_entropy(
+                cat_slot_value_logits,
+                cat_slot_value_labels.long(), reduction='mean')
+
+            # batch_size, max_num_cat
+            losses["loss_cat_slot_value_full_state"] = cat_slot_value_loss
+
+            # every batch is for a single slot
+            # (batch_size, max_cat_value_num) -> (batch_size)
+            argmax_cat_slot_value = torch.argmax(cat_slot_value_logits, dim=-1)
+            # batch_size
+            cat_slot_value_error = (argmax_cat_slot_value != cat_slot_value_labels).sum()
+            losses["error_cat_slot_value_full_state"] = cat_slot_value_error
 
         if "logit_cat_slot_value_status" in outputs:
             # Categorical slot status.
@@ -161,9 +198,21 @@ class FlatDSTOutputInterface(object):
             predictions["cat_slot_status"] = torch.argmax(
                 outputs["logit_cat_slot_status"], dim=-1)
 
+        # For categorical slots, the status of each slot and the predicted value are
+        # output.
+        if "logit_cat_slot_value_full_state" in outputs:
+            predictions["cat_slot_id"] = features["cat_slot_id"].cpu().numpy()
+            predictions["cat_slot_value_full_state"] = torch.argmax(
+                outputs["logit_cat_slot_value_full_state"], dim=-1)
+
         if "logit_cat_slot_value" in outputs:
             predictions["cat_slot_value"] = torch.argmax(
                 outputs["logit_cat_slot_value"], dim=-1)
+            ## debug for makring cat_slot_value as groud truth
+            #if labels and "cat_slot_value" in labels:
+            #    predictions["cat_slot_value"] = labels["cat_slot_value"]
+            #else:
+            #    predictions["cat_slot_value"] = predicted_cat_slot_value
 
         if "logit_cat_slot_value_status" in outputs:
             predictions["cat_slot_id"] = features["cat_slot_id"].cpu().numpy()
@@ -231,8 +280,12 @@ class FlatDSTOutputInterface(object):
             predictions["cat_slot_id"] = features["cat_slot_id"].cpu().numpy()
             predictions["cat_slot_status"] = labels["cat_slot_status"]
 
+        if "cat_slot_value_full_state" in labels:
+            predictions["cat_slot_id"] = features["cat_slot_id"].cpu().numpy()
+            predictions["cat_slot_value_full_state"] = labels["cat_slot_value_full_state"]
+
         if "cat_slot_value" in labels:
-            predictions["cat_slot_value"] =  labels["cat_slot_value"]
+            predictions["cat_slot_value"] = labels["cat_slot_value"]
 
         if "cat_slot_value_status" in labels:
             predictions["cat_slot_id"] = features["cat_slot_id"].cpu().numpy()

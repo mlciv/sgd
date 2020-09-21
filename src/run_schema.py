@@ -17,6 +17,7 @@
 
 
 import argparse
+import math
 import glob
 import logging
 import os
@@ -93,6 +94,8 @@ MODEL_CLASSES = {
     "toptrans": (TopTransformerModel, SchemaDSTC8Processor),
     # fixed-token + transformer
     "dstc8baseline_toptrans": (DSTC8BaselineTopTransModel, SchemaDSTC8Processor),
+    # fixed-token + transformer+ longhistory
+    "dstc8long_toptrans": (DSTC8BaselineTopTransModel, SchemaDialogProcessor),
     # snt_pair_match
     "bert_snt_pair_match": (DSTC8BaselineTopTransModel, SchemaDSTC8Processor),
     "active_intent_bert_snt_pair_match": (ActiveIntentBERTSntPairMatchModel, SchemaDialogProcessor),
@@ -363,7 +366,7 @@ def train(args, config, train_dataset, model, processor):
                     # Only evaluate when single GPU otherwise metrics may not average well
                     if args.local_rank == -1 and args.evaluate_during_training:
                         # we need a metric here to track and save the checkpoints.
-                        results, _ = evaluate(args, config, model, processor, "dev", step=global_step, tb_writer=tb_writer)
+                        results, per_frame_metrics, _ = evaluate(args, config, model, processor, "dev", step=global_step, tb_writer=tb_writer)
 
                         for key, value in results.items():
                             # tb_writer.add_scalar("eval_{}".format(key), value, global_step)
@@ -393,11 +396,15 @@ def train(args, config, train_dataset, model, processor):
                                     metrics_for_key[v_key] = (v_value, global_step)
                                     # We only save the model for core metrics
                                     if key in evaluate_utils.CORE_METRIC_KEYS and \
-                                       v_key in evaluate_utils.CORE_METRIC_SUBKEYS:
+                                       v_key in processor.metrics:
                                         if old_path:
                                             shutil.rmtree(old_path)
+                                        new_path = "best-{}-{}".format(joint_key, global_step)
                                         save_checkpoint(args, model, processor._tokenizer,
-                                                        optimizer, scheduler, "best-{}-{}".format(joint_key, global_step))
+                                                        optimizer, scheduler, new_path)
+                                        save_dir = os.path.join(args.models_dir, new_path)
+                                        output_metric_file = os.path.join(save_dir, "dev_eval_metrics.json")
+                                        evaluate_utils.write_metrics_to_file(output_metric_file, results)
 
                     tb_writer.add_scalar("lr", scheduler.get_last_lr()[0], global_step)
                     tb_writer.add_scalar("loss", (tr_loss - logging_loss) / args.logging_steps, global_step)
@@ -951,6 +958,7 @@ def main():
     )
 
     parser.add_argument("--logging_steps", type=int, default=500, help="Log every X updates steps.")
+    parser.add_argument("--few_shot_portion", type=float, default=-1, help="The portion of training dataset to use, -1 is default, no using any")
     parser.add_argument("--log_data_warnings", type=bool, default=True, help="Log the warnings when handling data.")
     parser.add_argument("--save_steps", type=int, default=500, help="Save checkpoint every X updates steps.")
     parser.add_argument(
@@ -1141,6 +1149,11 @@ def main():
     if args.do_train:
         train_dataset = load_and_cache_examples(args, processor, mode="train", output_examples=False)
         # with torch.autograd.detect_anomaly():
+        if args.few_shot_portion > 0:
+            train_length = len(train_dataset)
+            portion_length = math.ceil(train_length * args.few_shot_portion)
+            random_indices = random.sample(range(0, train_length), portion_length)
+            train_dataset = torch.utils.data.Subset(train_dataset, random_indices)
         global_step, tr_loss = train(args, config, train_dataset, model, processor)
         logger.info(" global_step = %s, average loss = %s", global_step, tr_loss)
 
@@ -1191,17 +1204,23 @@ def main():
         logging.getLogger("transformers.modeling_utils").setLevel(logging.WARN)  # Reduce model loading logs
         logger.info("Evaluate the following checkpoints: %s", checkpoints)
 
+        evaluated_global_steps = []
         for checkpoint in checkpoints:
             # Reload the model
             if checkpoint == args.models_dir:
                 global_step = -1
             else:
                 global_step = os.path.basename(os.path.normpath(checkpoint)).split("-")[-1]
+
+            if global_step in evaluated_global_steps:
+                logger.info("{} has been evaluated".format(global_step))
+                continue
+
             model = model_class.from_pretrained(checkpoint, args=args)  # , force_download=True)
             model.eval()
-            logger.info("Model's state_dict:")
-            for param_tensor in model.state_dict():
-                logger.info("{}\t{}".format(param_tensor, model.state_dict()[param_tensor].size()))
+            #logger.info("Model's state_dict:")
+            #for param_tensor in model.state_dict():
+            #    logger.info("{}\t{}".format(param_tensor, model.state_dict()[param_tensor].size()))
             tokenizer = tokenizer_class.from_pretrained(checkpoint)
             model.to(args.device)
 
@@ -1217,7 +1236,8 @@ def main():
                 log_data_warnings=args.log_data_warnings)
 
             # Evaluate
-            metrics, all_predictions = evaluate(args, config, model, processor, "test", step=global_step)
+            metrics, per_frame_metrics, all_predictions = evaluate(args, config, model, processor, "test", step=global_step)
+            evaluated_global_steps.append(global_step)
             # Write predictions to file in DSTC8 format.
             dataset_mark = os.path.basename(args.data_dir)
             prediction_dir = os.path.join(
@@ -1234,6 +1254,7 @@ def main():
 
             output_metric_file = os.path.join(prediction_dir, "eval_metrics.json")
             evaluate_utils.write_metrics_to_file(output_metric_file, metrics)
+            evaluate_utils.write_per_frame_metrics_and_splits(prediction_dir, per_frame_metrics)
             logger.info("metrics for checkpoint:{} is :{}".format(checkpoint, metrics))
             # TODO: do some error analysis
 

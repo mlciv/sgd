@@ -161,6 +161,45 @@ DATASET_CONFIG = {
             max_num_intent=4,
             schema_file="schema.json.enrich"
         ),
+    "dstc8_empty_service_name_only":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 128),
+                "dev": range(1, 21),
+                "test": range(1, 35)
+            },
+            max_num_cat_slot=6,
+            max_num_noncat_slot=12,
+            max_num_value_per_cat_slot=12,
+            max_num_intent=4,
+            schema_file="schema.json.empty_service_name_only"
+        ),
+    "dstc8_empty_service_desc":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 128),
+                "dev": range(1, 21),
+                "test": range(1, 35)
+            },
+            max_num_cat_slot=6,
+            max_num_noncat_slot=12,
+            max_num_value_per_cat_slot=12,
+            max_num_intent=4,
+            schema_file="schema.json.empty_service_desc"
+        ),
+    "dstc8_servicename_as_desc":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 128),
+                "dev": range(1, 21),
+                "test": range(1, 35)
+            },
+            max_num_cat_slot=6,
+            max_num_noncat_slot=12,
+            max_num_value_per_cat_slot=12,
+            max_num_intent=4,
+            schema_file="schema.json.servicename_as_desc"
+        ),
     "multiwoz21_all":
         DatasetConfig(
             file_ranges={

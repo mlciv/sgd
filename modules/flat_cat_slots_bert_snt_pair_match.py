@@ -80,6 +80,8 @@ class FlatCatSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPairInte
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
+        # cat_value_seq2_key in ["cat_value_seq2", "cat_slot_value_seq2", "cat_slot_desc_value_seq2"],
+        self.cat_value_seq2_key = self.config.cat_value_seq2_key
         self.categorical_slots_status_utterance_proj = torch.nn.Sequential(
         )
 
@@ -133,7 +135,7 @@ class FlatCatSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPairInte
             is_training
         )
         utt_cat_slot_value_pair_cls, _ = self._encode_utterance_schema_pairs(
-            self.encoder, self.utterance_dropout, features, "cat_slot_value", is_training)
+            self.encoder, self.utterance_dropout, features, self.cat_value_seq2_key, is_training)
         # batch_size, max_cat_value_num
         cat_slot_value_logits = self._get_logits(
             utt_cat_slot_value_pair_cls,
@@ -150,8 +152,8 @@ class FlatCatSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPairInte
             features["cat_slot_value_num"],
             maxlen=max_num_values, device=self.device, dtype=torch.bool)
         negative_logits = -0.7 * torch.ones_like(cat_slot_value_logits) * torch.finfo(torch.float16).max
-        cat_slot_value_logits = torch.where(mask, cat_slot_value_logits, negative_logits)
-        return cat_slot_status_logits, cat_slot_value_logits
+        masked_cat_slot_value_logits = torch.where(mask, cat_slot_value_logits, negative_logits)
+        return cat_slot_status_logits, masked_cat_slot_value_logits
 
     def forward(self, features, labels=None):
         """

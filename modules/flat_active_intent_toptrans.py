@@ -24,7 +24,8 @@ from src import utils_schema
 from utils import (
     torch_ext,
     data_utils,
-    schema
+    schema,
+    scalar_mix
 )
 
 # Dimension of the embedding for intents, slots and categorical slot values in
@@ -84,7 +85,9 @@ class FlatActiveIntentTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface
             # TODO: now we don't consider a seperate encoder for schema
             # Given the matchng layer above, it seems sharing the embedding layer and encoding is good
             # But if the schema description is a graph or other style, we can consider a GCN or others
-            self.schema_encoder = self.utt_encoder
+            new_schema_encoder = EncoderUtils.create_encoder(self.config)
+            new_schema_encoder.embeddings = self.utt_encoder.embeddings
+            self.schema_encoder = new_schema_encoder
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
@@ -100,7 +103,14 @@ class FlatActiveIntentTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface
         else:
             # Here, we share the encoder with utt_encoder, hence,share the prejection too,
             # Later, to support seperate projection layer
-            self.schema_projection_layer =  self.utterance_projection_layer
+            self.schema_projection_layer = self.utterance_projection_layer
+
+        if self.config.bert_mix_layers > 1:
+            self.scalar_utt_mix = scalar_mix.ScalarMix(self.config.bert_mix_layers, do_layer_norm=False)
+            self.scalar_schema_mix = scalar_mix.ScalarMix(self.config.bert_mix_layers, do_layer_norm=False)
+        else:
+            self.scalar_utt_mix = None
+            self.scalar_schema_mix = None
 
         self.intent_matching_layer = torch.nn.TransformerEncoder(
             encoder_layer=torch.nn.TransformerEncoderLayer(self.config.d_model, self.config.nhead, self.config.dim_feedforward),
@@ -160,11 +170,10 @@ class FlatActiveIntentTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface
 
     def _get_intents(self, features, is_training):
         """Obtain logits for intents."""
-        # we only use cls token for matching, either finetuned cls and fixed cls
         encoded_utt_cls, encoded_utt_tokens, encoded_utt_mask = self._encode_utterances(
-            self.tokenizer, self.utt_encoder, features, self.utterance_dropout, is_training)
+            self.tokenizer, self.utt_encoder, features, self.utterance_dropout, self.scalar_utt_mix, is_training)
         encoded_schema_cls, encoded_schema_tokens, encoded_schema_mask = self._encode_schema(
-            self.tokenizer, self.schema_encoder, features, self.schema_dropout, "intent", is_training)
+            self.tokenizer, self.schema_encoder, features, self.schema_dropout, self.scalar_schema_mix, "intent", is_training)
         logits = self._get_logits(
             encoded_schema_tokens, encoded_schema_mask,
             encoded_utt_tokens, encoded_utt_mask,

@@ -17,32 +17,40 @@ from transformers import BertTokenizer
 
 # Dimension of the embedding for intents, slots and categorical slot values in
 # the schema. Should be equal to BERT's hidden_size.
-logger = logging.getLogger(__name__)
-
-
 class EncodeSepUttSchemaInterface(object):
 
     @classmethod
-    def _encode_utterances(cls, tokenzier, encoder, features, dropout_layer, is_training):
+    def _encode_utterances(cls, tokenzier, encoder, features, dropout_layer, _scalar_mix, is_training):
         """Encode system and user utterances using BERT."""
         # Optain the embedded representation of system and user utterances in the
         # turn and the corresponding token level representations.
         # logger.info("utt:{}, utt_mask:{}, utt_seg:{}".format(features["utt"], features["utt_mask"], features["utt_seg"]))
-        output = encoder(
+        last_encoder_layer, pooled_output, all_encoder_layers, _ = encoder(
             input_ids=features["utt"],
             attention_mask=features["utt_mask"],
-            token_type_ids=features["utt_seg"])
+            token_type_ids=features["utt_seg"],
+            output_hidden_states=True,
+            output_attentions=True,
+        )
 
-        encoded_utterance = output[0][:, 0, :]
-        encoded_tokens = output[0]
+        if _scalar_mix is not None:
+            # when not do layer norm, input_mask is not used
+            selected_layers = list(all_encoder_layers[:_scalar_mix.mixture_size])
+            mix = _scalar_mix(tensors=selected_layers, mask=features["utt_mask"])
+        else:
+            mix = last_encoder_layer
+
+        encoded_utterance = mix[:, 0, :]
+        encoded_tokens = mix
         # Apply dropout in training mode.
         if is_training:
             encoded_utterance = dropout_layer(encoded_utterance)
             encoded_tokens = dropout_layer(encoded_tokens)
         return encoded_utterance, encoded_tokens, features["utt_mask"]
 
+
     @classmethod
-    def _encode_schema(cls, tokenizer, encoder, features, dropout_layer, schema_type, is_training):
+    def _encode_schema(cls, tokenizer, encoder, features, dropout_layer, _scalar_mix, schema_type, is_training):
         """
         Encode system and user utterances using BERT.
         return cls , and token embedding
@@ -85,22 +93,30 @@ class EncodeSepUttSchemaInterface(object):
             adjusted_schema_attention_mask = schema_attention_mask.view(batch_size*max_schema_num, -1)
             adjusted_schema_token_type_ids = None
 
-        output = encoder(
+        last_encoder_layer, pooled_output, all_encoder_layers, _ = encoder(
             input_ids=adjusted_schema_input_ids,
             attention_mask=adjusted_schema_attention_mask,
-            token_type_ids=adjusted_schema_token_type_ids
+            token_type_ids=adjusted_schema_token_type_ids,
+            output_hidden_states=True,
+            output_attentions=True,
         )
+
+        if _scalar_mix is not None:
+            # when not do layer norm, input_mask is not used
+            mix = _scalar_mix(tensors=list(all_encoder_layers[:_scalar_mix.mixture_size]), mask=features["utt_mask"])
+        else:
+            mix = last_encoder_layer
 
         cls_shape = copy.deepcopy(schema_input_shape)
         # cls ignore the length
         cls_shape[-1] = -1
-        encoded_schema_cls = output[0][:, 0, :].view(cls_shape)
+        encoded_schema_cls = mix[:, 0, :].view(cls_shape)
 
         token_shape = copy.deepcopy(schema_input_shape)
         token_shape[-1] = max_total_length
         token_shape.append(-1)
         # token_shape, schema_input_shape, -1
-        encoded_schema_tokens = output[0].view(token_shape)
+        encoded_schema_tokens = mix.view(token_shape)
         # Apply dropout in training mode.
         if is_training:
             encoded_schema_cls = dropout_layer(encoded_schema_cls)

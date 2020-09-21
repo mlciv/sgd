@@ -1,5 +1,6 @@
 # coding=utf-8
 # Copyright 2020 The Google Research Authors.
+# Extended by Jie Cao, jiessie.cao@gmail.com
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -74,7 +75,8 @@ IMPORTANT_METRIC_SUBKEYS = [
 
 # Name of the file containing all predictions and their corresponding frame
 # metrics.
-PER_FRAME_OUTPUT_FILENAME = "dialogues_and_metrics.json"
+PER_FRAME_OUTPUT_FILENAME = "dial_with_metrics.json"
+PER_FRAME_OUTPUT_FOLDER = "per_frame"
 
 
 def get_service_set(schema_path):
@@ -186,8 +188,8 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services, u
                 frame["service"]: frame for frame in turn_hyp["frames"]
             }
 
-            # logger.info("dial_key:{}, turn_ref:{}".format(dial_key, turn_ref))
-            # logger.info("dial_key:{}, turn_hyp:{}".format(dial_key, turn_hyp))
+            #logger.info("dial_key:{}, turn_ref:{}".format(dial_key, turn_ref))
+            #logger.info("dial_key:{}, turn_hyp:{}".format(dial_key, turn_hyp))
             # Calculate metrics for each frame in each user turn.
             for frame_ref in turn_ref["frames"]:
                 service_name = frame_ref["service"]
@@ -319,9 +321,9 @@ def main():
     dataset_ref = get_dataset_as_dict(
         os.path.join(args.dstc8_data_dir, args.eval_set, "dialogues_*.json"))
     dataset_hyp = get_dataset_as_dict(
-        os.path.join(args.prediction_dir, "*.json"))
+        os.path.join(args.prediction_dir, "dialogues_*.json"))
 
-    all_metric_aggregate = get_metrics_result(
+    all_metric_aggregate, per_frame_metrics = get_metrics_result(
         dataset_ref, dataset_hyp,
         args.dstc8_data_dir, args.eval_set,
         args.use_fuzzy_match,
@@ -336,9 +338,15 @@ def main():
             indent=2,
             separators=(",", ": "),
             sort_keys=True)
+
+    per_frame_dir = os.path.join(args.prediction_dir, PER_FRAME_OUTPUT_FOLDER)
+    if not os.path.exists(per_frame_dir):
+        os.makedirs(per_frame_dir)
     # Write the per-frame metrics values with the corrresponding dialogue frames.
-    with open(os.path.join(args.prediction_dir, PER_FRAME_OUTPUT_FILENAME), "w") as f:
+    with open(os.path.join(per_frame_dir, PER_FRAME_OUTPUT_FILENAME), "w") as f:
         json.dump(dataset_hyp, f, indent=2, separators=(",", ": "))
+
+    write_per_frame_metrics_and_splits(per_frame_dir, per_frame_metrics)
 
 
 def write_metrics_to_file(output_metric_file, agg_metrics):
@@ -350,21 +358,46 @@ def write_metrics_to_file(output_metric_file, agg_metrics):
             separators=(",", ": "),
             sort_keys=True)
 
-def get_metrics_result(dataset_ref, dataset_hyp, data_dir, split, use_fuzzy_match, joint_acc_across_turn):
-    in_domain_services = get_in_domain_services(
-        os.path.join(data_dir, split, "schema.json"),
-        os.path.join(data_dir, "train", "schema.json"))
+def write_per_frame_metrics_and_splits(prediction_dir, per_frame_metrics):
+    sorted_per_frames = sorted(per_frame_metrics.items(), key=lambda x: x[0])
+    metrics_keys = sorted_per_frames[0][1].keys()
+    # initial a list for each key
+    metric_list_dict = {}
+    metric_file_dict = {}
+    for key in metrics_keys:
+        metric_list_dict[key] = []
+        metric_file_dict[key] = os.path.join(prediction_dir, key + ".per_frame")
 
-    with open(os.path.join(data_dir, split, "schema.json")) as f:
+    # collect and append values
+    for _, pf_metrics in sorted_per_frames:
+        for key, value in pf_metrics.items():
+            metric_list_dict[key].append(value)
+
+    # write down each list into seprate file
+    for key in metrics_keys:
+        with open(metric_file_dict[key], "w") as f:
+            for x in metric_list_dict[key]:
+                if x == metrics.NAN_VAL:
+                    s = "0.0"
+                else:
+                    s = str(x)
+                f.write(s + "\n")
+
+def get_metrics_result(dataset_ref, dataset_hyp, data_dir, split, use_fuzzy_match, joint_acc_across_turn, schema_file_name):
+    in_domain_services = get_in_domain_services(
+        os.path.join(data_dir, split, schema_file_name),
+        os.path.join(data_dir, "train", schema_file_name))
+
+    with open(os.path.join(data_dir, split, schema_file_name)) as f:
         eval_services = {}
         list_services = json.load(f)
         for service in list_services:
             eval_services[service["service_name"]] = service
 
-    all_metric_aggregate, _ = get_metrics(dataset_ref, dataset_hyp,
+    all_metric_aggregate, per_frame_metrics = get_metrics(dataset_ref, dataset_hyp,
                                           eval_services, in_domain_services,
                                           use_fuzzy_match, joint_acc_across_turn)
-    return all_metric_aggregate
+    return all_metric_aggregate, per_frame_metrics
 
 
 

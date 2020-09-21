@@ -22,7 +22,7 @@ MODEL_NAME_PATH=
 # cache_dir, the cache_dir for store the mebdding, exampls.
 CACHE_DIR=$SGD_CACHE_DIR
 # data_dir, the data_dir for the splits
-DATA_DIR=$DSTC8_DATA_DIR
+DATA_DIR=$DSTC8_INDEX_NAME_DATA_DIR
 # train_file, the file for training
 TRAIN_FILE=train
 # dev_file, the file for eval

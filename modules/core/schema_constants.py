@@ -3,6 +3,7 @@ all the constant values in the schema-guided dialogue
 """
 STR_DONTCARE = "dontcare"
 STR_UNKNOWN = "unknown"
+SPECIAL_CAT_VALUES = [STR_DONTCARE, STR_UNKNOWN]
 VALUE_DONTCARE_ID = 0
 VALUE_UNKNOWN_ID = 1
 SPECIAL_CAT_VALUE_OFFSET = 2

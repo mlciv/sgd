@@ -24,7 +24,8 @@ from src import utils_schema
 from utils import (
     torch_ext,
     data_utils,
-    schema
+    schema,
+    scalar_mix
 )
 
 # Dimension of the embedding for intents, slots and categorical slot values in
@@ -146,6 +147,13 @@ class FlatRequestedSlotsTopTrans(PreTrainedModel, EncodeSepUttSchemaInterface, F
             (utterance_mask, element_mask),
             dim=1).view(-1, max_total_len).bool()
 
+        if self.config.bert_mix_layers > 1:
+            self.scalar_utt_mix = scalar_mix.ScalarMix(self.config.bert_mix_layers, do_layer_norm=False)
+            self.scalar_schema_mix = scalar_mix.ScalarMix(self.config.bert_mix_layers, do_layer_norm=False)
+        else:
+            self.scalar_utt_mix = None
+            self.scalar_schema_mix = None
+
         # trans_output: (batch_size, max_total_len, dim)
         trans_output = matching_layer(
             utterance_element_pair_emb.transpose(0, 1),
@@ -162,9 +170,9 @@ class FlatRequestedSlotsTopTrans(PreTrainedModel, EncodeSepUttSchemaInterface, F
         """Obtain logits for intents."""
         # we only use cls token for matching, either finetuned cls and fixed cls
         encoded_utt_cls, encoded_utt_tokens, encoded_utt_mask = self._encode_utterances(
-            self.tokenizer, self.utt_encoder, features, self.utterance_dropout, is_training)
+            self.tokenizer, self.utt_encoder, features, self.utterance_dropout, self.scalar_utt_mix, is_training)
         encoded_schema_cls, encoded_schema_tokens, encoded_schema_mask = self._encode_schema(
-            self.tokenizer, self.schema_encoder, features, self.schema_dropout, "req_slot", is_training)
+            self.tokenizer, self.schema_encoder, features, self.schema_dropout, self.scalar_schema_mix, "req_slot", is_training)
         logits = self._get_logits(
             encoded_schema_tokens, encoded_schema_mask,
             encoded_utt_tokens, encoded_utt_mask,

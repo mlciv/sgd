@@ -22,6 +22,8 @@ from __future__ import print_function
 import json
 import logging
 import argparse
+import os
+import glob
 
 logger = logging.getLogger(__name__)
 
@@ -254,9 +256,18 @@ class Schema(object):
         with open(file_path, "w") as f:
             json.dump(self._schemas, f, indent=2)
 
-    def gen_empty_description(self):
+    def gen_servicename_empty_desc(self):
         for schema in self._schemas:
             schema["description"] = schema["service_name"]
+            for slot in schema["slots"]:
+                slot['description'] = ""
+            for intent in schema["intents"]:
+                intent['description'] = ""
+
+        self.save_to_file(self.schema_json_path + ".servicename_empty_desc")
+
+    def gen_empty_description(self):
+        for schema in self._schemas:
             for slot in schema["slots"]:
                 slot['description'] = ""
             for intent in schema["intents"]:
@@ -277,23 +288,171 @@ class Schema(object):
 
         self.save_to_file(self.schema_json_path + ".enrich")
 
-    def gen_random_rename(self):
-        i = 0
-        j = 0
-        for schema in self._schemas:
+    def gen_index_name(self, processed_schema_file=None):
+        foldername = os.path.dirname(self.schema_json_path)
+        processed_schemas = {}
+        all_intent_names = set()
+        all_slot_names = set()
+        if processed_schema_file:
+            # matching with processed_schema
+            for f in processed_schema_file:
+                if len(f) == 0 or not f[0]:
+                    continue
+                logger.info("loading {}".format(f[0]))
+                schema_obj = Schema(f[0])
+                for _, s in schema_obj._service_schemas.items():
+                    for intent in s.intents:
+                        all_intent_names.add(intent)
+                    for slot in s.slots:
+                        all_slot_names.add(slot)
+                processed_schemas.update(schema_obj._service_schemas)
+
+        j = len(all_intent_names)
+        i = len(all_slot_names)
+        logger.info("all_intent_names:{}".format(sorted(all_intent_names, key=lambda x: int(x.split("_")[1]))))
+        logger.info("all_slot_names:{}".format(sorted(all_slot_names, key=lambda x: int(x.split("_")[1]))))
+        logger.info("initial_intent_index={}, initial_slot_index={}".format(j,i))
+        intent_name_mappings = {}
+        slot_name_mappings = {}
+        for index, schema in enumerate(self._schemas):
+            if schema["service_name"] in processed_schemas:
+                # service has been processed
+                self._schemas[index] = processed_schemas[schema["service_name"]].schema_json
+                # need to update the intent slot mappings
+                for intent in self._schemas[index]["intents"]:
+                    intent_name_mappings[(schema["service_name"], intent["ori_name"])] = intent["name"]
+
+                for slot in self._schemas[index]["slots"]:
+                    slot_name_mappings[(schema["service_name"], slot["ori_name"])] = slot["name"]
+
+                continue
+
             schema["description"] = ""
             for slot in schema["slots"]:
                 slot['description'] = ""
+                slot["ori_name"] = slot["name"]
                 slot["name"] = "slot_{}".format(i)
+                slot_name_mappings[(schema["service_name"], slot["ori_name"])] = slot["name"]
                 i = i + 1
+
             for intent in schema["intents"]:
                 intent['description'] = ""
+                intent["ori_name"] = intent["name"]
                 intent["name"] = "intent_{}".format(j)
+                intent_name_mappings[(schema["service_name"], intent["ori_name"])] = intent["name"]
                 j = j + 1
+                # update optional and required
+                for s_idx, slot in enumerate(intent["required_slots"]):
+                    intent["required_slots"][s_idx] = slot_name_mappings[(schema["service_name"], slot)]
+                tmp_opt_dict = {}
+                for slot_key, value in intent["optional_slots"].items():
+                    new_key = slot_name_mappings[(schema["service_name"], slot_key)]
+                    tmp_opt_dict[new_key] = value
+                intent["optional_slots"] = tmp_opt_dict
+                for s_idx, slot in enumerate(intent["result_slots"]):
+                    intent["result_slots"][s_idx] = slot_name_mappings[(schema["service_name"], slot)]
 
+        logger.info("final_intent_index={}, final_slot_index={}".format(j,i))
         self.save_to_file(self.schema_json_path + ".index_name")
+        # change the dialogue files:
+        dialogue_paths = [f for f in glob.glob(os.path.join(foldername, "dialogues_*.json"))]
+
+        for dialog_json_filepath in sorted(dialogue_paths):
+            new_dialogs = []
+            with open(dialog_json_filepath) as f:
+                ori_dialogs = json.load(f)
+                for dialog in ori_dialogs:
+                    new_dialogs.append(self.update_dialogue_with_name_mappings(dialog, intent_name_mappings, slot_name_mappings))
+            with open(dialog_json_filepath + ".index_name", "w") as f:
+                json.dump(
+                    new_dialogs, f, indent=2, separators=(",", ": "), sort_keys=True)
+
+
+    def update_dialogue_with_name_mappings(self, dialog, intent_name_mappings, slot_name_mappings):
+        for turn_idx, turn in enumerate(dialog["turns"]):
+            for f_idx, frame in enumerate(turn["frames"]):
+                # actions
+                for act_idx, act in enumerate(frame["actions"]):
+                    if act["slot"] != "intent" and act["slot"]:
+                        # We found that sometimes the system act use a different slot , which is not in the schema.
+                        # Hence, be careful to use the system act
+                        ori_slot = act["slot"]
+                        act["slot"] = slot_name_mappings.get((frame["service"], ori_slot), ori_slot)
+                        if act["slot"] == ori_slot:
+                            logger.info("{} {} {} is not changed in actions  due to missing the mappings".format(dialog["dialogue_id"], turn_idx, ori_slot))
+                    else:
+                        # here we also replace the "canonical_values""
+                        for v_i, intent in enumerate(act["canonical_values"]):
+                            act["canonical_values"][v_i] = intent_name_mappings.get((frame['service'], intent), intent)
+                            if act["canonical_values"][v_i] == intent:
+                                logger.info("{} {} {} is not changed in actions-canonical_values due to missing the mappings".format(dialog["dialogue_id"], turn_idx, intent))
+
+                        for v_i, intent in enumerate(act["values"]):
+                            act["values"][v_i] = intent_name_mappings.get((frame['service'], intent), intent)
+                            if act["values"][v_i] == intent:
+                                logger.info("{} {} {} is not changed in actions-values due to missing the mappings".format(dialog["dialogue_id"], turn_idx, intent))
+                    frame["actions"][act_idx] = act
+                # slots
+                for s_idx, slot in enumerate(frame["slots"]):
+                    slot["slot"] = slot_name_mappings[(frame['service'], slot["slot"])]
+                    frame["slots"][s_idx] = slot
+                # state
+                if "state" in frame:
+                    # active_intent
+                    if frame["state"]["active_intent"] != "NONE":
+                        frame["state"]["active_intent"] = intent_name_mappings[(frame['service'], frame["state"]["active_intent"])]
+                    # req_slots
+                    for r_i, req_slot in enumerate(frame["state"]["requested_slots"]):
+                        frame["state"]["requested_slots"][r_i] = slot_name_mappings[(frame['service'], req_slot)]
+                    # slot_values
+                    new_slot_values = {}
+                    for slot_key, value in frame["state"]["slot_values"].items():
+                        new_slot_key = slot_name_mappings[(frame['service'], slot_key)]
+                        new_slot_values[new_slot_key] = value
+
+                    frame["state"]["slot_values"] = new_slot_values
+                # "service_call"
+                if "service_call" in frame:
+                    frame["service_call"]["method"] = intent_name_mappings[(frame['service'], frame["service_call"]["method"])]
+                    new_paras = {}
+                    for slot_key, value in frame["service_call"]["parameters"].items():
+                        new_slot_key = slot_name_mappings[(frame['service'], slot_key)]
+                        new_paras[new_slot_key] = value
+                    frame["service_call"]["parameters"] = new_paras
+                if "service_results" in frame:
+                    for sr_i, sr in enumerate(frame["service_results"]):
+                        new_sr = {}
+                        for slot_key, value in sr.items():
+                            new_slot_key = slot_name_mappings[(frame['service'], slot_key)]
+                            new_sr[new_slot_key] = value
+                        frame["service_results"][sr_i] = new_sr
+
+                    frame["service_call"]["parameters"] = new_paras
+                turn["frames"][f_idx] = frame
+            dialog["turns"][turn_idx] = turn
+        return dialog
+
+
+    def gen_all_name_only_description(self):
+        for schema in self._schemas:
+            schema["descirption"] = schema["service_name"]
+            for slot in schema["slots"]:
+                slot['description'] = slot["name"]
+            for intent in schema["intents"]:
+                intent['description'] = intent["name"]
+
+        self.save_to_file(self.schema_json_path + ".all_name_only")
 
     def gen_name_only_description(self):
+        for schema in self._schemas:
+            for slot in schema["slots"]:
+                slot['description'] = slot["name"]
+            for intent in schema["intents"]:
+                intent['description'] = intent["name"]
+
+        self.save_to_file(self.schema_json_path + ".name_only")
+
+    def gen_name_only_change(self):
         for schema in self._schemas:
             schema["description"] = schema["service_name"]
             for slot in schema["slots"]:
@@ -301,7 +460,7 @@ class Schema(object):
             for intent in schema["intents"]:
                 intent['description'] = intent["name"]
 
-        self.save_to_file(self.schema_json_path + ".name_only")
+        self.save_to_file(self.schema_json_path + ".name_change")
 
     def load_back_translation_file(self, back_translation_file):
         desc_mapping_dict = {}
@@ -324,7 +483,6 @@ class Schema(object):
                 intent["description"] = desc_mapping_dict.get(ori_intent_desc, "NOT_FOUND" + ori_intent_desc)
 
         self.save_to_file(self.schema_json_path + ".bt")
-
 
     def gen_question_template(self):
         slot_name = []
@@ -349,6 +507,28 @@ class Schema(object):
 
         self.save_to_file(self.schema_json_path + ".question_template")
 
+    def gen_empty_service_desc(self):
+        for schema in self._schemas:
+            # No change to service description
+            schema["description"] = ""
+        self.save_to_file(self.schema_json_path + ".empty_service_desc")
+
+    def gen_empty_service_name_only(self):
+        for schema in self._schemas:
+            # No change to service description
+            schema["description"] = ""
+            for slot in schema["slots"]:
+                slot['description'] = ""
+            for intent in schema["intents"]:
+                intent['description'] = ""
+        self.save_to_file(self.schema_json_path + ".empty_service_name_only")
+
+    def gen_servicename_as_desc(self):
+        for schema in self._schemas:
+            # No change to service description
+            schema["description"] = schema["service_name"]
+        self.save_to_file(self.schema_json_path + ".servicename_as_desc")
+
 def main():
     # Setup logging
     logging.basicConfig(
@@ -370,16 +550,29 @@ def main():
         default=None,
         type=str,
         required=True,
-        choices=["empty", "name_only", "index_name", "question_template", "back_translation", "enrich"],
+        choices=["empty", "name_only", "index_name", "question_template", "back_translation", "enrich", "empty_service_desc", "servicename_as_desc", "empty_service_name_only"],
         help="for evaluation.")
+
+    parser.add_argument(
+        "--processed_schema",
+        nargs="*",
+        action="append",
+        default=None,
+        type=str,
+        required=False,
+        help="processed_schema_files to avoid duplicate annotating, indexed by service name")
 
     args = parser.parse_args()
     logger.info("args:{}".format(args))
     schema = Schema(args.schema_json_path)
     if args.task_name == "empty":
         schema.gen_empty_description()
-    if args.task_name == "name_only":
+    elif args.task_name == "name_only":
         schema.gen_name_only_description()
+    elif args.task_name == "all_name_only":
+        schema.gen_all_name_only_description()
+    elif args.task_name == "name_change":
+        schema.gen_name_change_description()
     elif args.task_name == "back_translation":
         schema_description_back_translation_path = args.schema_json_path + ".ori_desc.cs.backtranslated.sorted"
         schema.load_back_translation_file(schema_description_back_translation_path)
@@ -388,7 +581,16 @@ def main():
     elif args.task_name == "enrich":
         schema.gen_enrich()
     elif args.task_name == "index_name":
-        schema.gen_random_rename()
+        schema.gen_index_name(args.processed_schema)
+    elif args.task_name == "empty_service_desc":
+        schema.gen_empty_service_desc()
+    elif args.task_name == "servicename_as_desc":
+        schema.gen_servicename_as_desc()
+    elif args.task_name == "servicename_empty_desc":
+        schema.gen_servicename_empty_desc()
+    elif args.task_name == "empty_service_name_only":
+        schema.gen_empty_service_name_only()
+
 
 
 if __name__ == "__main__":

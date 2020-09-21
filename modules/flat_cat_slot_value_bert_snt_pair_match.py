@@ -79,6 +79,8 @@ class FlatCatSlotValueBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPair
         EncoderUtils.add_special_tokens(self.tokenizer, self.encoder, schema_constants.USER_AGENT_SPECIAL_TOKENS)
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
+        # cat_value_seq2_key in ["cat_value_seq2", "cat_slot_value_seq2", "cat_slot_desc_value_seq2"],
+        self.cat_value_seq2_key = self.config.cat_value_seq2_key
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
         self.categorical_slots_values_utterance_proj = torch.nn.Sequential(
         )
@@ -118,8 +120,9 @@ class FlatCatSlotValueBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPair
         # doncare is also one of the value
         # batch_size, embedding_dim
         # Shape: (batch_size, embedding_dim).
+        # cat_value_seq2_key in ["cat_value_seq2", "cat_slot_value_seq2", "cat_slot_desc_value_seq2"],
         utt_cat_slot_value_pair_cls, _ = self._encode_utterance_schema_pairs(
-            self.encoder, self.utterance_dropout, features, "cat_slot_value", is_training)
+            self.encoder, self.utterance_dropout, features, self.cat_value_seq2_key, is_training)
         value_logits = self._get_logits(
             utt_cat_slot_value_pair_cls,
             None,

@@ -93,6 +93,30 @@ class CatSlotValueExample(BaseBertExample):
         self.cat_slot_value_status = cat_slot_value_status
         # adding doncare and off two value, change it to binary check
 
+class CatSlotFullStateExample(BaseBertExample):
+    """
+    Example for cat slot classification
+    """
+    def __init__(self,
+                 example_id,
+                 service_id,
+                 input_ids,
+                 input_mask,
+                 input_seg,
+                 cat_slot_id,
+                 cat_slot_value,
+                 num_cat_slot_values
+    ):
+        super(CatSlotFullStateExample, self).__init__(example_id, service_id, input_ids, input_mask, input_seg)
+        self.example_id = example_id
+        self.service_id = service_id
+        self.input_ids = input_ids
+        self.input_mask = input_mask
+        self.input_seg = input_seg
+        self.cat_slot_id = cat_slot_id
+        self.cat_slot_value = cat_slot_value
+        self.num_cat_slot_values = num_cat_slot_values
+
 class CatSlotExample(BaseBertExample):
     """
     Example for cat slot classification
@@ -670,6 +694,32 @@ class SchemaDSTExample(object):
                 cat_slot_all_value_examples.append(unknown_cat_slot_value_example)
 
         return cat_slot_all_value_examples
+
+    def add_categorical_slots_full_state(self, state):
+        """
+        For every state update, Add features and labels for categorical slots.
+        """
+        categorical_slots = self.service_schema.categorical_slots
+        self.num_categorical_slots = len(categorical_slots)
+        cat_slot_examples = []
+        for slot_idx, slot in enumerate(categorical_slots):
+            values = state.get(slot, [])
+            # Add categorical slot value features.
+            slot_values = self.service_schema.get_categorical_slot_values(slot)
+            self.num_categorical_slot_values[slot_idx] = len(slot_values)
+            total_slot_value = len(slot_values) + schema_constants.SPECIAL_CAT_VALUE_OFFSET
+            if not values:
+                cat_slot_example = CatSlotFullStateExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, schema_constants.VALUE_UNKNOWN_ID, total_slot_value)
+                cat_slot_examples.append(cat_slot_example)
+            elif values[0] == schema_constants.STR_DONTCARE:
+                # use a spaecial value dontcare
+                cat_slot_example = CatSlotFullStateExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, schema_constants.VALUE_DONTCARE_ID, total_slot_value)
+                cat_slot_examples.append(cat_slot_example)
+            else:
+                value_id = self.service_schema.get_categorical_slot_value_id(slot, values[0]) + schema_constants.SPECIAL_CAT_VALUE_OFFSET
+                cat_slot_example = CatSlotFullStateExample(self.example_id, self.service_id, self.utterance_ids, self.utterance_mask, self.utterance_segment, slot_idx, value_id, len(slot_values))
+                cat_slot_examples.append(cat_slot_example)
+        return cat_slot_examples
 
     def add_categorical_slots(self, state_update):
         """

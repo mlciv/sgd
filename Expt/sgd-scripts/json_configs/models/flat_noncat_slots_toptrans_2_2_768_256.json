@@ -12,5 +12,6 @@
   "d_model": 768,
   "num_matching_layer": 2,
   "nhead": 2,
-  "dim_feedforward": 256
+  "dim_feedforward": 256,
+  "bert_mix_layers": 0
 }

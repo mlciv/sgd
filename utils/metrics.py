@@ -242,6 +242,7 @@ def get_average_and_joint_goal_accuracy(frame_ref, frame_hyp, service,
         frame_ref["state"]["slot_values"], frame_hyp["state"]["slot_values"],
         service, use_fuzzy_match)
     # (4) Average goal accuracy.
+    # here, the accuracy is for active only
     active_acc = [acc for acc, active in zip(list_acc, slot_active) if active]
     goal_acc[AVERAGE_GOAL_ACCURACY] = np.mean(
         active_acc) if active_acc else NAN_VAL

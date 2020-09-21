@@ -69,9 +69,14 @@ class DSTC8BaselineTopTransModel(TopTransformerModel, DSTC8BaselineOutputInterfa
     def __init__(self, config=None, args=None, encoder=None):
         super(DSTC8BaselineTopTransModel, self).__init__(config=config, args=args)
 
-    def _encode_schema(self, features, schema_type, is_training):
+    @classmethod
+    def _encode_schema(cls, tokenizer, encoder, features, dropout_layer, _scalar_mix, schema_type, is_training):
         """Directly read from precomputed schema embedding."""
-        encoded_schema_tokens = features[SchemaInputFeatures.get_embedding_tensor_name(schema_type)]
+        # scala_mix is not used here, since we only cache the last layer of token schema embedding
+        # batch_size, max_intent_num, max_seq_length, dim
+        cached_schema_tokens = features[SchemaInputFeatures.get_embedding_tensor_name(schema_type)]
+        # batch_size, max_intent_num, max_seq_length
+        cached_schema_mask = features[SchemaInputFeatures.get_input_mask_tensor_name(schema_type)]
         if is_training:
-            encoded_schema_tokens = self.utterance_dropout(encoded_schema_tokens)
-        return None, encoded_schema_tokens
+            cached_schema_tokens = dropout_layer(cached_schema_tokens)
+        return None, cached_schema_tokens, cached_schema_mask

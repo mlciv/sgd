@@ -86,7 +86,7 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                 # NONE intent.
                 active_intent = "NONE"
                 if "intent_status" in predictions:
-                    if isinstance(predictions["intent_status"], int):
+                    if isinstance(predictions["intent_status"], int) or (isinstance(predictions["intent_status"], torch.Tensor) and predictions["intent_status"].dim() == 0):
                         active_intent_id = predictions["intent_status"]
                         active_intent = (
                             service_schema.get_intent_from_id(active_intent_id - 1)
@@ -113,17 +113,32 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                 # Add prediction for user goal (slot values).
                 # Categorical slots.
                 # used for global state not for incremental
+                # logger.info("dial_key={} old_slots_values={}, gd_value={}".format(dial_key, slot_values, gd_state["slot_values"]))
                 new_cat_slot_values = {}
                 if "cat_slot_status" in predictions:
                     for slot_idx, slot in enumerate(service_schema.categorical_slots):
                         slot_status = predictions["cat_slot_status"][slot_idx]
+                        cat_values = service_schema.get_categorical_slot_values(slot)
                         if slot_status == schema_constants.STATUS_DONTCARE:
                             slot_values[slot] = schema_constants.STR_DONTCARE
                         elif slot_status == schema_constants.STATUS_ACTIVE:
                             value_idx = predictions["cat_slot_value"][slot_idx]
-                            if value_idx >= 0:
-                                slot_values[slot] = (
-                                    service_schema.get_categorical_slot_values(slot)[value_idx])
+                            if len(cat_values) > value_idx >= 0:
+                                slot_values[slot] = cat_values[value_idx]
+                        # logger.info("dial_key={} slots_status={}, slot_idx={}, slot={}, value_id={}, gd_value={}".format(dial_key, slot_status, slot_idx, slot, predictions["cat_slot_value"][slot_idx], gd_state["slot_values"].get(slot, "NONE")))
+                elif "cat_slot_value_full_state" in predictions:
+                    for slot_idx, slot in enumerate(service_schema.categorical_slots):
+                        value_id = predictions["cat_slot_value_full_state"][slot_idx]
+                        value_idx = value_id - schema_constants.SPECIAL_CAT_VALUE_OFFSET
+                        cat_values = service_schema.get_categorical_slot_values(slot)
+                        if value_id == schema_constants.VALUE_UNKNOWN_ID:
+                            # not adding the slot
+                            continue
+                        if value_id == schema_constants.VALUE_DONTCARE_ID:
+                            new_cat_slot_values[slot] = schema_constants.STR_DONTCARE
+                        else:
+                            if 0 <= value_idx < len(cat_values):
+                                new_cat_slot_values[slot] = cat_values[value_idx]
                 elif "cat_slot_value_status" in predictions:
                     # for flattent case, we don't do incremental predciton, always predict the frame in current turn
                     for slot_idx, slot in enumerate(service_schema.categorical_slots):
@@ -183,11 +198,11 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                 frame["slots"] = slots
                 # logger.info("gd_slots:{}, pred_slots:{}".format(gd_slots, slots))
                 state["slot_values"] = {s: [v] for s, v in slot_values.items()}
-                if "cat_slot_value_status" in predictions:
+                if "cat_slot_value_status" in predictions or "cat_slot_value_full_state" in predictions:
                     for s, v in new_cat_slot_values.items():
                         state["slot_values"][s] = [v]
 
-                # logger.info("dial_key:{}, slot_values:{}".format(dial_key, slot_values))
+                # logger.info("dial_key:{}, slot_values:{}, gd_state:{}".format(dial_key, slot_values, gd_state))
                 frame["state"] = state
     return dialog
 
