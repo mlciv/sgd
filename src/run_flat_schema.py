@@ -229,9 +229,11 @@ def train(args, config, train_dataset, model, processor):
         try:
             # set global_step to gobal_step of last saved checkpoint from model path
             # "checkpoing-xxxx" or "best-model-xxxx"
-            checkpoint_suffix = os.path.basename(os.path.normpath(args.model_name_or_path)).split("-")[-1]
-            # global_step = int(checkpoint_suffix)
-            global_step = 0
+            if args.skip_trained_epochs:
+                checkpoint_suffix = os.path.basename(os.path.normpath(args.model_name_or_path)).split("-")[-1]
+                global_step = int(checkpoint_suffix)
+            else:
+                global_step = 0
             epochs_trained = global_step // (len(train_dataloader) // args.gradient_accumulation_steps)
             steps_trained_in_current_epoch = global_step % (len(train_dataloader) // args.gradient_accumulation_steps)
 
@@ -1524,6 +1526,12 @@ def main():
         type=int,
         help="If > 0: set total number of training steps to perform. Override num_train_epochs.",
     )
+    parser.add_argument(
+        "--skip_trained_epochs",
+        default=False,
+        type=bool,
+        help="When training from checkping, Whether to skip trained epochs, default is not")
+
     parser.add_argument("--warmup_portion", default=0.0, type=float, help="Linear warmup over warmup_portion.")
     parser.add_argument(
         "--n_best_size",

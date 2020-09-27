@@ -66,6 +66,7 @@ pargs="--do_train \
 --save_steps=$SAVE_STEPS \
 --max_seq_length=$MAX_SEQ_LENGTH \
 --warmup_portion=$WARMUP_PORTION \
+--skip_trained_epochs=False \
 --fp16
 "
 
