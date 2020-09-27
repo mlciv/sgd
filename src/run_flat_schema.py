@@ -565,7 +565,10 @@ def train(args, config, train_dataset, model, processor):
                 scalar_name = loss_name + "/" + "train"
                 tb_writer.add_scalar(scalar_name, loss, global_step)
                 try:
-                    tmp_loss_dict[scalar_name] = loss.item()
+                    if isinstance(loss, torch.Tensor):
+                        tmp_loss_dict[scalar_name] = loss.item()
+                    else:
+                        tmp_loss_dict[scalar_name] = loss
                 except:
                     logger.error("loss_name:{}, loss:{}".format(loss_name, loss))
 
@@ -999,9 +1002,9 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
                     try:
                         scalar_name = loss_name + "/" + mode
                         if scalar_name in stats:
-                            stats[scalar_name] = loss.item()
+                            stats[scalar_name] = loss.item() if isinstance(loss, torch.Tensor) else loss
                         else:
-                            stats[scalar_name] += loss.item()
+                            stats[scalar_name] += loss.item() if isinstance(loss, torch.Tensor) else loss
                     except:
                         logger.error("loss_name:{}, loss:{}".format(loss_name, loss))
 
