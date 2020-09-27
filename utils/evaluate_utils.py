@@ -290,6 +290,13 @@ def main():
         + " and schema files of all datasets (train, dev, test)")
 
     parser.add_argument(
+        "--schema_file_name",
+        default=None,
+        type=str,
+        required=True,
+        help="Just the name of schema file")
+
+    parser.add_argument(
         "--eval_set",
         default=None,
         type=str,
@@ -327,7 +334,8 @@ def main():
         dataset_ref, dataset_hyp,
         args.dstc8_data_dir, args.eval_set,
         args.use_fuzzy_match,
-        args.joint_acc_across_turn
+        args.joint_acc_across_turn,
+        args.schema_file_name
     )
 
     # Write the aggregated metrics values.

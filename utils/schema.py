@@ -54,7 +54,14 @@ class ServiceSchema(object):
         self._categorical_slots = sorted(
             s["name"]
             for s in schema_json["slots"]
+
             if s["is_categorical"] and s["name"] in self.state_slots)
+
+        self._boolean_categorical_slots = sorted(
+            s["name"]
+            for s in schema_json["slots"]
+            if self.is_boolean(s)
+        )
 
         # all the non categorical slots in the schema file
         self._all_non_categorical_slots = sorted(
@@ -90,6 +97,35 @@ class ServiceSchema(object):
             all_categorical_slot_value_ids[slot] = value_ids
         self._all_categorical_slot_values = all_categorical_slot_values
         self._all_categorical_slot_value_ids = all_categorical_slot_value_ids
+
+    def is_boolean(self, slot):
+        """
+        check whether the slot is boolean slot
+        """
+        if slot in self._all_categorical_slots:
+            values = self.get_all_categorical_slot_values(slot)
+            # not sure the order
+            if len(values) == 2 and "True" in values and "False" in values:
+                return True
+            else:
+                return False
+        else:
+            return False
+
+    def is_numeric(self, slot):
+        """
+        check whether the slot is numeric slot
+        """
+        if slot in self._all_categorical_slots:
+            values = self.get_all_categorical_slot_values(slot)
+            return all([value.isdigit() for value in values])
+        return False
+
+    def is_other_cat(self, slot):
+        """
+        neight numeric and boolean slot
+        """
+        return not (self.is_numeric(slot) or self.is_boolean(slot))
 
     @property
     def schema_json(self):

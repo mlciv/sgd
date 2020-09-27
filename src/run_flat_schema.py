@@ -562,9 +562,10 @@ def train(args, config, train_dataset, model, processor):
             for loss_name, loss in losses.items():
                 if isinstance(loss, torch.Tensor):
                     loss = loss.sum()
-                tb_writer.add_scalar(loss_name, loss, global_step)
+                scalar_name = loss_name + "/" + "train"
+                tb_writer.add_scalar(scalar_name, loss, global_step)
                 try:
-                    tmp_loss_dict[loss_name] = loss.item()
+                    tmp_loss_dict[scalar_name] = loss.item()
                 except:
                     logger.error("loss_name:{}, loss:{}".format(loss_name, loss))
 
@@ -716,6 +717,7 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
 
     all_predictions = {}
     start_time = timeit.default_timer()
+    stats = {}
 
     for batch in tqdm(eval_dataloader, desc="Evaluating", position=0, leave=True):
         model.eval()
@@ -991,14 +993,15 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
             outputs = model(inputs, labels)
             if labels:
                 losses = outputs[1]
-                tmp_loss_dict = {}
                 for loss_name, loss in losses.items():
                     if isinstance(loss, torch.Tensor):
                         loss = loss.sum()
-                    if tb_writer:
-                        tb_writer.add_scalar(mode + "_" + loss_name, loss, step)
                     try:
-                        tmp_loss_dict[loss_name] = loss.item()
+                        scalar_name = loss_name + "/" + mode
+                        if scalar_name in stats:
+                            stats[scalar_name] = loss.item()
+                        else:
+                            stats[scalar_name] += loss.item()
                     except:
                         logger.error("loss_name:{}, loss:{}".format(loss_name, loss))
 
@@ -1154,6 +1157,13 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
 
     # Compute predictions
     start_time = timeit.default_timer()
+
+    log_str = ""
+    for scalar_name, value in stats.items():
+        avg_value = value / len(dataset)
+        log_str += "[{}: {}]".format(scalar_name, avg_value)
+        if tb_writer:
+            tb_writer.add_scalar(scalar_name, avg_value, step)
     # indexed dialogue, key is (dialogue_id, turn_idx, service_name)
     indexed_predictions = pred_utils.get_predictions_index_dict(all_predictions)
     # Here dials will be modified and return

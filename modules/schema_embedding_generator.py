@@ -25,6 +25,7 @@ import  modules.core.schema_constants as schema_constants
 logger = logging.getLogger(__name__)
 _NL_SEPARATOR = "|||"
 CAT_SLOT_VALUE_SEPARATOR = ":"
+SERVICE_INTENT_SLOT_SEPARATOR = "|"
 
 class SchemaInputFeatures(object):
     """A single set of features for BERT inference."""
@@ -144,6 +145,11 @@ class SchemaEmbeddingGenerator(nn.Module):
                         schema_embedding_file,
                         args.dataset_config)
                 elif config.schema_embedding_type == "flat_seq2_feature":
+                    schema_data = schema_emb_generator.save_flat_seq2_feature_tensors(
+                        schemas,
+                        schema_embedding_file,
+                        args.dataset_config)
+                elif config.schema_embedding_type == "flat_seq2_desc_only_feature":
                     schema_data = schema_emb_generator.save_flat_seq2_feature_tensors(
                         schemas,
                         schema_embedding_file,
@@ -932,26 +938,44 @@ class SchemaEmbeddingGenerator(nn.Module):
         embedding_dim = self.schema_embedding_dim
         for _ in schemas.services:
             schema_input_features.append({
+                # [service_desc intent intent_desc] -> it also support empty service desc, and empty intent desc
+                # => [service_dsc intent intent_desc], impact of the service_desc
+                # => [intent intent_desc], impact of the intent_desc
+                # => [intent], is intent name enough
+                # => [intent_desc], is intent desc enough
+                # => [intent_index_name], is intent name enough
                 "intent_input_ids": np.zeros([max_num_intent, max_seq_length]),
                 "intent_input_mask": np.zeros([max_num_intent, max_seq_length]),
                 "intent_input_type_ids": np.zeros([max_num_intent, max_seq_length]),
+                # [service_desc slot slot_desc] -> it also support empty service desc, and empty intent desc
+                # => [service_dsc slot slot_desc], impact of the service_desc
+                # => [slot slot_desc], impact of the intent_desc
+                # => [slot], is intent name enough
+                # => [slot_desc], is intent desc enough
+                # => [slot_index_name], is intent name enough
                 "req_slot_input_ids": np.zeros([max_num_slot, max_seq_length]),
                 "req_slot_input_mask": np.zeros([max_num_slot, max_seq_length]),
                 "req_slot_input_type_ids": np.zeros([max_num_slot, max_seq_length]),
+                # [service_desc slot slot_desc] -> it also support empty service desc, and empty intent desc
+                # => [service_dsc slot slot_desc], impact of the service_desc
+                # => [slot slot_desc], impact of the intent_desc
+                # => [slot], is intent name enough
+                # => [slot_desc], is intent desc enough
+                # => [slot_index_name], is intent name enough
                 "cat_slot_input_ids": np.zeros([max_num_cat_slot, max_seq_length]),
                 "cat_slot_input_mask": np.zeros([max_num_cat_slot, max_seq_length]),
                 "cat_slot_input_type_ids": np.zeros([max_num_cat_slot, max_seq_length]),
-                # for cat_slot_slot_desc_vlaue
+                # [slot slot_desc value]
                 "cat_slot_desc_value_seq2_input_ids": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
                 "cat_slot_desc_value_seq2_input_mask": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
                 "cat_slot_desc_value_seq2_input_type_ids": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
                 "cat_slot_desc_value_seq_emb": np.zeros([max_num_cat_slot, max_aug_num_value, embedding_dim]),
-                # for cat_slot_value
+                # [slot value]
                 "cat_slot_value_seq2_input_ids": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
                 "cat_slot_value_seq2_input_mask": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
                 "cat_slot_value_seq2_input_type_ids": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
                 "cat_slot_value_seq_emb": np.zeros([max_num_cat_slot, max_aug_num_value, embedding_dim]),
-                # for cat_value_only
+                # [value]
                 "cat_value_seq2_input_ids": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
                 "cat_value_seq2_input_mask": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
                 "cat_value_seq2_input_type_ids": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),

@@ -151,6 +151,7 @@ class FlatCatSlotsBERTCLSValueMatchModel(PreTrainedModel, EncodeUttSchemaPairInt
         batch_size, max_num_values, _ = value_embeddings.size()
         value_cls = value_proj(value_embeddings)
         if is_training:
+            utt_schema_pair_cls = self.utterance_dropout(utt_schema_pair_cls)
             value_cls = self.value_dropout(value_cls)
         # batch_size x num_cat_value, output_dim
         pair_encodings = self.matcher(utt_schema_pair_cls, value_cls)

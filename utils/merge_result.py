@@ -102,11 +102,11 @@ def merge_predicted_dialog(all_predicted_dialogs_dict, schemas):
                         predicted_noncat_slot_values = pivot_state["slot_values"]
 
                     for slot in service_schema.non_categorical_slots:
-                        if slot in predicted_cat_slot_values:
+                        if slot in predicted_noncat_slot_values:
                             slot_values[slot] = predicted_noncat_slot_values[slot]
 
                 frame["slots"] = slots
-                state["slot_values"] = {s: [v] for s, v in slot_values.items()}
+                state["slot_values"] = {s: v for s, v in slot_values.items()}
                 # logger.info("dial_key:{}, slot_values:{}".format(dial_key, slot_values))
                 frame["state"] = state
     return pivot_dialog
