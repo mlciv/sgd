@@ -88,6 +88,9 @@ class FlatCatSlotsTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface, Fl
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
+        self.cat_slot_seq2_key = self.config.cat_slot_seq2_key
+        # cat_value_seq2_key in ["cat_value_seq2", "cat_slot_value_seq2", "cat_slot_desc_value_seq2"],
+        self.cat_value_seq2_key = self.config.cat_value_seq2_key
         if self.utterance_embedding_dim == self.config.d_model:
             self.utterance_projection_layer = torch.nn.Sequential()
         else:
@@ -176,7 +179,7 @@ class FlatCatSlotsTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface, Fl
         encoded_utt_cls, encoded_utt_tokens, encoded_utt_mask = self._encode_utterances(
             self.tokenizer, self.utt_encoder, features, self.utterance_dropout, is_training)
         encoded_slot_cls, encoded_slot_tokens, encoded_slot_mask = self._encode_schema(
-            self.tokenizer, self.schema_encoder, features, self.schema_dropout, "cat_slot", is_training)
+            self.tokenizer, self.schema_encoder, features, self.schema_dropout, self.cat_slot_seq2_key, is_training)
         cat_slot_status_logits = self._get_logits(
             encoded_slot_tokens, encoded_slot_mask,
             encoded_utt_tokens, encoded_utt_mask,
@@ -185,7 +188,7 @@ class FlatCatSlotsTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface, Fl
         cat_slot_status_logits = cat_slot_status_logits.squeeze(-1)
 
         encoded_slot_value_cls, encoded_slot_value_tokens, encoded_slot_value_mask = self._encode_schema(
-            self.tokenizer, self.schema_encoder, features, self.schema_dropout, "cat_slot_value", is_training)
+            self.tokenizer, self.schema_encoder, features, self.schema_dropout, self.cat_value_seq2_key, is_training)
         cat_slot_value_logits = self._get_logits(
             encoded_slot_value_tokens, encoded_slot_value_mask,
             encoded_utt_tokens, encoded_utt_mask,

@@ -80,6 +80,7 @@ class FlatCatSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPairInte
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
+        self.cat_slot_seq2_key = self.config.cat_slot_seq2_key
         # cat_value_seq2_key in ["cat_value_seq2", "cat_slot_value_seq2", "cat_slot_desc_value_seq2"],
         self.cat_value_seq2_key = self.config.cat_value_seq2_key
         self.categorical_slots_status_utterance_proj = torch.nn.Sequential(
@@ -126,7 +127,7 @@ class FlatCatSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPairInte
         # batch_size, embedding_dim
         # Shape: (batch_size, embedding_dim).
         utt_cat_slot_pair_cls, _ = self._encode_utterance_schema_pairs(
-            self.encoder, self.utterance_dropout, features, "cat_slot", is_training)
+            self.encoder, self.utterance_dropout, features, self.cat_slot_seq2_key, is_training)
         cat_slot_status_logits = self._get_logits(
             utt_cat_slot_pair_cls,
             None,

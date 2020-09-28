@@ -300,6 +300,6 @@ class FlatDSTOutputInterface(object):
             predictions["noncat_slot_start"] = labels["noncat_slot_value_start"]
             predictions["noncat_slot_end"] = labels["noncat_slot_value_end"]
             # Add inverse alignments
-            predictions["noncat_alignment_start"] = features["noncat_alignment_start"].cpu().numpy()
-            predictions["noncat_alignment_end"] = features["noncat_alignment_end"].cpu().numpy()
+            predictions["noncat_alignment_start"] = features["noncat_alignment_start"]
+            predictions["noncat_alignment_end"] = features["noncat_alignment_end"]
         return predictions

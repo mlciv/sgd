@@ -8,6 +8,7 @@
   "schema_embedding_type": "flat_seq2_feature",
   "schema_embedding_dim": 768,
   "schema_finetuning_type": "bert_snt_pair",
+  "intent_seq2_key": "intent",
   "utterance_embedding_dim": 768,
   "d_model": 768,
   "num_matching_layer": 2,

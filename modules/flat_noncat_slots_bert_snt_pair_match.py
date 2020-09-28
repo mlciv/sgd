@@ -80,6 +80,7 @@ class FlatNonCatSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPairI
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
+        self.noncat_slot_seq2_key = self.config.noncat_slot_seq2_key
         self.noncategorical_slots_status_utterance_proj = torch.nn.Sequential(
         )
 
@@ -111,7 +112,7 @@ class FlatNonCatSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPairI
         # Predict the status of all categorical slots.
         # batch_size, max_noncat_slot, embedding_dim
         utt_noncat_slot_pair_cls, utt_noncat_slot_pair_tokens = self._encode_utterance_schema_pairs(
-            self.encoder, self.utterance_dropout, features, "noncat_slot", is_training)
+            self.encoder, self.utterance_dropout, features, self.noncat_slot_seq2_key, is_training)
         # batch_size, 3
         status_logits = self._get_logits(
             utt_noncat_slot_pair_cls,
@@ -124,7 +125,7 @@ class FlatNonCatSlotsBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPairI
         # Shape: (batch_size, max_seq_length, 2)
         span_logits = self.noncat_span_layer(utt_noncat_slot_pair_tokens)
         total_max_length = span_logits.size()[1]
-        schema_attention_mask = features[SchemaInputFeatures.get_input_mask_tensor_name("noncat_slot")]
+        schema_attention_mask = features[SchemaInputFeatures.get_input_mask_tensor_name(self.noncat_slot_seq2_key)]
         # all schema part should be masked as 0
         schema_attention_mask = torch.zeros_like(schema_attention_mask.view(batch_size, -1))
         # batch_size , max_seq_length

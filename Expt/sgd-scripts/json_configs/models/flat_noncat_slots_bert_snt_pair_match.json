@@ -7,5 +7,6 @@
   "schema_embedding_type": "flat_seq2_feature",
   "schema_embedding_dim": 768,
   "schema_finetuning_type": "bert_snt_pair",
+  "noncat_slot_seq2_key": "noncat_slot",
   "utterance_embedding_dim": 768
 }

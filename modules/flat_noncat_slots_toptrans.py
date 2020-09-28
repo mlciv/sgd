@@ -92,6 +92,7 @@ class FlatNonCatSlotsTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface,
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
+        self.noncat_slot_seq2_key = self.config.noncat_slot_seq2_key
         if self.utterance_embedding_dim == self.config.d_model:
             self.utterance_projection_layer = torch.nn.Sequential()
         else:
@@ -180,7 +181,7 @@ class FlatNonCatSlotsTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface,
         encoded_utt_cls, encoded_utt_tokens, encoded_utt_mask = self._encode_utterances(
             self.tokenizer, self.utt_encoder, features, self.utterance_dropout, self.scalar_utt_mix, is_training)
         encoded_schema_cls, encoded_schema_tokens, encoded_schema_mask = self._encode_schema(
-            self.tokenizer, self.schema_encoder, features, self.schema_dropout, self.scalar_schema_mix, "noncat_slot", is_training)
+            self.tokenizer, self.schema_encoder, features, self.schema_dropout, self.scalar_schema_mix, self.noncat_slot_seq2_key, is_training)
         status_logits, utt_noncat_slot_pair_tokens = self._get_logits(
             encoded_schema_tokens, encoded_schema_mask,
             encoded_utt_tokens, encoded_utt_mask,

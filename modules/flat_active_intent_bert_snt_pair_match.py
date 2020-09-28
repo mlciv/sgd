@@ -79,6 +79,7 @@ class FlatActiveIntentBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPair
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
+        self.intent_seq2_key = self.config.intent_seq2_key
         self.intent_utterance_proj = torch.nn.Sequential(
         )
         # Project the combined embeddings to obtain logits.
@@ -112,7 +113,7 @@ class FlatActiveIntentBERTSntPairMatchModel(PreTrainedModel, EncodeUttSchemaPair
     def _get_intents(self, features, is_training):
         """Obtain logits for intents."""
         # we only use cls token for matching, either finetuned cls and fixed cls
-        utt_intent_pair_cls, _ = self._encode_utterance_schema_pairs(self.encoder, self.utterance_dropout, features, "intent", is_training)
+        utt_intent_pair_cls, _ = self._encode_utterance_schema_pairs(self.encoder, self.utterance_dropout, features, self.intent_seq2_key, is_training)
         logits = self._get_logits(
             utt_intent_pair_cls, None,
             self.intent_utterance_proj, self.intent_final_proj, is_training)
