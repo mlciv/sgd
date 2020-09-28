@@ -387,6 +387,8 @@ class SchemaEmbeddingGenerator(nn.Module):
             # here, every value_id is shifted with special_cat_value_offset
             for value_id, value in enumerate(
                     [schema_constants.STR_DONTCARE, schema_constants.STR_UNKNOWN] + service_schema.get_categorical_slot_values(slot)):
+                service_slot_desc_value_nl_seq2 = " ".join([service_des, slot, slot_descriptions[slot], CAT_SLOT_VALUE_SEPARATOR, value])
+                service_slot_desc_value_nl_seq = " ".join([service_des, slot, slot_descriptions[slot], _NL_SEPARATOR, value])
                 slot_desc_value_nl_seq2 = " ".join([slot, slot_descriptions[slot], CAT_SLOT_VALUE_SEPARATOR, value])
                 slot_desc_value_nl_seq = " ".join([slot, slot_descriptions[slot], _NL_SEPARATOR, value])
                 desc_value_nl_seq2 = " ".join([slot_descriptions[slot], CAT_SLOT_VALUE_SEPARATOR, value])
@@ -395,6 +397,13 @@ class SchemaEmbeddingGenerator(nn.Module):
                 slot_value_nl_seq = " ".join([slot, _NL_SEPARATOR, value])
                 value_nl_seq2 = " ".join([value])
                 value_nl_seq = " ".join([value, _NL_SEPARATOR])
+                features.append(self._create_seq2_feature(
+                    service_slot_desc_value_nl_seq2, "cat_service_slot_desc_value_seq2",
+                    service_schema.service_id, slot_id, value_id))
+                features.append(self._create_feature(
+                    service_slot_desc_value_nl_seq, "cat_service_slot_desc_value_seq",
+                    service_schema.service_id, slot_id, value_id))
+
                 features.append(self._create_seq2_feature(
                     slot_desc_value_nl_seq2, "cat_slot_desc_value_seq2",
                     service_schema.service_id, slot_id, value_id))
@@ -951,6 +960,11 @@ class SchemaEmbeddingGenerator(nn.Module):
                 "cat_slot_desc_only_input_ids": np.zeros([max_num_cat_slot, max_seq_length]),
                 "cat_slot_desc_only_input_mask": np.zeros([max_num_cat_slot, max_seq_length]),
                 "cat_slot_desc_only_input_type_ids": np.zeros([max_num_cat_slot, max_seq_length]),
+                # [service, slot slot_desc value]
+                "cat_service_slot_desc_value_seq2_input_ids": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
+                "cat_service_slot_desc_value_seq2_input_mask": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
+                "cat_service_slot_desc_value_seq2_input_type_ids": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
+                "cat_service_slot_desc_value_seq_emb": np.zeros([max_num_cat_slot, max_aug_num_value, embedding_dim]),
                 # [slot slot_desc value]
                 "cat_slot_desc_value_seq2_input_ids": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
                 "cat_slot_desc_value_seq2_input_mask": np.zeros([max_num_cat_slot, max_aug_num_value, max_seq_length]),
