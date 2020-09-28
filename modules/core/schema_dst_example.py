@@ -406,8 +406,8 @@ class SchemaDSTExample(object):
         # here the charindex is agnostic to the bert encoding, which is just the concatenaing of all snts
         # only add globa_char_offeset to each utterance boundaries.
         global_char_offset = sum([len(utt[1]) for utt in utterances[:start_turn + 1]])
-        #logger.info("skip {} turns/ {} with last_utt_offset={}, global_offset = {}, current_len = {}".format(
-        #    start_turn + 1, total_utterances, last_utt_offset, global_char_offset, current_len))
+        logger.info("skip {} turns/ {} with last_utt_offset={}, global_offset = {}, current_len = {}".format(
+            start_turn + 1, total_utterances, last_utt_offset, global_char_offset, current_len))
         # here we only consider seq 1 in bert
         utt_subword = []
         utt_seg = []

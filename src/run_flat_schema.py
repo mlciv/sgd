@@ -767,11 +767,12 @@ def load_and_cache_examples(args, processor, mode, output_examples=False):
 
     cached_features_file = os.path.join(
         sub_dir,
-        "cached_{}_{}_{}_{}".format(
+        "cached_{}_{}_{}_{}_{}".format(
             list(filter(None, file_split.split("/"))).pop(),
             args.model_type,
             args.enc_model_type,
-            args.max_seq_length
+            args.max_seq_length,
+            args.dialog_cxt_length
         ),
     )
 
@@ -1234,6 +1235,7 @@ def main():
         cache_dir=args.cache_dir if args.cache_dir else None,
     )
     config.update_encoder_config(encoder_config)
+    args.dialog_cxt_length = config.dialog_cxt_length
     # model class
     # Here, we need to build differe model class for different models
     model_class, processor_class = MODEL_CLASSES[args.model_type]
