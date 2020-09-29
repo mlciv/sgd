@@ -820,14 +820,14 @@ class SchemaEmbeddingGenerator(nn.Module):
                 logger.info("Generating schema feature for service %s.", service)
                 completed_services.add(service)
             schema_type = feature.schema_type
-            if schema_type in ["cat_slot_desc_value_seq2", "cat_desc_value_seq2", "cat_slot_value_seq2", "cat_value_seq2"]:
+            if schema_type in ["cat_service_slot_desc_value_seq2", "cat_slot_desc_value_seq2", "cat_desc_value_seq2", "cat_slot_value_seq2", "cat_value_seq2"]:
                 input_ids_mat = schema_features[feature.service_id][feature.input_ids_tensor_name]
                 input_mask_mat = schema_features[feature.service_id][feature.input_mask_tensor_name]
                 input_type_ids_mat = schema_features[feature.service_id][feature.input_type_ids_tensor_name]
                 input_ids_mat[feature.intent_or_slot_id, feature.value_id] = feature.input_ids
                 input_mask_mat[feature.intent_or_slot_id, feature.value_id] = feature.input_mask
                 input_type_ids_mat[feature.intent_or_slot_id, feature.value_id] = feature.input_type_ids
-            elif schema_type in ["cat_slot_desc_value_seq", "cat_desc_value_seq", "cat_slot_value_seq", "cat_value_seq"]:
+            elif schema_type in ["cat_service_slot_desc_value_seq", "cat_slot_desc_value_seq", "cat_desc_value_seq", "cat_slot_value_seq", "cat_value_seq"]:
                 # precomputing the cls
                 emb_mat = schema_features[feature.service_id][feature.embedding_tensor_name]
                 if self.enc_model_type in ["xlm", "roberta", "distilbert", "camembert"]:
