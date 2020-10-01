@@ -238,7 +238,7 @@ class SchemaEmbeddingGenerator(nn.Module):
 
         for intent_id, intent in enumerate(service_schema.intents):
             nl_seq = " ".join(
-                [service_des, _NL_SEPARATOR, intent, intent_descriptions[intent]])
+                [service_des, _NL_SEPARATOR, intent_descriptions[intent]])
             features.append(self._create_feature(
                 nl_seq, "intent", service_schema.service_id, intent_id))
         return features
@@ -290,7 +290,7 @@ class SchemaEmbeddingGenerator(nn.Module):
         features = []
         for slot_id, slot in enumerate(service_schema.slots):
             nl_seq = " ".join(
-                [service_des, _NL_SEPARATOR, slot, slot_descriptions[slot]])
+                [service_des, _NL_SEPARATOR, slot_descriptions[slot]])
             features.append(self._create_feature(
                 nl_seq, "req_slot", service_schema.service_id, slot_id))
         return features
@@ -343,13 +343,13 @@ class SchemaEmbeddingGenerator(nn.Module):
 
         for slot_id, slot in enumerate(service_schema.categorical_slots):
             nl_seq = " ".join(
-                [service_des, _NL_SEPARATOR, slot, slot_descriptions[slot]])
+                [service_des, _NL_SEPARATOR, slot_descriptions[slot]])
             features.append(self._create_feature(
                 nl_seq, "cat_slot",
                 service_schema.service_id, slot_id))
             for value_id, value in enumerate(
                     service_schema.get_categorical_slot_values(slot)):
-                nl_seq = " ".join([slot, slot_descriptions[slot], _NL_SEPARATOR, value])
+                nl_seq = " ".join([slot_descriptions[slot], _NL_SEPARATOR, value])
                 features.append(self._create_feature(
                     nl_seq, "cat_slot_value",
                     service_schema.service_id, slot_id, value_id))
@@ -492,7 +492,7 @@ class SchemaEmbeddingGenerator(nn.Module):
 
         for slot_id, slot in enumerate(service_schema.non_categorical_slots):
             nl_seq = " ".join(
-                [service_des, _NL_SEPARATOR, slot, slot_descriptions[slot]])
+                [service_des, _NL_SEPARATOR, slot_descriptions[slot]])
             features.append(self._create_feature(
                 nl_seq, "noncat_slot",
                 service_schema.service_id, slot_id))
@@ -650,20 +650,25 @@ class SchemaEmbeddingGenerator(nn.Module):
             if service not in completed_services:
                 logger.info("Generating token embeddings for service %s.", service)
                 completed_services.add(service)
-            tensor_name = feature.embedding_tensor_name
-            mask_name = feature.input_mask_tensor_name
-            emb_mat = schema_embeddings[feature.service_id][tensor_name]
-            mask_mat = schema_embeddings[feature.service_id][mask_name]
+            ids_mat = schema_embeddings[feature.service_id][feature.input_ids_tensor_name]
+            emb_mat = schema_embeddings[feature.service_id][feature.embedding_tensor_name]
+            mask_mat = schema_embeddings[feature.service_id][feature.input_mask_tensor_name]
+            type_mat = schema_embeddings[feature.service_id][feature.input_type_ids_tensor_name]
             # Obtain the whole token encodings
             embedding = output[0][0, :, :].cpu().numpy()
             mask = feature.input_mask.cpu().numpy()
-            #logger.info("max_seq_length:{}, input_ids:{}, embedding:{}, mask:{}".format(self.max_seq_length, feature.input_ids, embedding.shape, mask.shape))
-            if tensor_name == SchemaInputFeatures.get_embedding_tensor_name("cat_slot_value"):
+            schema_type = feature.schema_type
+            # logger.info("max_seq_length:{}, input_ids:{}, embedding:{}, mask:{}".format(self.max_seq_length, feature.input_ids, embedding.shape, mask.shape))
+            if schema_type in ["cat_slot_value"]:
+                ids_mat[feature.intent_or_slot_id, feature.value_id] = feature.input_ids
                 emb_mat[feature.intent_or_slot_id, feature.value_id] = embedding
                 mask_mat[feature.intent_or_slot_id, feature.value_id] = mask
+                mask_mat[feature.intent_or_slot_id, feature.value_id] = feature.input_type_ids
             else:
+                ids_mat[feature.intent_or_slot_id] = feature.input_ids
                 emb_mat[feature.intent_or_slot_id] = embedding
                 mask_mat[feature.intent_or_slot_id] = mask
+                mask_mat[feature.intent_or_slot_id] = feature.input_type_ids
 
 
     def save_token_embeddings(self, schemas, output_file, dataset_config):
@@ -679,17 +684,25 @@ class SchemaEmbeddingGenerator(nn.Module):
             # follow the naming for embedding_tensor_name and mask_tensor_name
             schema_embs.append({
                 "intent_emb": np.zeros([max_num_intent, self.max_seq_length, embedding_dim]),
+                "intent_input_ids": np.zeros([max_num_intent, self.max_seq_length]),
                 "intent_input_mask": np.zeros([max_num_intent, self.max_seq_length]),
+                "intent_input_type_ids": np.zeros([max_num_intent, self.max_seq_length]),
                 "req_slot_emb": np.zeros([max_num_slot, self.max_seq_length, embedding_dim]),
+                "req_slot_input_ids": np.zeros([max_num_slot, self.max_seq_length]),
                 "req_slot_input_mask": np.zeros([max_num_slot, self.max_seq_length]),
+                "req_slot_input_type_ids": np.zeros([max_num_slot, self.max_seq_length]),
                 "cat_slot_emb": np.zeros([max_num_cat_slot, self.max_seq_length, embedding_dim]),
+                "cat_slot_input_ids": np.zeros([max_num_cat_slot, self.max_seq_length]),
                 "cat_slot_input_mask": np.zeros([max_num_cat_slot, self.max_seq_length]),
+                "cat_slot_input_type_ids": np.zeros([max_num_cat_slot, self.max_seq_length]),
                 "noncat_slot_emb": np.zeros([max_num_noncat_slot, self.max_seq_length, embedding_dim]),
+                "noncat_slot_input_ids": np.zeros([max_num_noncat_slot, self.max_seq_length]),
+                "noncat_slot_input_type_ids": np.zeros([max_num_noncat_slot, self.max_seq_length]),
                 "noncat_slot_input_mask": np.zeros([max_num_noncat_slot, self.max_seq_length]),
-                "cat_slot_value_emb":
-                np.zeros([max_num_cat_slot, max_num_value, self.max_seq_length, embedding_dim]),
-                "cat_slot_value_input_mask":
-                np.zeros([max_num_cat_slot, max_num_value, self.max_seq_length]),
+                "cat_slot_value_emb": np.zeros([max_num_cat_slot, max_num_value, self.max_seq_length, embedding_dim]),
+                "cat_slot_value_input_ids": np.zeros([max_num_cat_slot, max_num_value, self.max_seq_length]),
+                "cat_slot_value_input_mask": np.zeros([max_num_cat_slot, max_num_value, self.max_seq_length]),
+                "cat_slot_value_input_type_ids": np.zeros([max_num_cat_slot, max_num_value, self.max_seq_length]),
             })
         # Populate the embeddings based on bert inference results and save them.
         self._populate_schema_token_embeddings(schemas, schema_embs)

@@ -53,16 +53,20 @@ from modules.schema_noncatslot_processor import SchemaNonCatSlotProcessor
 
 from modules.flat_active_intent_bert_snt_pair_match import FlatActiveIntentBERTSntPairMatchModel
 from modules.flat_active_intent_toptrans import FlatActiveIntentTopTransModel
+from modules.flat_active_intent_fusion import FlatActiveIntentFusionModel
 from modules.flat_requested_slots_bert_snt_pair_match import FlatRequestedSlotsBERTSntPairMatchModel
 from modules.flat_requested_slots_toptrans import FlatRequestedSlotsTopTrans
+from modules.flat_requested_slots_fusion import FlatRequestedSlotsFusionModel
 from modules.flat_cat_slot_value_bert_snt_pair_match import FlatCatSlotValueBERTSntPairMatchModel
 from modules.flat_cat_slots_bert_snt_pair_match import FlatCatSlotsBERTSntPairMatchModel
 from modules.flat_cat_slots_bert_cls_value import FlatCatSlotsBERTCLSValueMatchModel
 from modules.flat_cat_slots_full_state_bert_snt_pair_match import FlatCatSlotsFullStateBERTSntPairMatchModel
 from modules.flat_cat_slots_toptrans import FlatCatSlotsTopTransModel
 from modules.flat_cat_slot_value_toptrans import FlatCatSlotValueTopTransModel
+from modules.flat_cat_slot_value_fusion import FlatCatSlotValueFusionModel
 from modules.flat_noncat_slots_bert_snt_pair_match import FlatNonCatSlotsBERTSntPairMatchModel
 from modules.flat_noncat_slots_toptrans import FlatNonCatSlotsTopTransModel
+from modules.flat_noncat_slots_fusion import FlatNonCatSlotsFusionModel
 from modules.schema_embedding_generator import SchemaEmbeddingGenerator
 import modules.core.schema_constants as schema_constants
 from utils import schema_dataset_config
@@ -97,10 +101,14 @@ MODEL_CLASSES = {
     "flat_cat_slot_value_bert_snt_pair_match": (FlatCatSlotValueBERTSntPairMatchModel, SchemaCatSlotValueProcessor),
     "flat_noncat_slots_bert_snt_pair_match": (FlatNonCatSlotsBERTSntPairMatchModel, SchemaNonCatSlotProcessor),
     "flat_active_intent_toptrans": (FlatActiveIntentTopTransModel, SchemaIntentProcessor),
+    "flat_active_intent_fusion": (FlatActiveIntentFusionModel, SchemaIntentProcessor),
     "flat_requested_slots_toptrans": (FlatRequestedSlotsTopTrans, SchemaReqSlotProcessor),
+    "flat_requested_slots_fusion": (FlatRequestedSlotsFusionModel, SchemaReqSlotProcessor),
     "flat_cat_slot_value_toptrans": (FlatCatSlotValueTopTransModel, SchemaCatSlotValueProcessor),
+    "flat_cat_slot_value_fusion": (FlatCatSlotValueFusionModel, SchemaCatSlotValueProcessor),
     "flat_cat_slots_toptrans": (FlatCatSlotsTopTransModel, SchemaCatSlotProcessor),
-    "flat_noncat_slots_toptrans": (FlatNonCatSlotsTopTransModel, SchemaNonCatSlotProcessor)
+    "flat_noncat_slots_toptrans": (FlatNonCatSlotsTopTransModel, SchemaNonCatSlotProcessor),
+    "flat_noncat_slots_fusion": (FlatNonCatSlotsFusionModel, SchemaNonCatSlotProcessor)
 }
 
 NO_EMBEDDING_CLASSES = []
