@@ -35,6 +35,10 @@ class SchemaInputFeatures(object):
         self.value_id = value_id
 
     @staticmethod
+    def get_tok_embedding_tensor_name(schema_type):
+        return "{}_tok_emb".format(schema_type)
+
+    @staticmethod
     def get_embedding_tensor_name(schema_type):
         return "{}_emb".format(schema_type)
 

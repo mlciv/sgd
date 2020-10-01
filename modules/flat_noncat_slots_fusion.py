@@ -49,3 +49,7 @@ class FlatNonCatSlotsFusionModel(FlatNonCatSlotsTopTransModel, FixedSchemaCacheE
 
     def __init__(self, config=None, args=None, encoder=None, utt_encoder=None, schema_encoder=None):
         super(FlatNonCatSlotsFusionModel, self).__init__(config=config, args=args, utt_encoder=utt_encoder, schema_encoder=None)
+
+    @classmethod
+    def _encode_schema(cls, tokenizer, encoder, features, dropout_layer, _scalar_mix, schema_type, is_training):
+        return FixedSchemaCacheEncoder._encode_schema(tokenizer, encoder, features, dropout_layer, _scalar_mix, schema_type, is_training)
