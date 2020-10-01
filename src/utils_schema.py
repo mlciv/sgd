@@ -611,6 +611,71 @@ def convert_active_intent_examples_to_features(
 
     return features
 
+
+def convert_active_intent_examples_to_features(
+        examples, dataset_config, max_seq_length, is_training, return_dataset):
+    """Convert a set of `SchemaDSTExample to features In the google
+    baseline, all features including the utterance ids are actually
+    preprocessed when creaing the dialog examples.  TODO: we can do
+    any other expansions later for other combinations
+    """
+    features = []
+    for (ex_index, ex) in enumerate(examples):
+        if ex_index % 10000 == 0:
+            logger.info("Writing active_intent example %d of %d", ex_index, len(examples))
+        feature = ActiveIntentSntPairInputFeatures(
+            ex.example_id,
+            ex.service_id,
+            ex.input_ids,
+            ex.input_seg,
+            ex.input_mask,
+            ex.intent_id,
+            ex.intent_status)
+        features.append(feature)
+
+    if return_dataset == "pt":
+        # Convert to Tensors and build dataset
+        # flags or ids for the example
+        # for intent example, the flag is 1
+        all_example_types = torch.tensor([f.example_type for f in features], dtype=torch.uint8)
+        all_example_ids = torch.tensor([list(f.example_id.encode("utf-8")) for f in features], dtype=torch.uint8)
+        all_service_ids = torch.tensor([f.service_id for f in features], dtype=torch.long)
+
+        # snt_pair features
+        all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
+        all_attention_masks = torch.tensor([f.input_mask for f in features], dtype=torch.long)
+        all_token_type_ids = torch.tensor([f.input_seg for f in features], dtype=torch.long)
+
+        # active_intent
+        all_intent_ids = torch.tensor([f.intent_id for f in features], dtype=torch.long)
+        all_intent_status = torch.tensor([f.intent_status for f in features], dtype=torch.long)
+
+        if not is_training:
+            dataset = torch.utils.data.TensorDataset(
+                all_example_types,
+                all_example_ids,
+                all_service_ids,
+                all_input_ids,
+                all_attention_masks,
+                all_token_type_ids,
+                all_intent_ids
+            )
+        else:
+            dataset = torch.utils.data.TensorDataset(
+                all_example_types,
+                all_example_ids,
+                all_service_ids,
+                all_input_ids,
+                all_attention_masks,
+                all_token_type_ids,
+                all_intent_ids,
+                all_intent_status
+            )
+
+        return features, dataset
+
+    return features
+
 def convert_schema_dst_examples_to_features(examples,
                                  dataset_config,
                                  max_seq_length,
@@ -764,6 +829,7 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         # active_intent
         inputs["intent_id"] = batch[6]
         intent_key = config.intent_seq2_key if "intent_seq2_key" in config.__dict__ else "intent"
+        intent_input_embs_key = SchemaInputFeatures.get_embedding_tensor_name(intent_key)
         intent_input_ids_key = SchemaInputFeatures.get_input_ids_tensor_name(intent_key)
         intent_input_mask_key = SchemaInputFeatures.get_input_mask_tensor_name(intent_key)
         intent_input_type_ids_key = SchemaInputFeatures.get_input_type_ids_tensor_name(intent_key)
@@ -778,6 +844,13 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         inputs[intent_input_mask_key] = all_intent_mask_in_batch.gather(1, intent_indices).squeeze(1)
         all_intent_seg_in_batch = schema_tensors[intent_input_type_ids_key].to(args.device).index_select(0, inputs["service_id"])
         inputs[intent_input_type_ids_key] = all_intent_seg_in_batch.gather(1, intent_indices).squeeze(1)
+
+        if intent_input_embs_key in schema_tensors:
+            all_intent_embs_in_batch = schema_tensors[intent_input_embs_key].to(args.device).index_select(0, inputs["service_id"])
+            _, _, max_enc_length, enc_dim = all_intent_embs_in_batch.size()
+            emb_intent_indices = inputs["intent_id"].view(-1, 1, 1, 1).expand(-1, 1, max_enc_length, enc_dim)
+            inputs[intent_input_embs_key] = all_intent_embs_in_batch.gather(1, emb_intent_indices).squeeze(1)
+
         if len(batch) > 7:
             # results
             labels = {
@@ -789,6 +862,7 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         # req slot
         inputs["req_slot_id"] = batch[6]
         req_slot_key = config.req_slot_seq2_key if "req_slot_seq2_key" in config.__dict__ else "req_slot"
+        req_slot_input_embs_key = SchemaInputFeatures.get_embedding_tensor_name(req_slot_key)
         req_slot_input_ids_key = SchemaInputFeatures.get_input_ids_tensor_name(req_slot_key)
         req_slot_input_mask_key = SchemaInputFeatures.get_input_mask_tensor_name(req_slot_key)
         req_slot_input_type_ids_key = SchemaInputFeatures.get_input_type_ids_tensor_name(req_slot_key)
@@ -801,6 +875,12 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         inputs[req_slot_input_mask_key] = all_req_slot_mask_in_batch.gather(1, req_slot_indices).squeeze(1)
         all_req_slot_seg_in_batch = schema_tensors[req_slot_input_type_ids_key].to(args.device).index_select(0, inputs["service_id"])
         inputs[req_slot_input_type_ids_key] = all_req_slot_seg_in_batch.gather(1, req_slot_indices).squeeze(1)
+        if req_slot_input_embs_key in schema_tensors:
+            all_req_slot_embs_in_batch = schema_tensors[req_slot_input_embs_key].to(args.device).index_select(0, inputs["service_id"])
+            _, _, max_enc_length, enc_dim = all_req_slot_ids_in_batch.size()
+            emb_req_slot_indices = inputs["req_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_enc_length, enc_dim)
+            inputs[req_slot_input_embs_key] = all_req_slot_embs_in_batch.gather(1, emb_req_slot_indices).squeeze(1)
+
         if len(batch) > 7:
             # results
             labels = {
@@ -812,6 +892,7 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         # cat slot
         inputs["cat_slot_id"] = batch[6]
         cat_slot_key = config.cat_slot_seq2_key if "cat_slot_seq2_key" in config.__dict__ else "cat_slot"
+        cat_slot_input_embs_key = SchemaInputFeatures.get_embedding_tensor_name(cat_slot_key)
         cat_slot_input_ids_key = SchemaInputFeatures.get_input_ids_tensor_name(cat_slot_key)
         cat_slot_input_mask_key = SchemaInputFeatures.get_input_mask_tensor_name(cat_slot_key)
         cat_slot_input_type_ids_key = SchemaInputFeatures.get_input_type_ids_tensor_name(cat_slot_key)
@@ -831,10 +912,16 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         all_cat_slot_seg_in_batch = schema_tensors[cat_slot_input_type_ids_key].to(
             args.device).index_select(0, inputs["service_id"])
         inputs[cat_slot_input_type_ids_key] = all_cat_slot_seg_in_batch.gather(1, cat_slot_indices).squeeze(1)
+        if cat_slot_input_embs_key in schema_tensors:
+            all_cat_slot_embs_in_batch = schema_tensors[cat_slot_input_embs_key].to(args.device).index_select(0, inputs["service_id"])
+            _, _, max_enc_length, enc_dim = all_cat_slot_embs_in_batch.size()
+            embs_cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1).expand(-1, 1, max_enc_length, enc_dim)
+            inputs[cat_slot_input_embs_key] = all_cat_slot_embs_in_batch.gather(1, embs_cat_slot_indices).squeeze(1)
         # cat slot value
         inputs["cat_slot_value_id"] = batch[7]
         # max_service_num, max_cat_slot_num, max_value_num,  max_seq_lenth -> (batch_size, max_cat_slot_num, max_cat_value_num, max_seq_length)
         if "cat_value_seq2_key" in config.__dict__:
+            input_embs_key = SchemaInputFeatures.get_embedding_tensor_name(config.cat_value_seq2_key)
             input_ids_key = SchemaInputFeatures.get_input_ids_tensor_name(config.cat_value_seq2_key)
             input_mask_key = SchemaInputFeatures.get_input_mask_tensor_name(config.cat_value_seq2_key)
             input_type_key = SchemaInputFeatures.get_input_type_ids_tensor_name(config.cat_value_seq2_key)
@@ -854,6 +941,14 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
                 args.device).index_select(0, inputs["service_id"])
             inputs[input_type_key] = all_cat_slot_value_seg_in_batch.gather(
                 1, cat_slot_indices).squeeze(1).gather(1, cat_slot_value_indices).squeeze(1)
+            if input_embs_key in schema_tensors:
+                # batch_size, cat, value, max_seq, dim
+                all_cat_slot_value_embs_in_batch = schema_tensors[input_embs_key].to(args.device).index_select(0, inputs["service_id"])
+                _, _, _, max_enc_length, enc_dim = all_cat_slot_value_embs_in_batch.size()
+                emb_cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_enc_length, enc_dim)
+                embs_cat_slot_value_indices = inputs["cat_slot_value_id"].view(-1, 1, 1, 1).expand(-1, 1, max_enc_length, enc_dim)
+                inputs[input_embs_key] = all_cat_slot_value_embs_in_batch.gather(1, emb_cat_slot_indices).squeeze(1).gather(1, embs_cat_slot_value_indices).squeeze(1)
+
         elif "cat_value_embedding_key" in config.__dict__:
             input_embedding_key = SchemaInputFeatures.get_embedding_tensor_name(config.cat_value_embedding_key)
             # batch_size, max_cat, max_cat_value, max_length
