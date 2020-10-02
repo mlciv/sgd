@@ -3,7 +3,7 @@ config_name=`basename "$1"`
 
 EXP_NAME="${config_name%.*}"
 echo $EXP_NAME
-TASK_NAME=dstc8_bert
+TASK_NAME=dstc8_all
 EXP_DIR=$SGD_WORK_DIR/$TASK_NAME/$EXP_NAME/
 EXP_MODELS=$EXP_DIR/models/
 EXP_SUMMARY=$EXP_DIR/summary/

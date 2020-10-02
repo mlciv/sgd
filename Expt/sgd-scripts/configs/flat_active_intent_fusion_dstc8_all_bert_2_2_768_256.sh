@@ -30,9 +30,9 @@ DEV_FILE=dev
 # test_file, the file for eval
 TEST_FILE=test
 # per_gpu_eval_batch_size
-PER_GPU_EVAL_BATCH_SIZE=16
+PER_GPU_EVAL_BATCH_SIZE=24
 # per_gpu_train_batch_size
-PER_GPU_TRAIN_BATCH_SIZE=16
+PER_GPU_TRAIN_BATCH_SIZE=24
 # num_train_epochs
 NUM_TRAIN_EPOCHS=10
 # learning_rate
