@@ -10,13 +10,13 @@ EXP_SUMMARY=$EXP_DIR/summary/
 EXP_RESULTS=$EXP_DIR/results/
 
 # model_type, some model name to initialize or load pretrained model
-MODEL_TYPE=flat_noncat_slots_fusion
+MODEL_TYPE=flat_active_intent_dual
 # encoder config name for the task
 ENCODER_CONFIG_NAME=
 # encoder_model_name_path, whether a name or a path for the model
 ENCODER_MODEL_NAME_PATH=$SGD_JSON_CONFIG_DIR/encoders/bert-base-cased.json
 # config name for the task
-CONFIG_NAME=$SGD_JSON_CONFIG_DIR/models/flat_noncat_slots_fusion_2_2_768_256.json
+CONFIG_NAME=$SGD_JSON_CONFIG_DIR/models/flat_active_intent_dual_dotprod.json
 # model_name_path, whether a name or a path for the model
 MODEL_NAME_PATH=
 # cache_dir, the cache_dir for store the mebdding, exampls.

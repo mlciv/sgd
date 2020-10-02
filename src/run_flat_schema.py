@@ -54,9 +54,11 @@ from modules.schema_noncatslot_processor import SchemaNonCatSlotProcessor
 from modules.flat_active_intent_bert_snt_pair_match import FlatActiveIntentBERTSntPairMatchModel
 from modules.flat_active_intent_toptrans import FlatActiveIntentTopTransModel
 from modules.flat_active_intent_fusion import FlatActiveIntentFusionModel
+from modules.flat_active_intent_dual_encoder import FlatActiveIntentDualEncoder
 from modules.flat_requested_slots_bert_snt_pair_match import FlatRequestedSlotsBERTSntPairMatchModel
 from modules.flat_requested_slots_toptrans import FlatRequestedSlotsTopTrans
 from modules.flat_requested_slots_fusion import FlatRequestedSlotsFusionModel
+from modules.flat_requested_slots_dual_encoder import FlatRequestedSlotsDualEncoder
 from modules.flat_cat_slot_value_bert_snt_pair_match import FlatCatSlotValueBERTSntPairMatchModel
 from modules.flat_cat_slots_bert_snt_pair_match import FlatCatSlotsBERTSntPairMatchModel
 from modules.flat_cat_slots_bert_cls_value import FlatCatSlotsBERTCLSValueMatchModel
@@ -102,8 +104,10 @@ MODEL_CLASSES = {
     "flat_noncat_slots_bert_snt_pair_match": (FlatNonCatSlotsBERTSntPairMatchModel, SchemaNonCatSlotProcessor),
     "flat_active_intent_toptrans": (FlatActiveIntentTopTransModel, SchemaIntentProcessor),
     "flat_active_intent_fusion": (FlatActiveIntentFusionModel, SchemaIntentProcessor),
+    "flat_active_intent_dual": (FlatActiveIntentDualEncoder, SchemaIntentProcessor),
     "flat_requested_slots_toptrans": (FlatRequestedSlotsTopTrans, SchemaReqSlotProcessor),
     "flat_requested_slots_fusion": (FlatRequestedSlotsFusionModel, SchemaReqSlotProcessor),
+    "flat_requested_slots_dual": (FlatRequestedSlotsDualEncoder, SchemaReqSlotProcessor),
     "flat_cat_slot_value_toptrans": (FlatCatSlotValueTopTransModel, SchemaCatSlotValueProcessor),
     "flat_cat_slot_value_fusion": (FlatCatSlotValueFusionModel, SchemaCatSlotValueProcessor),
     "flat_cat_slots_toptrans": (FlatCatSlotsTopTransModel, SchemaCatSlotProcessor),

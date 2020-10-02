@@ -1,0 +1,14 @@
+{
+  "utterance_dropout": 0.3,
+  "schema_dropout": 0.3,
+  "final_dropout": 0.3,
+  "schema_embedding_file_name": "flat_requested_slot_fusion_token.npy",
+  "schema_max_seq_length": 80,
+  "dialog_cxt_length": 15,
+  "schema_embedding_type": "flat_token",
+  "schema_embedding_dim": 768,
+  "schema_finetuning_type": "bert_snt_pair",
+  "utterance_embedding_dim": 768,
+  "matcher": "DotProductMatcher",
+  "req_slot_seq2_key": "req_slot"
+}
