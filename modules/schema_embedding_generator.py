@@ -393,7 +393,7 @@ class SchemaEmbeddingGenerator(nn.Module):
                 desc_only_nl_seq, "cat_slot_desc_only",
                 service_schema.service_id, slot_id))
             features.append(self._create_seq2_feature(
-                desc_only_nl_seq, "cat_slot_service_desc",
+                service_desc_nl_seq, "cat_slot_service_desc",
                 service_schema.service_id, slot_id))
             # here, every value_id is shifted with special_cat_value_offset
             for value_id, value in enumerate(
