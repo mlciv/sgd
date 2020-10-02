@@ -43,15 +43,15 @@ class FixedSchemaCacheEncoder(object):
         # batch_size, max_slot_num, max_value_num, max_seq_length, dim
         # for tokens , it is encoded with sentence or single sentence, all will be ok
         # because make will include both special token cls, sep tokens, but making those paddings are 0
-        cached_schema_tokens = features[SchemaInputFeatures.get_embedding_tensor_name(schema_type)]
+        cached_schema_tokens = features[SchemaInputFeatures.get_tok_embedding_tensor_name(schema_type)]
         # batch_size, max_intent_num, max_seq_length
         cached_schema_mask = features[SchemaInputFeatures.get_input_mask_tensor_name(schema_type)]
-        logger.info("shape for fixed_schema: {}, {}".format(cached_schema_mask.size(), cached_schema_mask.size()))
-        size_length = len(list(cached_schema_mask.size()))
-        if size_length == 4:
+        size_length = len(list(cached_schema_tokens.size()))
+        #logger.info("shape for fixed_schema: {}, {}, {}".format(cached_schema_tokens.size(), cached_schema_mask.size(), size_length))
+        if size_length == 3:
+            cls_embeddings = cached_schema_tokens[:, 0, :]
+        elif size_length == 4:
             cls_embeddings = cached_schema_tokens[:, :, 0, :]
-        elif size_length == 5:
-            cls_embeddings = cached_schema_tokens[:, :, :, 0, :]
 
         if is_training:
             cached_schema_tokens = dropout_layer(cached_schema_tokens)

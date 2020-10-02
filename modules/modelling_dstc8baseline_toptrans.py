@@ -74,7 +74,7 @@ class DSTC8BaselineTopTransModel(TopTransformerModel, DSTC8BaselineOutputInterfa
         """Directly read from precomputed schema embedding."""
         # scala_mix is not used here, since we only cache the last layer of token schema embedding
         # batch_size, max_intent_num, max_seq_length, dim
-        cached_schema_tokens = features[SchemaInputFeatures.get_embedding_tensor_name(schema_type)]
+        cached_schema_tokens = features[SchemaInputFeatures.get_tok_embedding_tensor_name(schema_type)]
         # batch_size, max_intent_num, max_seq_length
         cached_schema_mask = features[SchemaInputFeatures.get_input_mask_tensor_name(schema_type)]
         if is_training:

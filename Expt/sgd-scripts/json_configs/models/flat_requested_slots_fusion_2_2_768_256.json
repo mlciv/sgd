@@ -2,17 +2,17 @@
   "utterance_dropout": 0.3,
   "schema_dropout": 0.3,
   "final_dropout": 0.3,
-  "schema_embedding_file_name": "flat_active_intent_fusion_token.npy",
+  "schema_embedding_file_name": "flat_requested_slot_fusion_token.npy",
   "schema_max_seq_length": 80,
   "dialog_cxt_length": 15,
   "schema_embedding_type": "flat_token",
   "schema_embedding_dim": 768,
   "schema_finetuning_type": "bert_snt_pair",
-  "intent_seq2_key": "intent",
   "utterance_embedding_dim": 768,
   "d_model": 768,
   "num_matching_layer": 2,
   "nhead": 2,
   "dim_feedforward": 256,
-  "bert_mix_layers": 0
+  "bert_mix_layers": 0,
+  "req_slot_seq2_key": "req_slot"
 }

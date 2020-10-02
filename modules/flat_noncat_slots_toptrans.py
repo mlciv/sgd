@@ -86,9 +86,12 @@ class FlatNonCatSlotsTopTransModel(PreTrainedModel, EncodeSepUttSchemaInterface,
             # Given the matchng layer above, it seems sharing the embedding layer and encoding is good
             # But if the schema description is a graph or other style, we can consider a GCN or others
             # self.schema_encoder = self.utt_encoder
-            new_schema_encoder = EncoderUtils.create_encoder(self.config)
-            new_schema_encoder.embeddings = self.utt_encoder.embeddings
-            self.schema_encoder = new_schema_encoder
+            if self.config.schema_embedding_type in ["token", "flat_token"]:
+                self.schema_encoder = None
+            else:
+                new_schema_encoder = EncoderUtils.create_encoder(self.config)
+                new_schema_encoder.embeddings = self.utt_encoder.embeddings
+                self.schema_encoder = new_schema_encoder
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)

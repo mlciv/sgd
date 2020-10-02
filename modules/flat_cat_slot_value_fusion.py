@@ -48,7 +48,7 @@ class FlatCatSlotValueFusionModel(FlatCatSlotValueTopTransModel, FixedSchemaCach
     pretrained_model_archieve_map = CLS_PRETRAINED_MODEL_ARCHIVE_MAP
 
     def __init__(self, config=None, args=None, encoder=None, utt_encoder=None, schema_encoder=None):
-        super(FlatCatSlotValueFusionModel, self).__init__(config=config, args=args, utt_encoder=utt_encoder, schema_encoder=None)
+        super(FlatCatSlotValueFusionModel, self).__init__(config=config, args=args, utt_encoder=utt_encoder, schema_encoder=schema_encoder)
 
     @classmethod
     def _encode_schema(cls, tokenizer, encoder, features, dropout_layer, _scalar_mix, schema_type, is_training):

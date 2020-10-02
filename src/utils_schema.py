@@ -829,7 +829,7 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         # active_intent
         inputs["intent_id"] = batch[6]
         intent_key = config.intent_seq2_key if "intent_seq2_key" in config.__dict__ else "intent"
-        intent_input_embs_key = SchemaInputFeatures.get_embedding_tensor_name(intent_key)
+        intent_input_tok_embs_key = SchemaInputFeatures.get_tok_embedding_tensor_name(intent_key)
         intent_input_ids_key = SchemaInputFeatures.get_input_ids_tensor_name(intent_key)
         intent_input_mask_key = SchemaInputFeatures.get_input_mask_tensor_name(intent_key)
         intent_input_type_ids_key = SchemaInputFeatures.get_input_type_ids_tensor_name(intent_key)
@@ -845,11 +845,11 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         all_intent_seg_in_batch = schema_tensors[intent_input_type_ids_key].to(args.device).index_select(0, inputs["service_id"])
         inputs[intent_input_type_ids_key] = all_intent_seg_in_batch.gather(1, intent_indices).squeeze(1)
 
-        if intent_input_embs_key in schema_tensors:
-            all_intent_embs_in_batch = schema_tensors[intent_input_embs_key].to(args.device).index_select(0, inputs["service_id"])
+        if intent_input_tok_embs_key in schema_tensors:
+            all_intent_embs_in_batch = schema_tensors[intent_input_tok_embs_key].to(args.device).index_select(0, inputs["service_id"])
             _, _, max_enc_length, enc_dim = all_intent_embs_in_batch.size()
             emb_intent_indices = inputs["intent_id"].view(-1, 1, 1, 1).expand(-1, 1, max_enc_length, enc_dim)
-            inputs[intent_input_embs_key] = all_intent_embs_in_batch.gather(1, emb_intent_indices).squeeze(1)
+            inputs[intent_input_tok_embs_key] = all_intent_embs_in_batch.gather(1, emb_intent_indices).squeeze(1)
 
         if len(batch) > 7:
             # results
@@ -862,7 +862,7 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         # req slot
         inputs["req_slot_id"] = batch[6]
         req_slot_key = config.req_slot_seq2_key if "req_slot_seq2_key" in config.__dict__ else "req_slot"
-        req_slot_input_embs_key = SchemaInputFeatures.get_embedding_tensor_name(req_slot_key)
+        req_slot_input_tok_embs_key = SchemaInputFeatures.get_tok_embedding_tensor_name(req_slot_key)
         req_slot_input_ids_key = SchemaInputFeatures.get_input_ids_tensor_name(req_slot_key)
         req_slot_input_mask_key = SchemaInputFeatures.get_input_mask_tensor_name(req_slot_key)
         req_slot_input_type_ids_key = SchemaInputFeatures.get_input_type_ids_tensor_name(req_slot_key)
@@ -875,11 +875,11 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         inputs[req_slot_input_mask_key] = all_req_slot_mask_in_batch.gather(1, req_slot_indices).squeeze(1)
         all_req_slot_seg_in_batch = schema_tensors[req_slot_input_type_ids_key].to(args.device).index_select(0, inputs["service_id"])
         inputs[req_slot_input_type_ids_key] = all_req_slot_seg_in_batch.gather(1, req_slot_indices).squeeze(1)
-        if req_slot_input_embs_key in schema_tensors:
-            all_req_slot_embs_in_batch = schema_tensors[req_slot_input_embs_key].to(args.device).index_select(0, inputs["service_id"])
-            _, _, max_enc_length, enc_dim = all_req_slot_ids_in_batch.size()
+        if req_slot_input_tok_embs_key in schema_tensors:
+            all_req_slot_embs_in_batch = schema_tensors[req_slot_input_tok_embs_key].to(args.device).index_select(0, inputs["service_id"])
+            _, _, max_enc_length, enc_dim = all_req_slot_embs_in_batch.size()
             emb_req_slot_indices = inputs["req_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_enc_length, enc_dim)
-            inputs[req_slot_input_embs_key] = all_req_slot_embs_in_batch.gather(1, emb_req_slot_indices).squeeze(1)
+            inputs[req_slot_input_tok_embs_key] = all_req_slot_embs_in_batch.gather(1, emb_req_slot_indices).squeeze(1)
 
         if len(batch) > 7:
             # results
@@ -892,7 +892,7 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         # cat slot
         inputs["cat_slot_id"] = batch[6]
         cat_slot_key = config.cat_slot_seq2_key if "cat_slot_seq2_key" in config.__dict__ else "cat_slot"
-        cat_slot_input_embs_key = SchemaInputFeatures.get_embedding_tensor_name(cat_slot_key)
+        cat_slot_input_tok_embs_key = SchemaInputFeatures.get_tok_embedding_tensor_name(cat_slot_key)
         cat_slot_input_ids_key = SchemaInputFeatures.get_input_ids_tensor_name(cat_slot_key)
         cat_slot_input_mask_key = SchemaInputFeatures.get_input_mask_tensor_name(cat_slot_key)
         cat_slot_input_type_ids_key = SchemaInputFeatures.get_input_type_ids_tensor_name(cat_slot_key)
@@ -912,16 +912,16 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         all_cat_slot_seg_in_batch = schema_tensors[cat_slot_input_type_ids_key].to(
             args.device).index_select(0, inputs["service_id"])
         inputs[cat_slot_input_type_ids_key] = all_cat_slot_seg_in_batch.gather(1, cat_slot_indices).squeeze(1)
-        if cat_slot_input_embs_key in schema_tensors:
-            all_cat_slot_embs_in_batch = schema_tensors[cat_slot_input_embs_key].to(args.device).index_select(0, inputs["service_id"])
+        if cat_slot_input_tok_embs_key in schema_tensors:
+            all_cat_slot_embs_in_batch = schema_tensors[cat_slot_input_tok_embs_key].to(args.device).index_select(0, inputs["service_id"])
             _, _, max_enc_length, enc_dim = all_cat_slot_embs_in_batch.size()
-            embs_cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1).expand(-1, 1, max_enc_length, enc_dim)
-            inputs[cat_slot_input_embs_key] = all_cat_slot_embs_in_batch.gather(1, embs_cat_slot_indices).squeeze(1)
+            embs_cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_enc_length, enc_dim)
+            inputs[cat_slot_input_tok_embs_key] = all_cat_slot_embs_in_batch.gather(1, embs_cat_slot_indices).squeeze(1)
         # cat slot value
         inputs["cat_slot_value_id"] = batch[7]
         # max_service_num, max_cat_slot_num, max_value_num,  max_seq_lenth -> (batch_size, max_cat_slot_num, max_cat_value_num, max_seq_length)
         if "cat_value_seq2_key" in config.__dict__:
-            input_embs_key = SchemaInputFeatures.get_embedding_tensor_name(config.cat_value_seq2_key)
+            input_tok_embs_key = SchemaInputFeatures.get_tok_embedding_tensor_name(config.cat_value_seq2_key)
             input_ids_key = SchemaInputFeatures.get_input_ids_tensor_name(config.cat_value_seq2_key)
             input_mask_key = SchemaInputFeatures.get_input_mask_tensor_name(config.cat_value_seq2_key)
             input_type_key = SchemaInputFeatures.get_input_type_ids_tensor_name(config.cat_value_seq2_key)
@@ -941,13 +941,13 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
                 args.device).index_select(0, inputs["service_id"])
             inputs[input_type_key] = all_cat_slot_value_seg_in_batch.gather(
                 1, cat_slot_indices).squeeze(1).gather(1, cat_slot_value_indices).squeeze(1)
-            if input_embs_key in schema_tensors:
+            if input_tok_embs_key in schema_tensors:
                 # batch_size, cat, value, max_seq, dim
-                all_cat_slot_value_embs_in_batch = schema_tensors[input_embs_key].to(args.device).index_select(0, inputs["service_id"])
+                all_cat_slot_value_embs_in_batch = schema_tensors[input_tok_embs_key].to(args.device).index_select(0, inputs["service_id"])
                 _, _, _, max_enc_length, enc_dim = all_cat_slot_value_embs_in_batch.size()
                 emb_cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_enc_length, enc_dim)
                 embs_cat_slot_value_indices = inputs["cat_slot_value_id"].view(-1, 1, 1, 1).expand(-1, 1, max_enc_length, enc_dim)
-                inputs[input_embs_key] = all_cat_slot_value_embs_in_batch.gather(1, emb_cat_slot_indices).squeeze(1).gather(1, embs_cat_slot_value_indices).squeeze(1)
+                inputs[input_tok_embs_key] = all_cat_slot_value_embs_in_batch.gather(1, emb_cat_slot_indices).squeeze(1).gather(1, embs_cat_slot_value_indices).squeeze(1)
 
         elif "cat_value_embedding_key" in config.__dict__:
             input_embedding_key = SchemaInputFeatures.get_embedding_tensor_name(config.cat_value_embedding_key)
@@ -971,19 +971,26 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         else:
             labels = None
     elif all_examples_types[0] == 6:
-        # cat slots, one cat slot statu, and another a single value for the gt cat_slot_value( without special value shift)
+        # cat slots, one cat slot statu, and another a single value for the gt cat_slot_value( with special value shift)
         inputs["cat_slot_id"] = batch[6]
         inputs["cat_slot_value_num"] = batch[7]
         cat_slot_key = config.cat_slot_seq2_key if "cat_slot_seq2_key" in config.__dict__ else "cat_slot"
+        cat_slot_input_tok_embs_key = SchemaInputFeatures.get_tok_embeddings_tensor_name(cat_slot_key)
         cat_slot_input_ids_key = SchemaInputFeatures.get_input_ids_tensor_name(cat_slot_key)
         cat_slot_input_mask_key = SchemaInputFeatures.get_input_mask_tensor_name(cat_slot_key)
         cat_slot_input_type_ids_key = SchemaInputFeatures.get_input_type_ids_tensor_name(cat_slot_key)
         all_cat_slot_ids_in_batch = schema_tensors[cat_slot_input_ids_key].to(
             args.device).index_select(0, inputs["service_id"])
+        if cat_slot_input_tok_embs_key in schema_tensors:
+            all_cat_slot_embs_in_batch = schema_tensors[cat_slot_input_tok_embs_key].to(args.device).index_select(0, inputs["service_id"])
+            _, _, max_enc_length, enc_dim = all_cat_slot_embs_in_batch.size()
+            embs_cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1).expand(-1, 1, max_enc_length, enc_dim)
+            inputs[cat_slot_input_tok_embs_key] = all_cat_slot_embs_in_batch.gather(1, embs_cat_slot_indices).squeeze(1)
         # cat slot value
         inputs["cat_slot_value_id"] = batch[7]
         # batch_size, max_cat, max_cat_value, max_length
         if "cat_value_seq2_key" in config.__dict__:
+            input_tok_embs_key = SchemaInputFeatures.get_tok_embedding_tensor_name(config.cat_value_seq2_key)
             input_ids_key = SchemaInputFeatures.get_input_ids_tensor_name(config.cat_value_seq2_key)
             input_mask_key = SchemaInputFeatures.get_input_mask_tensor_name(config.cat_value_seq2_key)
             input_type_key = SchemaInputFeatures.get_input_type_ids_tensor_name(config.cat_value_seq2_key)
@@ -1008,6 +1015,13 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
             inputs[input_type_key] = all_cat_slot_value_seg_in_batch.gather(
                 1, cat_slot_indices
             ).squeeze(1)
+            if input_tok_embs_key in schema_tensors:
+                # batch_size, cat, value, max_seq, dim
+                all_cat_slot_value_embs_in_batch = schema_tensors[input_tok_embs_key].to(args.device).index_select(0, inputs["service_id"])
+                _, _, _, max_enc_length, enc_dim = all_cat_slot_value_embs_in_batch.size()
+                emb_cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_enc_length, enc_dim)
+                embs_cat_slot_value_indices = inputs["cat_slot_value_id"].view(-1, 1, 1, 1).expand(-1, 1, max_enc_length, enc_dim)
+                inputs[input_tok_embs_key] = all_cat_slot_value_embs_in_batch.gather(1, emb_cat_slot_indices).squeeze(1).gather(1, embs_cat_slot_value_indices).squeeze(1)
         elif "cat_value_embedding_key" in config.__dict__:
             input_embedding_key = SchemaInputFeatures.get_embedding_tensor_name(config.cat_value_embedding_key)
             # batch_size, max_cat, max_cat_value, max_length
@@ -1033,6 +1047,7 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         inputs["cat_slot_id"] = batch[6]
         inputs["cat_slot_value_num"] = batch[7]
         cat_slot_key = config.cat_slot_seq2_key if "cat_slot_seq2_key" in config.__dict__ else "cat_slot"
+        cat_slot_input_tok_embs_key = SchemaInputFeatures.get_tok_embedding_tensor_name(cat_slot_key)
         cat_slot_input_ids_key = SchemaInputFeatures.get_input_ids_tensor_name(cat_slot_key)
         cat_slot_input_mask_key = SchemaInputFeatures.get_input_mask_tensor_name(cat_slot_key)
         cat_slot_input_type_ids_key = SchemaInputFeatures.get_input_type_ids_tensor_name(cat_slot_key)
@@ -1047,7 +1062,14 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         all_cat_slot_seg_in_batch = schema_tensors[cat_slot_input_type_ids_key].to(
             args.device).index_select(0, inputs["service_id"])
         inputs[cat_slot_input_type_ids_key] = all_cat_slot_seg_in_batch.gather(1, cat_slot_indices).squeeze(1)
+        if cat_slot_input_tok_embs_key in schema_tensors:
+            all_cat_slot_embs_in_batch = schema_tensors[cat_slot_input_tok_embs_key].to(args.device).index_select(0, inputs["service_id"])
+            _, _, max_enc_length, enc_dim = all_cat_slot_embs_in_batch.size()
+            embs_cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1).expand(-1, 1, max_enc_length, enc_dim)
+            inputs[cat_slot_input_tok_embs_key] = all_cat_slot_embs_in_batch.gather(1, embs_cat_slot_indices).squeeze(1)
+
         if "cat_value_seq2_key" in config.__dict__:
+            input_tok_embs_key = SchemaInputFeatures.get_tok_embedding_tensor_name(config.cat_value_seq2_key)
             input_ids_key = SchemaInputFeatures.get_input_ids_tensor_name(config.cat_value_seq2_key)
             input_mask_key = SchemaInputFeatures.get_input_mask_tensor_name(config.cat_value_seq2_key)
             input_type_key = SchemaInputFeatures.get_input_type_ids_tensor_name(config.cat_value_seq2_key)
@@ -1073,6 +1095,13 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
             inputs[input_type_key] = all_cat_slot_value_seg_in_batch.gather(
                 1, cat_slot_indices
             ).squeeze(1)[:, schema_constants.SPECIAL_CAT_VALUE_OFFSET:, :]
+            if input_tok_embs_key in schema_tensors:
+                # batch_size, cat, value, max_seq, dim
+                all_cat_slot_value_embs_in_batch = schema_tensors[input_tok_embs_key].to(args.device).index_select(0, inputs["service_id"])
+                _, _, _, max_enc_length, enc_dim = all_cat_slot_value_embs_in_batch.size()
+                emb_cat_slot_indices = inputs["cat_slot_id"].view(-1, 1, 1, 1, 1).expand(-1, 1, max_cat_value_num, max_enc_length, enc_dim)
+                embs_cat_slot_value_indices = inputs["cat_slot_value_id"].view(-1, 1, 1, 1).expand(-1, 1, max_enc_length, enc_dim)
+                inputs[input_tok_embs_key] = all_cat_slot_value_embs_in_batch.gather(1, emb_cat_slot_indices).squeeze(1).gather(1, embs_cat_slot_value_indices).squeeze(1)
         elif "cat_value_embedding_key" in config.__dict__:
             input_embedding_key = SchemaInputFeatures.get_embedding_tensor_name(config.cat_value_embedding_key)
             all_cat_slot_value_embeddings_in_batch = schema_tensors[input_embedding_key].to(
@@ -1099,6 +1128,7 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         inputs["noncat_alignment_start"] = batch[7]
         inputs["noncat_alignment_end"] = batch[8]
         noncat_slot_key = config.noncat_slot_seq2_key if "noncat_slot_seq2_key" in config.__dict__ else "noncat_slot"
+        noncat_slot_input_tok_embs_key = SchemaInputFeatures.get_tok_embedding_tensor_name(noncat_slot_key)
         noncat_slot_input_ids_key = SchemaInputFeatures.get_input_ids_tensor_name(noncat_slot_key)
         noncat_slot_input_mask_key = SchemaInputFeatures.get_input_mask_tensor_name(noncat_slot_key)
         noncat_slot_input_type_ids_key = SchemaInputFeatures.get_input_type_ids_tensor_name(noncat_slot_key)
@@ -1113,6 +1143,11 @@ def assemble_schema_features_into_inputs(inputs, batch, schema_tensors, args, co
         all_noncat_slot_seg_in_batch = schema_tensors[noncat_slot_input_type_ids_key].to(
             args.device).index_select(0, inputs["service_id"])
         inputs[noncat_slot_input_type_ids_key] = all_noncat_slot_seg_in_batch.gather(1, noncat_slot_indices).squeeze(1)
+        if noncat_slot_input_tok_embs_key in schema_tensors:
+            all_noncat_slot_embs_in_batch = schema_tensors[noncat_slot_input_tok_embs_key].to(args.device).index_select(0, inputs["service_id"])
+            _, max_noncat_slot_num, max_seq_length, enc_dim = all_noncat_slot_embs_in_batch.size()
+            noncat_slot_indices = inputs["noncat_slot_id"].view(-1, 1, 1, 1).expand(-1, 1, max_seq_length, enc_dim)
+            inputs[noncat_slot_input_tok_embs_key] = all_noncat_slot_embs_in_batch.gather(1, noncat_slot_indices).squeeze(1)
         if len(batch) > 9:
             # results
             all_noncat_slot_status = batch[9]

@@ -18,6 +18,8 @@ class SchemaInputFeatures(object):
         # schema type : intent, req_slot, cat_slot, noncat_slot, cat_slot_value
         self.schema_type = schema_type
         # The name of the embedding tensor corresponding to this example.
+        self.tok_embedding_tensor_name = SchemaInputFeatures.get_tok_embedding_tensor_name(schema_type)
+        # The name of the embedding tensor corresponding to this example.
         self.embedding_tensor_name = SchemaInputFeatures.get_embedding_tensor_name(schema_type)
         # The name of the mask tensor corresponding to this example.
         self.input_ids_tensor_name = SchemaInputFeatures.get_input_ids_tensor_name(schema_type)

@@ -85,7 +85,12 @@ class FlatRequestedSlotsTopTrans(PreTrainedModel, EncodeSepUttSchemaInterface, F
             # TODO: now we don't consider a seperate encoder for schema
             # Given the matchng layer above, it seems sharing the embedding layer and encoding is good
             # But if the schema description is a graph or other style, we can consider a GCN or others
-            self.schema_encoder = self.utt_encoder
+            if self.config.schema_embedding_type in ["token", "flat_token"]:
+                self.schema_encoder = None
+            else:
+                new_schema_encoder = EncoderUtils.create_encoder(self.config)
+                new_schema_encoder.embeddings = self.utt_encoder.embeddings
+                self.schema_encoder = new_schema_encoder
         setattr(self, self.base_model_prefix, torch.nn.Sequential())
         self.utterance_embedding_dim = self.config.utterance_embedding_dim
         self.utterance_dropout = torch.nn.Dropout(self.config.utterance_dropout)
@@ -102,7 +107,14 @@ class FlatRequestedSlotsTopTrans(PreTrainedModel, EncodeSepUttSchemaInterface, F
         else:
             # Here, we share the encoder with utt_encoder, hence,share the prejection too,
             # Later, to support seperate projection layer
-            self.schema_projection_layer =  self.utterance_projection_layer
+            self.schema_projection_layer = self.utterance_projection_layer
+
+        if self.config.bert_mix_layers > 1:
+            self.scalar_utt_mix = scalar_mix.ScalarMix(self.config.bert_mix_layers, do_layer_norm=False)
+            self.scalar_schema_mix = scalar_mix.ScalarMix(self.config.bert_mix_layers, do_layer_norm=False)
+        else:
+            self.scalar_utt_mix = None
+            self.scalar_schema_mix = None
 
         self.requested_slots_matching_layer = torch.nn.TransformerEncoder(
             encoder_layer=torch.nn.TransformerEncoderLayer(self.config.d_model, self.config.nhead, self.config.dim_feedforward),
