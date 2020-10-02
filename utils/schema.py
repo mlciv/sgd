@@ -520,6 +520,22 @@ class Schema(object):
 
         self.save_to_file(self.schema_json_path + ".bt")
 
+    def gen_question_nameonly(self):
+        slot_name = []
+        intent_name = []
+        for schema in self._schemas:
+            # No change to service description
+            # schema["description"] = schema["service_name"]
+            for slot in schema["slots"]:
+                slot['ori_description'] = slot['description']
+                slot['description'] = "What is the value of {} ?".format(slot['name'])
+                slot_name.append(slot['name'])
+            for intent in schema["intents"]:
+                intent['ori_description'] = intent['description']
+                intent['description'] = "Is the user intending to {} ?".format(intent['name'])
+                intent_name.append(intent['name'])
+        self.save_to_file(self.schema_json_path + ".question_nameonly")
+
     def gen_question_template(self):
         slot_name = []
         intent_name = []
@@ -586,7 +602,7 @@ def main():
         default=None,
         type=str,
         required=True,
-        choices=["empty", "name_only", "index_name", "question_template", "back_translation", "enrich", "empty_service_desc", "servicename_as_desc", "empty_service_name_only"],
+        choices=["empty", "name_only", "question_nameonly", "index_name", "question_template", "back_translation", "enrich", "empty_service_desc", "servicename_as_desc", "empty_service_name_only"],
         help="for evaluation.")
 
     parser.add_argument(
@@ -614,6 +630,8 @@ def main():
         schema.load_back_translation_file(schema_description_back_translation_path)
     elif args.task_name == "question_template":
         schema.gen_question_template()
+    elif args.task_name == "question_nameonly":
+        schema.gen_question_nameonly()
     elif args.task_name == "enrich":
         schema.gen_enrich()
     elif args.task_name == "index_name":
