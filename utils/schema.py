@@ -385,8 +385,9 @@ class Schema(object):
                     new_key = slot_name_mappings[(schema["service_name"], slot_key)]
                     tmp_opt_dict[new_key] = value
                 intent["optional_slots"] = tmp_opt_dict
-                for s_idx, slot in enumerate(intent["result_slots"]):
-                    intent["result_slots"][s_idx] = slot_name_mappings[(schema["service_name"], slot)]
+                if "result_slots" in intent:
+                    for s_idx, slot in enumerate(intent["result_slots"]):
+                        intent["result_slots"][s_idx] = slot_name_mappings[(schema["service_name"], slot)]
 
         logger.info("final_intent_index={}, final_slot_index={}".format(j,i))
         self.save_to_file(self.schema_json_path + ".index_name")
