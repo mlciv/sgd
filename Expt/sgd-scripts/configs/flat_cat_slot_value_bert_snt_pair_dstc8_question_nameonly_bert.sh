@@ -3,20 +3,20 @@ config_name=`basename "$1"`
 
 EXP_NAME="${config_name%.*}"
 echo $EXP_NAME
-TASK_NAME=dstc8_all
+TASK_NAME=dstc8_question_nameonly
 EXP_DIR=$SGD_WORK_DIR/$TASK_NAME/$EXP_NAME/
 EXP_MODELS=$EXP_DIR/models/
 EXP_SUMMARY=$EXP_DIR/summary/
 EXP_RESULTS=$EXP_DIR/results/
 
 # model_type, some model name to initialize or load pretrained model
-MODEL_TYPE=flat_noncat_slots_bert_snt_pair_match
+MODEL_TYPE=flat_cat_slot_value_bert_snt_pair_match
 # encoder config name for the task
 ENCODER_CONFIG_NAME=
 # encoder_model_name_path, whether a name or a path for the model
 ENCODER_MODEL_NAME_PATH=$SGD_JSON_CONFIG_DIR/encoders/bert-base-cased.json
 # config name for the task
-CONFIG_NAME=$SGD_JSON_CONFIG_DIR/models/flat_noncat_slots_bert_snt_pair_match_service_desc.json
+CONFIG_NAME=$SGD_JSON_CONFIG_DIR/models/flat_cat_slot_value_bert_snt_pair_match.json
 # model_name_path, whether a name or a path for the model
 MODEL_NAME_PATH=
 # cache_dir, the cache_dir for store the mebdding, exampls.
