@@ -583,8 +583,12 @@ class SchemaEmbeddingGenerator(nn.Module):
                 nl_seq, "noncat_slot",
                 service_schema.service_id, slot_id))
             desc_only_nl_seq = " ".join([slot_descriptions[slot]])
+            service_desc_nl_seq = " ".join([service_des, slot_descriptions[slot]])
             features.append(self._create_seq2_feature(
                 desc_only_nl_seq, "noncat_slot_desc_only",
+                service_schema.service_id, slot_id))
+            features.append(self._create_seq2_feature(
+                service_desc_nl_seq, "noncat_slot_service_desc",
                 service_schema.service_id, slot_id))
         return features
 
