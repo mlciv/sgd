@@ -587,7 +587,8 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
         ref_dialogue_dict, predicted_dialogue_dict,
         args.data_dir, file_split,
         args.use_fuzzy_match,
-        args.joint_acc_across_turn)
+        args.joint_acc_across_turn,
+        args.dataset_config.schema_file)
 
     if evaluate_utils.ALL_SERVICES in all_metric_aggregate:
         logger.info("Model_step: {}, ALL_SERVICES Dialog metrics: {}".format(
