@@ -583,7 +583,7 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
     ref_dialogs = processor.get_whole_dialogs(args.data_dir, file_split)
     ref_dialogue_dict = evaluate_utils.get_dialogue_dict(ref_dialogs)
     predicted_dialogue_dict = evaluate_utils.get_dialogue_dict(all_predicted_dialogues)
-    all_metric_aggregate = evaluate_utils.get_metrics_result(
+    all_metric_aggregate, per_frame_metrics = evaluate_utils.get_metrics_result(
         ref_dialogue_dict, predicted_dialogue_dict,
         args.data_dir, file_split,
         args.use_fuzzy_match,
@@ -607,7 +607,7 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
     metric_time = timeit.default_timer() - start_time
     logger.info("Metrics done in total %f secs (%f sec per example)",
                 metric_time, metric_time / len(dataset))
-    return all_metric_aggregate, all_predictions
+    return all_metric_aggregate, per_frame_metrics, all_predictions
 
 
 def load_and_cache_examples(args, processor, mode, output_examples=False):
