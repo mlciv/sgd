@@ -762,12 +762,12 @@ class SchemaEmbeddingGenerator(nn.Module):
                 ids_mat[feature.intent_or_slot_id, feature.value_id] = feature.input_ids
                 emb_mat[feature.intent_or_slot_id, feature.value_id] = embedding
                 mask_mat[feature.intent_or_slot_id, feature.value_id] = mask
-                mask_mat[feature.intent_or_slot_id, feature.value_id] = feature.input_type_ids
+                type_mat[feature.intent_or_slot_id, feature.value_id] = feature.input_type_ids
             else:
                 ids_mat[feature.intent_or_slot_id] = feature.input_ids
                 emb_mat[feature.intent_or_slot_id] = embedding
                 mask_mat[feature.intent_or_slot_id] = mask
-                mask_mat[feature.intent_or_slot_id] = feature.input_type_ids
+                type_mat[feature.intent_or_slot_id] = feature.input_type_ids
 
     def _populate_schema_flat_token_embeddings(self, schemas, schema_embeddings):
         """Run the BERT estimator and populate all schema embeddings."""
