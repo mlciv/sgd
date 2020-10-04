@@ -509,17 +509,17 @@ class Schema(object):
         for schema in self._schemas:
             ori_service_desc = schema["description"]
             schema["description"] = desc_mapping_dict.get(ori_service_desc, "NOT_FOUND:" + ori_service_desc)
-            schema["description_ori"] = ori_service_desc
+            schema["ori_description"] = ori_service_desc
             for slot in schema["slots"]:
                 ori_slot_desc = slot['description']
-                slot["description_ori"] = ori_slot_desc
+                slot["ori_description"] = ori_slot_desc
                 slot["description"] = desc_mapping_dict.get(ori_slot_desc, "NOT_FOUND" + ori_slot_desc)
             for intent in schema["intents"]:
                 ori_intent_desc = intent['description']
-                intent["description_ori"] = ori_intent_desc
+                intent["ori_description"] = ori_intent_desc
                 intent["description"] = desc_mapping_dict.get(ori_intent_desc, "NOT_FOUND" + ori_intent_desc)
 
-        self.save_to_file(self.schema_json_path + ".bt")
+        self.save_to_file(self.schema_json_path + ".back_translation")
 
     def gen_question_nameonly(self):
         slot_name = []
