@@ -265,4 +265,92 @@ DATASET_CONFIG = {
             max_num_intent=1,
             schema_file="schema.json.back_translation"
         ),
+
+    # service:hotel, max_num_cat_slot:9, max_num_noncat_slot:1, max_num_value_per_cat_slot:8, max_num_intent:2
+    # service:train, max_num_cat_slot:4, max_num_noncat_slot:2, max_num_value_per_cat_slot:13, max_num_intent:2
+    # service:attraction, max_num_cat_slot:2, max_num_noncat_slot:1, max_num_value_per_cat_slot:12, max_num_intent:1
+    # service:restaurant, max_num_cat_slot:4, max_num_noncat_slot:3, max_num_value_per_cat_slot:8, max_num_intent:2
+    # service:hospital, max_num_cat_slot:0, max_num_noncat_slot:1, max_num_value_per_cat_slot:0, max_num_intent:1
+    # service:taxi, max_num_cat_slot:0, max_num_noncat_slot:4, max_num_value_per_cat_slot:0, max_num_intent:1
+    # service:bus, max_num_cat_slot:1, max_num_noncat_slot:3, max_num_value_per_cat_slot:1, max_num_intent:1
+    # service:police, max_num_cat_slot:1, max_num_noncat_slot:0, max_num_value_per_cat_slot:1, max_num_intent:1
+    # max_num_cat_slot:9, max_num_noncat_slot:4, max_num_value_per_cat_slot:13, max_num_intent:2
+    "multiwoz22_all":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 18),
+                "dev": range(1, 3),
+                "test": range(1, 3)
+            },
+            max_num_cat_slot=9,
+            max_num_noncat_slot=4,
+            max_num_value_per_cat_slot=13,
+            max_num_intent=2,
+            schema_file="schema.json"
+        ),
+    "multiwoz22_name_only":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 18),
+                "dev": range(1, 3),
+                "test": range(1, 3)
+            },
+            max_num_cat_slot=9,
+            max_num_noncat_slot=4,
+            max_num_value_per_cat_slot=13,
+            max_num_intent=2,
+            schema_file="schema.json.name_only"
+        ),
+    "multiwoz22_question_nameonly":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 18),
+                "dev": range(1, 3),
+                "test": range(1, 3)
+            },
+            max_num_cat_slot=9,
+            max_num_noncat_slot=4,
+            max_num_value_per_cat_slot=13,
+            max_num_intent=2,
+            schema_file="schema.json.question_nameonly"
+        ),
+    "multiwoz22_question_rich":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 18),
+                "dev": range(1, 3),
+                "test": range(1, 3)
+            },
+            max_num_cat_slot=9,
+            max_num_noncat_slot=4,
+            max_num_value_per_cat_slot=13,
+            max_num_intent=2,
+            schema_file="schema.json.question_rich"
+        ),
+    "multiwoz22_back_translation":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 18),
+                "dev": range(1, 3),
+                "test": range(1, 3)
+            },
+            max_num_cat_slot=9,
+            max_num_noncat_slot=4,
+            max_num_value_per_cat_slot=13,
+            max_num_intent=2,
+            schema_file="schema.json.back_translation"
+        ),
+    "multiwoz22_defintion":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 18),
+                "dev": range(1, 3),
+                "test": range(1, 3)
+            },
+            max_num_cat_slot=9,
+            max_num_noncat_slot=4,
+            max_num_value_per_cat_slot=13,
+            max_num_intent=2,
+            schema_file="schema.json.definition"
+        ),
 }
