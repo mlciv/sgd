@@ -18,6 +18,7 @@ from modules.core.encoder_utils import EncoderUtils
 from modules.core.schemadst_configuration import SchemaDSTConfig
 from modules.dstc8baseline_output_interface import DSTC8BaselineOutputInterface
 from modules.schema_embedding_generator import SchemaInputFeatures
+import modules.core.schema_constants as schema_constants
 from src import utils_schema
 from utils import (
     torch_ext,

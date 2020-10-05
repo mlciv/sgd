@@ -230,9 +230,6 @@ class ServiceSchema(object):
         slot = self.categorical_slots[slot_id]
         return self._categorical_slot_values[slot][value_id]
 
-    def get_categorical_slot_values(self):
-        return self._categorical_slot_values
-
     def get_categorical_slot_value_id(self, slot, value):
         """
         use slot name and value to get the corresponding value id
@@ -285,7 +282,7 @@ class Schema(object):
                 max_num_noncat_slot = noncat_slot_num
 
             # num_value_per cat slot
-            lengths = [len(values) for key, values in ss.get_categorical_slot_values().items()]
+            lengths = [len(values) for key, values in ss._categorical_slot_values.items()]
             if len(lengths) == 0:
                 logger.warn("non cat values for service {}".format(name))
                 max_num_value = 0
