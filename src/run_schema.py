@@ -51,12 +51,16 @@ from modules.schema_noncatslot_processor import SchemaNonCatSlotProcessor
 
 from modules.active_intent_cls_match_model import ActiveIntentCLSMatchModel
 from modules.active_intent_bert_snt_pair_match import ActiveIntentBERTSntPairMatchModel
+from modules.active_intent_fusion import ActiveIntentFusionModel
 from modules.requested_slots_bert_snt_pair_match import RequestedSlotsBERTSntPairMatchModel
 from modules.requested_slots_cls_match_model import RequestedSlotsCLSMatchModel
+from modules.requested_slots_fusion import RequestedSlotsFusionModel
 from modules.cat_slots_bert_snt_pair_match import CatSlotsBERTSntPairMatchModel
 from modules.cat_slots_cls_match_model import CatSlotsCLSMatchModel
+from modules.cat_slots_fusion import CatSlotsFusionModel
 from modules.noncat_slots_bert_snt_pair_match import NonCatSlotsBERTSntPairMatchModel
 from modules.noncat_slots_cls_match_model import NonCatSlotsCLSMatchModel
+from modules.noncat_slots_fusion import NonCatSlotsFusionModel
 from modules.modelling_dstc8baseline import DSTC8BaselineModel
 from modules.modelling_dstc8baseline_toptrans import DSTC8BaselineTopTransModel
 from modules.modelling_toptransformer import TopTransformerModel
@@ -94,6 +98,7 @@ MODEL_CLASSES = {
     "toptrans": (TopTransformerModel, SchemaDSTC8Processor),
     # fixed-token + transformer
     "dstc8baseline_toptrans": (DSTC8BaselineTopTransModel, SchemaDSTC8Processor),
+    "active_intent_fusion": (ActiveIntentFusionModel, SchemaDSTC8Processor),
     # fixed-token + transformer+ longhistory
     "dstc8long_toptrans": (DSTC8BaselineTopTransModel, SchemaDialogProcessor),
     # snt_pair_match

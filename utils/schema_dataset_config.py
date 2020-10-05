@@ -288,6 +288,19 @@ DATASET_CONFIG = {
             max_num_intent=2,
             schema_file="schema.json"
         ),
+    "multiwoz22_good":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 18),
+                "dev": range(1, 3),
+                "test": range(1, 3)
+            },
+            max_num_cat_slot=9,
+            max_num_noncat_slot=4,
+            max_num_value_per_cat_slot=13,
+            max_num_intent=2,
+            schema_file="schema.json"
+        ),
     "multiwoz22_name_only":
         DatasetConfig(
             file_ranges={

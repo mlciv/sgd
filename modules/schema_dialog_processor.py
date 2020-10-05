@@ -261,6 +261,9 @@ class SchemaDialogProcessor(DataProcessor):
             value_char_spans = {}
             for slot_span in char_slot_spans:
                 if slot_span["slot"] == slot:
+                    if "start" not in slot_span:
+                        logger.warning("utterance:{} ".format(utterance))
+                        continue
                     value = utterance[slot_span["start"]:slot_span["exclusive_end"]]
                     start_tok_idx = alignments[slot_span["start"]]
                     end_tok_idx = alignments[slot_span["exclusive_end"] - 1]
