@@ -16,7 +16,6 @@ import torch.nn as nn
 from transformers.modeling_utils import PreTrainedModel
 from modules.core.encoder_utils import EncoderUtils
 from modules.core.schemadst_configuration import SchemaDSTConfig
-from modules.fixed_schema_cache import FixedSchemaCacheEncoder
 from modules.dstc8baseline_output_interface import DSTC8BaselineOutputInterface
 from modules.core.encode_sep_utterance_schema_interface import EncodeSepUttSchemaInterface
 from modules.schema_embedding_generator import SchemaInputFeatures
@@ -205,7 +204,27 @@ class CatSlotsFusionModel(PreTrainedModel, EncodeSepUttSchemaInterface, DSTC8Bas
 
     @classmethod
     def _encode_schema(cls, tokenizer, encoder, features, dropout_layer, _scalar_mix, schema_type, is_training):
-        return FixedSchemaCacheEncoder._encode_schema(tokenizer, encoder, features, dropout_layer, _scalar_mix, schema_type, is_training)
+        """Directly read from precomputed schema embedding."""
+        # The cached also inclduing the cls token.
+        # scala_mix is not used here, since we only cache the last layer of token schema embedding
+        # batch_size, max_intent_num, max_seq_length, dim
+        # batch_size, max_slot_num, max_seq_length, dim
+        # batch_size, max_slot_num, max_value_num, max_seq_length, dim
+        # for tokens , it is encoded with sentence or single sentence, all will be ok
+        # because make will include both special token cls, sep tokens, but making those paddings are 0
+        cached_schema_tokens = features[SchemaInputFeatures.get_tok_embedding_tensor_name(schema_type)]
+        # batch_size, max_intent_num, max_seq_length
+        cached_schema_mask = features[SchemaInputFeatures.get_input_mask_tensor_name(schema_type)]
+        size_length = len(list(cached_schema_tokens.size()))
+        # logger.info("shape for fixed_schema: {}, {}, {}".format(cached_schema_tokens.size(), cached_schema_mask.size(), size_length))
+        if size_length == 4:
+            cls_embeddings = cached_schema_tokens[:, :, 0, :]
+        elif size_length == 5:
+            cls_embeddings = cached_schema_tokens[:, :, :, 0, :]
+
+        if is_training:
+            cached_schema_tokens = dropout_layer(cached_schema_tokens)
+        return cls_embeddings, cached_schema_tokens, cached_schema_mask
 
     def forward(self, features, labels=None):
         """
