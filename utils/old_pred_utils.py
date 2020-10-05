@@ -172,25 +172,25 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                                 continue
                             ch_start_idx = predictions["noncat_alignment_start"][tok_start_idx].item()
                             ch_end_idx = predictions["noncat_alignment_end"][tok_end_idx].item()
-                            if ch_start_idx >= current_utt_start_char_index and ch_end_idx <= current_utt_end_char_index:
-                                # this slot is in the current utterance
-                                slot_span = {}
-                                slot_span["slot"] = slot
-                                # shift the char index by one
-                                slot_span["start"] = ch_start_idx - current_utt_start_char_index - 1
-                                slot_span["exclusive_end"] = ch_end_idx - current_utt_start_char_index
-                                slots.append(slot_span)
+                            #if ch_start_idx >= current_utt_start_char_index and ch_end_idx <= current_utt_end_char_index:
+                            #    # this slot is in the current utterance
+                            #    slot_span = {}
+                            #    slot_span["slot"] = slot
+                            #    # shift the char index by one
+                            #    slot_span["start"] = ch_start_idx - current_utt_start_char_index - 1
+                            #    slot_span["exclusive_end"] = ch_end_idx - current_utt_start_char_index
+                            #    slots.append(slot_span)
 
                             # shift the char index by one
-                            slot_values[slot] = global_utterance_for_index[ch_start_idx - 1:ch_end_idx]
+                            # slot_values[slot] = global_utterance_for_index[ch_start_idx - 1:ch_end_idx]
                             # TO SUPPORT old utternace features
-                            #if ch_start_idx < 0 and ch_end_idx < 0:
-                            #    # Add span from the system utterance.
-                            #    slot_values[slot] = (
-                            #        system_utterance[-ch_start_idx - 1:-ch_end_idx])
-                            #elif ch_start_idx > 0 and ch_end_idx > 0:
-                            #    # Add span from the user utterance.
-                            #    slot_values[slot] = (user_utterance[ch_start_idx - 1:ch_end_idx])
+                            if ch_start_idx < 0 and ch_end_idx < 0:
+                                # Add span from the system utterance.
+                                slot_values[slot] = (
+                                    system_utterance[-ch_start_idx - 1:-ch_end_idx])
+                            elif ch_start_idx > 0 and ch_end_idx > 0:
+                                # Add span from the user utterance.
+                                slot_values[slot] = (user_utterance[ch_start_idx - 1:ch_end_idx])
                             # directly use global offset
                 # Create a new dict to avoid overwriting the state in previous turns
                 # because of use of same objects.

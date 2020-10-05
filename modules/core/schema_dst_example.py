@@ -387,7 +387,7 @@ class SchemaDSTExample(object):
             # adding one user turn, with a user tag
             if start_turn <= min_start_turn:
                 break
-            # using the tokens after tokenizion of each utt
+            # using the tokens after tokenizion of each utt, plus the agent token
             utt_len = len(utterances[start_turn][2]) + 1
             if current_len + utt_len > max_utt_len:
                 # when only partially fit in(at leat one token)
@@ -761,8 +761,7 @@ class SchemaDSTExample(object):
 
     def add_noncategorical_slots_old(self, state_update, system_span_boundaries, user_span_boundaries):
         """
-        Add features for non-categorical slots.
-        Here only consider the spans in the last user and system turns
+        only use the user and system turns
         """
         noncategorical_slots = self.service_schema.non_categorical_slots
         self.num_noncategorical_slots = len(noncategorical_slots)
