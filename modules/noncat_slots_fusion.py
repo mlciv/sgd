@@ -15,6 +15,7 @@ import torch
 import torch.nn as nn
 from transformers.modeling_utils import PreTrainedModel
 from modules.core.encoder_utils import EncoderUtils
+from modules.fixed_schema_cache import FixedSchemaCacheEncoder
 from modules.core.schemadst_configuration import SchemaDSTConfig
 from modules.dstc8baseline_output_interface import DSTC8BaselineOutputInterface
 from modules.core.encode_sep_utterance_schema_interface import EncodeSepUttSchemaInterface
@@ -188,6 +189,10 @@ class NonCatSlotsFusionModel(PreTrainedModel, EncodeSepUttSchemaInterface, DSTC8
         span_start_logits = span_logits[:, :, :, 0]
         span_end_logits = span_logits[:, :, :, 1]
         return status_logits, span_start_logits, span_end_logits
+
+    @classmethod
+    def _encode_schema(cls, tokenizer, encoder, features, dropout_layer, _scalar_mix, schema_type, is_training):
+        return FixedSchemaCacheEncoder._encode_schema(tokenizer, encoder, features, dropout_layer, _scalar_mix, schema_type, is_training)
 
     def forward(self, features, labels=None):
         """

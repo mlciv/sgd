@@ -3,20 +3,20 @@ config_name=`basename "$1"`
 
 EXP_NAME="${config_name%.*}"
 echo $EXP_NAME
-TASK_NAME=dstc8_all
+TASK_NAME=multiwoz21_all
 EXP_DIR=$SGD_WORK_DIR/$TASK_NAME/$EXP_NAME/
 EXP_MODELS=$EXP_DIR/models/
 EXP_SUMMARY=$EXP_DIR/summary/
 EXP_RESULTS=$EXP_DIR/results/
 
 # model_type, some model name to initialize or load pretrained model
-MODEL_TYPE=active_intent_fusion
+MODEL_TYPE=requested_slots_fusion
 # encoder config name for the task
 ENCODER_CONFIG_NAME=
 # encoder_model_name_path, whether a name or a path for the model
 ENCODER_MODEL_NAME_PATH=$SGD_JSON_CONFIG_DIR/encoders/bert-base-cased.json
 # config name for the task
-CONFIG_NAME=$SGD_JSON_CONFIG_DIR/models/active_intent_fusion_2_2_768_256.json
+CONFIG_NAME=$SGD_JSON_CONFIG_DIR/models/requested_slots_fusion_2_2_768_256.json
 # model_name_path, whether a name or a path for the model
 MODEL_NAME_PATH=
 # cache_dir, the cache_dir for store the mebdding, exampls.

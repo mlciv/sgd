@@ -16,6 +16,7 @@ import torch.nn as nn
 from transformers.modeling_utils import PreTrainedModel
 from modules.core.encoder_utils import EncoderUtils
 from modules.core.schemadst_configuration import SchemaDSTConfig
+from modules.fixed_schema_cache import FixedSchemaCacheEncoder
 from modules.dstc8baseline_output_interface import DSTC8BaselineOutputInterface
 from modules.core.encode_sep_utterance_schema_interface import EncodeSepUttSchemaInterface
 from modules.schema_embedding_generator import SchemaInputFeatures
@@ -164,6 +165,10 @@ class RequestedSlotsFusionModel(PreTrainedModel, EncodeSepUttSchemaInterface, DS
             encoded_utt_tokens, encoded_utt_mask,
             self.requested_slots_matching_layer, self.requested_slots_final_proj, self.requested_slots_final_dropout, is_training)
         return torch.squeeze(logits, dim=-1)
+
+    @classmethod
+    def _encode_schema(cls, tokenizer, encoder, features, dropout_layer, _scalar_mix, schema_type, is_training):
+        return FixedSchemaCacheEncoder._encode_schema(tokenizer, encoder, features, dropout_layer, _scalar_mix, schema_type, is_training)
 
     def forward(self, features, labels=None):
         """

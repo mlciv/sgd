@@ -16,6 +16,7 @@ import torch.nn as nn
 from transformers.modeling_utils import PreTrainedModel
 from modules.core.encoder_utils import EncoderUtils
 from modules.core.schemadst_configuration import SchemaDSTConfig
+from modules.fixed_schema_cache import FixedSchemaCacheEncoder
 from modules.dstc8baseline_output_interface import DSTC8BaselineOutputInterface
 from modules.core.encode_sep_utterance_schema_interface import EncodeSepUttSchemaInterface
 from modules.schema_embedding_generator import SchemaInputFeatures
@@ -201,6 +202,10 @@ class CatSlotsFusionModel(PreTrainedModel, EncodeSepUttSchemaInterface, DSTC8Bas
         negative_logits = -0.7 * torch.ones_like(value_logits) * torch.finfo(torch.float16).max
         value_logits = torch.where(mask, value_logits, negative_logits)
         return status_logits, value_logits
+
+    @classmethod
+    def _encode_schema(cls, tokenizer, encoder, features, dropout_layer, _scalar_mix, schema_type, is_training):
+        return FixedSchemaCacheEncoder._encode_schema(tokenizer, encoder, features, dropout_layer, _scalar_mix, schema_type, is_training)
 
     def forward(self, features, labels=None):
         """

@@ -3,7 +3,7 @@ config_name=`basename "$1"`
 
 EXP_NAME="${config_name%.*}"
 echo $EXP_NAME
-TASK_NAME=dstc8_all
+TASK_NAME=dstc8_sample
 EXP_DIR=$SGD_WORK_DIR/$TASK_NAME/$EXP_NAME/
 EXP_MODELS=$EXP_DIR/models/
 EXP_SUMMARY=$EXP_DIR/summary/
@@ -30,17 +30,17 @@ DEV_FILE=dev
 # test_file, the file for eval
 TEST_FILE=test
 # per_gpu_eval_batch_size
-PER_GPU_EVAL_BATCH_SIZE=24
+PER_GPU_EVAL_BATCH_SIZE=4
 # per_gpu_train_batch_size
-PER_GPU_TRAIN_BATCH_SIZE=24
+PER_GPU_TRAIN_BATCH_SIZE=4
 # num_train_epochs
 NUM_TRAIN_EPOCHS=100
 # learning_rate
 LEARNING_RATE=5e-5
 # gradient_accumulation_steps
-GRADIENT_ACCUMULATION_STEPS=8
+GRADIENT_ACCUMULATION_STEPS=48
 # logging_steps
-LOGGING_STEPS=3000
+LOGGING_STEPS=20
 # save_steps 
 SAVE_STEPS=1000000
 # JOINT_ACC_ACROSS_TURN
