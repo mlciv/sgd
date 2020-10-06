@@ -272,12 +272,12 @@ class Schema(object):
                 max_num_intent = intent_num
 
             # cat_slot
-            cat_slot_num = len(ss.categorical_slots)
+            cat_slot_num = len(ss.all_categorical_slots)
             if cat_slot_num > max_num_cat_slot:
                 max_num_cat_slot = cat_slot_num
 
             # noncat_slot
-            noncat_slot_num = len(ss.non_categorical_slots)
+            noncat_slot_num = len(ss.all_non_categorical_slots)
             if noncat_slot_num > max_num_noncat_slot:
                 max_num_noncat_slot = noncat_slot_num
 
@@ -600,11 +600,9 @@ class Schema(object):
             # schema["description"] = schema["service_name"]
             for slot in schema["slots"]:
                 slot['ori_description'] = slot['description']
-                slot['description'] = slot["name"]
                 slot_name.append(slot['name'])
             for intent in schema["intents"]:
                 intent['ori_description'] = intent['description']
-                intent['description'] = intent["name"]
                 intent_name.append(intent['name'])
 
         with open(self.schema_json_path + ".slot_name", "w") as f:

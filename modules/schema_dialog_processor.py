@@ -6,6 +6,7 @@ from modules.core.schema_dst_example import SchemaDSTExample
 from utils import schema
 from utils import data_utils
 from utils import evaluate_utils
+import sys
 import os
 import json
 
@@ -262,11 +263,27 @@ class SchemaDialogProcessor(DataProcessor):
             for slot_span in char_slot_spans:
                 if slot_span["slot"] == slot:
                     if "start" not in slot_span:
-                        logger.warning("utterance:{} ".format(utterance))
+                        logger.warning("No start span for utterance:{} slot_span:{}".format(utterance, slot_span))
                         continue
                     value = utterance[slot_span["start"]:slot_span["exclusive_end"]]
                     start_tok_idx = alignments[slot_span["start"]]
-                    end_tok_idx = alignments[slot_span["exclusive_end"] - 1]
+                    ori_end = slot_span["exclusive_end"]-1
+                    if ori_end not in alignments:
+                        logger.warning("utterance:{} slot_span:{}, alignments:{}, subwords:{}".format(utterance[slot_span["start"]:slot_span["exclusive_end"]], slot_span, alignments, subwords))
+                        closest_end = None
+                        min_gap = sys.maxsize
+                        for k in alignments.keys():
+                            gap = abs(k - ori_end)
+                            if gap < min_gap:
+                                min_gap = gap
+                                closest_end = k
+                    else:
+                        closest_end = ori_end
+                    if closest_end is None:
+                        logger.warning("cannot found end token for utterance:{} slot_span:{}".format(utterance, slot_span))
+                        continue
+                    else:
+                        end_tok_idx = alignments[closest_end]
                     if 0 <= start_tok_idx < len(subwords):
                         end_tok_idx = min(end_tok_idx, len(subwords) - 1)
                         # using the lowercase as key
@@ -304,6 +321,7 @@ class SchemaDialogProcessor(DataProcessor):
         # These lists store inverse alignments to be used during inference.
         bert_tokens_start_chars = []
         bert_tokens_end_chars = []
+
         for token in tokens:
             if token.strip():
                 subwords = self._tokenizer.tokenize(token)
@@ -319,6 +337,8 @@ class SchemaDialogProcessor(DataProcessor):
             char_index += len(token)
         inverse_alignments = list(
             zip(bert_tokens_start_chars, bert_tokens_end_chars))
+        # if utterance == "I am headed to Cambridge and need to arrive by 1:30pm.":
+        #    logger.warning("{}, {} {} {}".format(tokens, bert_tokens, alignments, inverse_alignments))
         return bert_tokens, alignments, inverse_alignments
 
     def get_whole_dialogs(self, data_dir, dataset):

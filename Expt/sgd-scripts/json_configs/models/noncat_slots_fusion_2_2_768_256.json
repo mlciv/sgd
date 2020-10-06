@@ -8,11 +8,11 @@
   "schema_embedding_type": "token",
   "schema_embedding_dim": 768,
   "schema_finetuning_type": "bert_snt_pair",
+  "noncat_slot_seq2_key": "noncat_slot",
   "utterance_embedding_dim": 768,
   "d_model": 768,
   "num_matching_layer": 2,
   "nhead": 2,
   "dim_feedforward": 256,
-  "bert_mix_layers": 0,
-  "noncat_slot_seq2_key": "noncat_slot"
+  "bert_mix_layers": 0
 }
