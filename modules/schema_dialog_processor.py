@@ -269,10 +269,11 @@ class SchemaDialogProcessor(DataProcessor):
                     end_tok_idx = alignments[slot_span["exclusive_end"] - 1]
                     if 0 <= start_tok_idx < len(subwords):
                         end_tok_idx = min(end_tok_idx, len(subwords) - 1)
-                        value_char_spans[value] = (start_tok_idx + bias, end_tok_idx + bias)
+                        # using the lowercase as key
+                        value_char_spans[value.lower()] = (start_tok_idx + bias, end_tok_idx + bias)
             for v in values:
-                if v in value_char_spans:
-                    span_boundaries[slot] = value_char_spans[v]
+                if v.lower() in value_char_spans:
+                    span_boundaries[slot] = value_char_spans[v.lower()]
                     break
         return span_boundaries
 
