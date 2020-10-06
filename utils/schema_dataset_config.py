@@ -283,7 +283,7 @@ DATASET_CONFIG = {
                 "test": range(1, 3)
             },
             max_num_cat_slot=9,
-            max_num_noncat_slot=4,
+            max_num_noncat_slot=7,
             max_num_value_per_cat_slot=13,
             max_num_intent=2,
             schema_file="schema.json"
@@ -296,7 +296,7 @@ DATASET_CONFIG = {
                 "test": range(1, 3)
             },
             max_num_cat_slot=9,
-            max_num_noncat_slot=4,
+            max_num_noncat_slot=7,
             max_num_value_per_cat_slot=13,
             max_num_intent=2,
             schema_file="schema.json"
@@ -309,7 +309,7 @@ DATASET_CONFIG = {
                 "test": range(1, 3)
             },
             max_num_cat_slot=9,
-            max_num_noncat_slot=4,
+            max_num_noncat_slot=7,
             max_num_value_per_cat_slot=13,
             max_num_intent=2,
             schema_file="schema.json.name_only"
@@ -335,7 +335,7 @@ DATASET_CONFIG = {
                 "test": range(1, 3)
             },
             max_num_cat_slot=9,
-            max_num_noncat_slot=4,
+            max_num_noncat_slot=7,
             max_num_value_per_cat_slot=13,
             max_num_intent=2,
             schema_file="schema.json.question_rich"
@@ -348,7 +348,7 @@ DATASET_CONFIG = {
                 "test": range(1, 3)
             },
             max_num_cat_slot=9,
-            max_num_noncat_slot=4,
+            max_num_noncat_slot=7,
             max_num_value_per_cat_slot=13,
             max_num_intent=2,
             schema_file="schema.json.back_translation"
@@ -361,7 +361,7 @@ DATASET_CONFIG = {
                 "test": range(1, 3)
             },
             max_num_cat_slot=9,
-            max_num_noncat_slot=4,
+            max_num_noncat_slot=7,
             max_num_value_per_cat_slot=13,
             max_num_intent=2,
             schema_file="schema.json.definition"
