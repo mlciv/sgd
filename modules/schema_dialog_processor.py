@@ -253,6 +253,20 @@ class SchemaDialogProcessor(DataProcessor):
             examples.append(example)
         return examples, states
 
+    def _find_closest_index(self, alignments, index):
+        if index not in alignments:
+            closest_idx = None
+            min_gap = sys.maxsize
+            for k in alignments.keys():
+                gap = abs(k - index)
+                if gap < min_gap:
+                    min_gap = gap
+                    closest_idx = k
+        else:
+            closest_idx = index
+
+        return closest_idx
+
     def _find_subword_indices(self, slot_values, utterance, char_slot_spans,
                               alignments, subwords, bias):
         """Find indices for subwords corresponding to slot values."""
@@ -266,23 +280,13 @@ class SchemaDialogProcessor(DataProcessor):
                         logger.warning("No start span for utterance:{} slot_span:{}".format(utterance, slot_span))
                         continue
                     value = utterance[slot_span["start"]:slot_span["exclusive_end"]]
-                    start_tok_idx = alignments[slot_span["start"]]
-                    ori_end = slot_span["exclusive_end"]-1
-                    if ori_end not in alignments:
-                        logger.warning("utterance:{} slot_span:{}, alignments:{}, subwords:{}".format(utterance[slot_span["start"]:slot_span["exclusive_end"]], slot_span, alignments, subwords))
-                        closest_end = None
-                        min_gap = sys.maxsize
-                        for k in alignments.keys():
-                            gap = abs(k - ori_end)
-                            if gap < min_gap:
-                                min_gap = gap
-                                closest_end = k
-                    else:
-                        closest_end = ori_end
-                    if closest_end is None:
+                    closest_start = self._find_closest_index(alignments, slot_span["start"])
+                    closest_end = self._find_closest_index(alignments, slot_span["exclusive_end"]-1)
+                    if closest_start is None or closest_end is None:
                         logger.warning("cannot found end token for utterance:{} slot_span:{}".format(utterance, slot_span))
                         continue
                     else:
+                        start_tok_idx = alignments[closest_start]
                         end_tok_idx = alignments[closest_end]
                     if 0 <= start_tok_idx < len(subwords):
                         end_tok_idx = min(end_tok_idx, len(subwords) - 1)
