@@ -352,7 +352,7 @@ DATASET_CONFIG = {
             max_num_intent=2,
             schema_file="schema.json"
         ),
-"multiwoz22_zero":
+      "multiwoz22_zero_name_only":
         DatasetConfig(
             file_ranges={
                 "train": range(1, 18),
@@ -363,7 +363,7 @@ DATASET_CONFIG = {
             max_num_noncat_slot=7,
             max_num_value_per_cat_slot=13,
             max_num_intent=2,
-            schema_file="schema.json"
+            schema_file="schema.json.name_only"
         ),
     "multiwoz22_zero_index_name":
         DatasetConfig(
@@ -386,7 +386,7 @@ DATASET_CONFIG = {
                 "test": range(1, 5)
             },
             max_num_cat_slot=9,
-            max_num_noncat_slot=4,
+            max_num_noncat_slot=7,
             max_num_value_per_cat_slot=13,
             max_num_intent=2,
             schema_file="schema.json.question_nameonly"
@@ -404,7 +404,7 @@ DATASET_CONFIG = {
             max_num_intent=2,
             schema_file="schema.json.question_rich"
         ),
-    "multiwoz22_zeor_back_translation":
+    "multiwoz22_zero_back_translation":
         DatasetConfig(
             file_ranges={
                 "train": range(1, 18),
