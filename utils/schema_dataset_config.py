@@ -300,25 +300,64 @@ DATASET_CONFIG = {
             max_num_intent=2,
             schema_file="schema.json"
         ),
-    "multiwoz22_name_only":
+    "multiwoz22_zero_sample":
         DatasetConfig(
             file_ranges={
-                "train": range(1, 18),
-                "dev": range(1, 3),
-                "test": range(1, 3)
+                "train": range(1, 2),
+                "dev": range(1, 2),
+                "test": range(1, 2)
             },
             max_num_cat_slot=9,
             max_num_noncat_slot=7,
             max_num_value_per_cat_slot=13,
             max_num_intent=2,
-            schema_file="schema.json.name_only"
+            schema_file="schema.json"
         ),
-    "multiwoz22_question_nameonly":
+    "multiwoz22_zero":
         DatasetConfig(
             file_ranges={
                 "train": range(1, 18),
-                "dev": range(1, 3),
-                "test": range(1, 3)
+                "dev": range(1, 4),
+                "test": range(1, 5)
+            },
+            max_num_cat_slot=9,
+            max_num_noncat_slot=7,
+            max_num_value_per_cat_slot=13,
+            max_num_intent=2,
+            schema_file="schema.json"
+        ),
+"multiwoz22_zero":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 18),
+                "dev": range(1, 4),
+                "test": range(1, 5)
+            },
+            max_num_cat_slot=9,
+            max_num_noncat_slot=7,
+            max_num_value_per_cat_slot=13,
+            max_num_intent=2,
+            schema_file="schema.json"
+        ),
+    "multiwoz22_zero_index_name":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 18),
+                "dev": range(1, 4),
+                "test": range(1, 5)
+            },
+            max_num_cat_slot=9,
+            max_num_noncat_slot=7,
+            max_num_value_per_cat_slot=13,
+            max_num_intent=2,
+            schema_file="schema.json.index_name"
+        ),
+    "multiwoz22_zero_question_nameonly":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 18),
+                "dev": range(1, 4),
+                "test": range(1, 5)
             },
             max_num_cat_slot=9,
             max_num_noncat_slot=4,
@@ -326,12 +365,12 @@ DATASET_CONFIG = {
             max_num_intent=2,
             schema_file="schema.json.question_nameonly"
         ),
-    "multiwoz22_question_rich":
+    "multiwoz22_zero_question_rich":
         DatasetConfig(
             file_ranges={
                 "train": range(1, 18),
-                "dev": range(1, 3),
-                "test": range(1, 3)
+                "dev": range(1, 4),
+                "test": range(1, 5)
             },
             max_num_cat_slot=9,
             max_num_noncat_slot=7,
@@ -339,12 +378,12 @@ DATASET_CONFIG = {
             max_num_intent=2,
             schema_file="schema.json.question_rich"
         ),
-    "multiwoz22_back_translation":
+    "multiwoz22_zeor_back_translation":
         DatasetConfig(
             file_ranges={
                 "train": range(1, 18),
-                "dev": range(1, 3),
-                "test": range(1, 3)
+                "dev": range(1, 4),
+                "test": range(1, 5)
             },
             max_num_cat_slot=9,
             max_num_noncat_slot=7,
@@ -352,12 +391,12 @@ DATASET_CONFIG = {
             max_num_intent=2,
             schema_file="schema.json.back_translation"
         ),
-    "multiwoz22_defintion":
+    "multiwoz22_zero_defintion":
         DatasetConfig(
             file_ranges={
                 "train": range(1, 18),
-                "dev": range(1, 3),
-                "test": range(1, 3)
+                "dev": range(1, 4),
+                "test": range(1, 5)
             },
             max_num_cat_slot=9,
             max_num_noncat_slot=7,

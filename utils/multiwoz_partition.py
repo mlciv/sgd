@@ -88,17 +88,32 @@ def process_folder(input_folder, keep_domains, keep_domains1, keep_domains2, out
                 if service_in_keep2 and service_in_keep1:
                     # randomly add to keep1 or keep2
                     if random.random() > 0.5:
+                        for j, turn in enumerate(dialog["turns"]):
+                            # only keep those service in keep_domains
+                            dialogs[i]["turns"][j]["frames"] = [f for f in dialogs[i]["turns"][j]["frames"] if f["service"] in keep_domains1]
                         keep_dialogs1.append(dialogs[i])
                     else:
+                        for j, turn in enumerate(dialog["turns"]):
+                            # only keep those service in keep_domains
+                            dialogs[i]["turns"][j]["frames"] = [f for f in dialogs[i]["turns"][j]["frames"] if f["service"] in keep_domains2]
                         keep_dialogs2.append(dialogs[i])
                 elif service_in_keep1:
+                    for j, turn in enumerate(dialog["turns"]):
+                        # only keep those service in keep_domains
+                        dialogs[i]["turns"][j]["frames"] = [f for f in dialogs[i]["turns"][j]["frames"] if f["service"] in keep_domains1]
                     keep_dialogs1.append(dialogs[i])
                 elif service_in_keep2:
+                    for j, turn in enumerate(dialog["turns"]):
+                        # only keep those service in keep_domains
+                        dialogs[i]["turns"][j]["frames"] = [f for f in dialogs[i]["turns"][j]["frames"] if f["service"] in keep_domains2]
                     keep_dialogs2.append(dialogs[i])
                 #1.2) if all the service only in test_keep, save to test
                 #1.3) if in both dev and test, random 1/2 in test and dev
             elif all([s in keep_domains for s in dialog["services"]]):
                 # 2) if all the service in keep, doing nothing, just add the dialog
+                for j, turn in enumerate(dialog["turns"]):
+                    # only keep those service in keep_domains
+                    dialogs[i]["turns"][j]["frames"] = [f for f in dialogs[i]["turns"][j]["frames"] if f["service"] in keep_domains]
                 new_dialogs.append(dialogs[i])
             else:
                 # for partial cases
@@ -112,7 +127,7 @@ def process_folder(input_folder, keep_domains, keep_domains1, keep_domains2, out
                     for j, turn in enumerate(dialog["turns"]):
                         # only keep those service in keep_domains
                         dialogs[i]["turns"][j]["frames"] = [f for f in dialogs[i]["turns"][j]["frames"] if f["service"] in keep_domains]
-                new_dialogs.append(dialogs[i])
+                    new_dialogs.append(dialogs[i])
 
         all_new_dialogs.extend(new_dialogs)
         with open(output_dialog_path, "w") as f:
