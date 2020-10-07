@@ -3,7 +3,7 @@ config_name=`basename "$1"`
 
 EXP_NAME="${config_name%.*}"
 echo $EXP_NAME
-TASK_NAME=multiwoz21_all
+TASK_NAME=multiwoz22_good
 EXP_DIR=$SGD_WORK_DIR/$TASK_NAME/$EXP_NAME/
 EXP_MODELS=$EXP_DIR/models/
 EXP_SUMMARY=$EXP_DIR/summary/
@@ -22,7 +22,7 @@ MODEL_NAME_PATH=
 # cache_dir, the cache_dir for store the mebdding, exampls.
 CACHE_DIR=$SGD_CACHE_DIR
 # data_dir, the data_dir for the splits
-DATA_DIR=$CONV_MULTIWOZ21_DATA_DIR
+DATA_DIR=$MULTIWOZ22_GOOD_DATA_DIR
 # train_file, the file for training
 TRAIN_FILE=train
 # dev_file, the file for eval
@@ -46,7 +46,7 @@ SAVE_STEPS=1000000
 # JOINT_ACC_ACROSS_TURN
 JOINT_ACC_ACROSS_TURN=x
 # USE_FUZZY_MATCH
-USE_FUZZY_MATCH=x
+USE_FUZZY_MATCH=
 # MAX_SEQ_LENGTH
 MAX_SEQ_LENGTH=512
 # warmup_step

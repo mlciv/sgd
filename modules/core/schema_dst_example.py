@@ -5,6 +5,7 @@ from transformers.tokenization_roberta import RobertaTokenizer, RobertaTokenizer
 import logging
 from utils import schema
 import copy
+import re
 from utils import data_utils
 
 logger = logging.getLogger(__name__)
@@ -387,7 +388,7 @@ class SchemaDSTExample(object):
             # adding one user turn, with a user tag
             if start_turn <= min_start_turn:
                 break
-            # using the tokens after tokenizion of each utt
+            # using the tokens after tokenizion of each utt, plus the agent token
             utt_len = len(utterances[start_turn][2]) + 1
             if current_len + utt_len > max_utt_len:
                 # when only partially fit in(at leat one token)
@@ -761,8 +762,7 @@ class SchemaDSTExample(object):
 
     def add_noncategorical_slots_old(self, state_update, system_span_boundaries, user_span_boundaries):
         """
-        Add features for non-categorical slots.
-        Here only consider the spans in the last user and system turns
+        only use the user and system turns
         """
         noncategorical_slots = self.service_schema.non_categorical_slots
         self.num_noncategorical_slots = len(noncategorical_slots)
@@ -828,23 +828,26 @@ class SchemaDSTExample(object):
                     # the value was mentioned earlier in the dialogue. Since this model
                     # only makes use of the last two utterances to predict state updates,
                     # it will fail in such cases.
+                    # for multiWOZ, many slots have no value, it means no span information there,
+                    # We need to use the utterance to find it
                     if self._log_data_warnings:
                         logger.info(
                             "Slot values %s not found in user or system utterance in "
-                            + "example with id - %s, service_id: %s, try to search on previous utterance, start_turn : %d, user_boundaries :%s, system_boundaries: %s",
+                            + "example with id - %s, service_id: %s, try to search on all utterances, start_turn : %d, user_boundaries :%s, system_boundaries: %s",
                             str(values), self.example_id, self.service_id, start_turn, user_span_boundaries, system_span_boundaries)
                     # try to find them in the longer history, start_turn is inclusive
                     # we serch for each utterance from the close to the furthest
-                    if len(utterances) < 2:
-                        logger.info("Slot values %s cannot be found, no previous utt in example {}, service_id = {}".format(
-                            str(values), self.example_id, self.service_id))
-                        continue
+                    #if len(utterances) < 2:
+                    #    logger.info("Slot values %s cannot be found, no previous utt in example {}, service_id = {}".format(
+                    #        str(values), self.example_id, self.service_id))
+                    #    continue
 
-                    not_last_two_turn_idx = max(start_turn, len(utterances) - 3)
+                    # not_last_two_turn_idx = max(start_turn, len(utterances) - 3)
+                    last_idx = len(utterances) - 1
                     start = 0
                     end = 0
                     found_utt_idx = -1
-                    for i in range(not_last_two_turn_idx, start_turn - 1, -1):
+                    for i in range(last_idx, start_turn - 1, -1):
                         agent_token, utt_utterance, utt_tokens, utt_alignments, utt_inv_alignments, utt_frames = utterances[i]
                         current_global_subtoken_offset = global_subtoken_offsets[i - start_turn]
                         if i == start_turn:
@@ -853,11 +856,22 @@ class SchemaDSTExample(object):
                         else:
                             local_char_offset = 0
                         for v in values:
+                            canonical_v = v.lower()
+                            if re.fullmatch("\d\d:\d\d", canonical_v):
+                                # remove the suffix
+                                if canonical_v[0] == '0':
+                                    canonical_v = canonical_v[1:]
+                                if canonical_v[-2:] == '00':
+                                    canonical_v = canonical_v[:-2]
+                                if canonical_v[-1] == ':':
+                                    canonical_v = canonical_v[:-1]
+                                logger.info("transform {} into canonical value:{}, for utt:{}".format(v, canonical_v, utt_utterance))
+
                             # check v in all the utterances other than user ans system utt
-                            found_char_idx = utt_utterance.find(v, local_char_offset, len(utt_utterance))
+                            found_char_idx = utt_utterance.lower().find(canonical_v, local_char_offset, len(utt_utterance))
                             if found_char_idx >= 0:
                                 # found the char idx, then find the corrsponding local subword idxs
-                                end_char_idx = found_char_idx + len(v) - 1
+                                end_char_idx = found_char_idx + len(canonical_v) - 1
                                 if found_char_idx in utt_alignments and end_char_idx in utt_alignments:
                                     found_start_subtoken_idx = utt_alignments[found_char_idx]
                                     found_end_subtoken_idx = utt_alignments[end_char_idx]
@@ -875,7 +889,7 @@ class SchemaDSTExample(object):
                         continue
                     else:
                         logger.info("Found value {} in previous utt {} in example {}, service_id = {}".format(
-                            str(values), not_last_two_turn_idx - found_utt_idx + 2, self.example_id, self.service_id))
+                            str(values), last_idx - found_utt_idx, self.example_id, self.service_id))
                 noncat_slot_status = schema_constants.STATUS_ACTIVE
                 self.noncategorical_slot_value_start[slot_idx] = start
                 self.noncategorical_slot_value_end[slot_idx] = end

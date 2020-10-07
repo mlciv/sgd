@@ -36,6 +36,9 @@ class SchemaInputFeatures(object):
         # embeddings are being calculated.
         self.value_id = value_id
 
+    def __str__(self):
+        return "service_id:{}, schema_type:{}, intent_slot_id:{}, value_id:{}".format(self.service_id, self.schema_type, self.intent_or_slot_id, self.value_id)
+
     @staticmethod
     def get_tok_embedding_tensor_name(schema_type):
         return "{}_tok_emb".format(schema_type)

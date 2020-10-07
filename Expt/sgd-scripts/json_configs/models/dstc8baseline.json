@@ -1,6 +1,7 @@
 {
   "utterance_dropout": 0.3,
   "token_dropout": 0.3,
+  "dialog_cxt_length": 2,
   "schema_embedding_file_name": "pretrained_schema_cls_embedding.npy",
   "schema_max_seq_length": 80,
   "schema_embedding_type": "cls",

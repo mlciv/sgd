@@ -260,6 +260,41 @@ class Schema(object):
         self._service_schemas = service_schemas
         self._schemas = schemas
 
+    def get_summary(self):
+        max_num_cat_slot = 0
+        max_num_noncat_slot = 0
+        max_num_value_per_cat_slot = 0
+        max_num_intent = 0
+        for name, ss in self._service_schemas.items():
+            # intent
+            intent_num = len(ss.intents)
+            if intent_num > max_num_intent:
+                max_num_intent = intent_num
+
+            # cat_slot
+            cat_slot_num = len(ss.all_categorical_slots)
+            if cat_slot_num > max_num_cat_slot:
+                max_num_cat_slot = cat_slot_num
+
+            # noncat_slot
+            noncat_slot_num = len(ss.all_non_categorical_slots)
+            if noncat_slot_num > max_num_noncat_slot:
+                max_num_noncat_slot = noncat_slot_num
+
+            # num_value_per cat slot
+            lengths = [len(values) for key, values in ss._categorical_slot_values.items()]
+            if len(lengths) == 0:
+                logger.warn("non cat values for service {}".format(name))
+                max_num_value = 0
+            else:
+                max_num_value = max(lengths)
+            if max_num_value > max_num_value_per_cat_slot:
+                max_num_value_per_cat_slot = max_num_value
+            logger.info("service:{}, max_num_cat_slot:{}, max_num_noncat_slot:{}, max_num_value_per_cat_slot:{}, max_num_intent:{}".format(name, cat_slot_num, noncat_slot_num, max_num_value, intent_num))
+
+        logger.info("max_num_cat_slot:{}, max_num_noncat_slot:{}, max_num_value_per_cat_slot:{}, max_num_intent:{}".format(
+                max_num_cat_slot, max_num_noncat_slot, max_num_value_per_cat_slot, max_num_intent))
+
     def get_service_id(self, service):
         """
         get service id by name
@@ -489,13 +524,33 @@ class Schema(object):
 
         self.save_to_file(self.schema_json_path + ".name_only")
 
+    def gen_extensional_desc(self):
+        for schema in self._schemas:
+            for slot in schema["slots"]:
+                ori_slot_desc = slot['description']
+                if "possible_values" in slot and len(slot['possible_values']):
+                    slot['description'] = ori_slot_desc + ", e.g. " + ", ".join(slot['possible_values'])
+                else:
+                    slot['description'] = ori_slot_desc
+                slot["ori_description"] = ori_slot_desc
+            for intent in schema["intents"]:
+                ori_intent_desc = intent['description']
+                intent['description'] = ori_intent_desc
+                intent['ori_description'] = ori_intent_desc
+
+        self.save_to_file(self.schema_json_path + ".extensional")
+
     def gen_name_only_change(self):
         for schema in self._schemas:
             schema["description"] = schema["service_name"]
             for slot in schema["slots"]:
+                ori_slot_desc = slot['description']
                 slot['description'] = slot["name"]
+                slot["ori_description"] = ori_slot_desc
             for intent in schema["intents"]:
+                ori_intent_desc = intent['description']
                 intent['description'] = intent["name"]
+                intent['ori_description'] = ori_intent_desc
 
         self.save_to_file(self.schema_json_path + ".name_change")
 
@@ -545,11 +600,9 @@ class Schema(object):
             # schema["description"] = schema["service_name"]
             for slot in schema["slots"]:
                 slot['ori_description'] = slot['description']
-                slot['description'] = slot["name"]
                 slot_name.append(slot['name'])
             for intent in schema["intents"]:
                 intent['ori_description'] = intent['description']
-                intent['description'] = intent["name"]
                 intent_name.append(intent['name'])
 
         with open(self.schema_json_path + ".slot_name", "w") as f:
@@ -603,7 +656,7 @@ def main():
         default=None,
         type=str,
         required=True,
-        choices=["empty", "name_only", "question_nameonly", "index_name", "question_template", "back_translation", "enrich", "empty_service_desc", "servicename_as_desc", "empty_service_name_only"],
+        choices=["empty", "name_only", "question_nameonly", "index_name", "question_template", "back_translation", "enrich", "empty_service_desc", "servicename_as_desc", "empty_service_name_only", "extensional"],
         help="for evaluation.")
 
     parser.add_argument(
@@ -618,6 +671,7 @@ def main():
     args = parser.parse_args()
     logger.info("args:{}".format(args))
     schema = Schema(args.schema_json_path)
+    schema.get_summary()
     if args.task_name == "empty":
         schema.gen_empty_description()
     elif args.task_name == "name_only":
@@ -645,7 +699,8 @@ def main():
         schema.gen_servicename_empty_desc()
     elif args.task_name == "empty_service_name_only":
         schema.gen_empty_service_name_only()
-
+    elif args.task_name == "extensional":
+        schema.gen_extensional_desc()
 
 
 if __name__ == "__main__":

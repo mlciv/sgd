@@ -1037,12 +1037,15 @@ class SchemaEmbeddingGenerator(nn.Module):
                 embedding = [round(float(x), 6) for x in output[0][0, 0, :].cpu().numpy()]
                 emb_mat[feature.intent_or_slot_id, feature.value_id] = embedding
             else:
-                input_ids_mat = schema_features[feature.service_id][feature.input_ids_tensor_name]
-                input_mask_mat = schema_features[feature.service_id][feature.input_mask_tensor_name]
-                input_type_ids_mat = schema_features[feature.service_id][feature.input_type_ids_tensor_name]
-                input_ids_mat[feature.intent_or_slot_id] = feature.input_ids
-                input_mask_mat[feature.intent_or_slot_id] = feature.input_mask
-                input_type_ids_mat[feature.intent_or_slot_id] = feature.input_type_ids
+                try:
+                    input_ids_mat = schema_features[feature.service_id][feature.input_ids_tensor_name]
+                    input_mask_mat = schema_features[feature.service_id][feature.input_mask_tensor_name]
+                    input_type_ids_mat = schema_features[feature.service_id][feature.input_type_ids_tensor_name]
+                    input_ids_mat[feature.intent_or_slot_id] = feature.input_ids
+                    input_mask_mat[feature.intent_or_slot_id] = feature.input_mask
+                    input_type_ids_mat[feature.intent_or_slot_id] = feature.input_type_ids
+                except:
+                    logger.warning("feature is {}".format(feature))
 
     def _populate_schema_seq2_feature_tensors(self, schemas, schema_features):
         """Run the BERT estimator and populate all schema embeddings."""

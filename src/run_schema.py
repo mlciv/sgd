@@ -51,12 +51,16 @@ from modules.schema_noncatslot_processor import SchemaNonCatSlotProcessor
 
 from modules.active_intent_cls_match_model import ActiveIntentCLSMatchModel
 from modules.active_intent_bert_snt_pair_match import ActiveIntentBERTSntPairMatchModel
+from modules.active_intent_fusion import ActiveIntentFusionModel
 from modules.requested_slots_bert_snt_pair_match import RequestedSlotsBERTSntPairMatchModel
 from modules.requested_slots_cls_match_model import RequestedSlotsCLSMatchModel
+from modules.requested_slots_fusion import RequestedSlotsFusionModel
 from modules.cat_slots_bert_snt_pair_match import CatSlotsBERTSntPairMatchModel
 from modules.cat_slots_cls_match_model import CatSlotsCLSMatchModel
+from modules.cat_slots_fusion import CatSlotsFusionModel
 from modules.noncat_slots_bert_snt_pair_match import NonCatSlotsBERTSntPairMatchModel
 from modules.noncat_slots_cls_match_model import NonCatSlotsCLSMatchModel
+from modules.noncat_slots_fusion import NonCatSlotsFusionModel
 from modules.modelling_dstc8baseline import DSTC8BaselineModel
 from modules.modelling_dstc8baseline_toptrans import DSTC8BaselineTopTransModel
 from modules.modelling_toptransformer import TopTransformerModel
@@ -65,6 +69,7 @@ import modules.core.schema_constants as schema_constants
 from utils import schema_dataset_config
 from utils import data_utils
 from utils import pred_utils
+from utils import old_pred_utils
 from utils import evaluate_utils
 from utils import torch_ext
 from src import utils_schema
@@ -94,6 +99,10 @@ MODEL_CLASSES = {
     "toptrans": (TopTransformerModel, SchemaDSTC8Processor),
     # fixed-token + transformer
     "dstc8baseline_toptrans": (DSTC8BaselineTopTransModel, SchemaDSTC8Processor),
+    "active_intent_fusion": (ActiveIntentFusionModel, SchemaDSTC8Processor),
+    "requested_slots_fusion": (RequestedSlotsFusionModel, SchemaDSTC8Processor),
+    "noncat_slots_fusion": (NonCatSlotsFusionModel, SchemaDSTC8Processor),
+    "cat_slots_fusion": (CatSlotsFusionModel, SchemaDSTC8Processor),
     # fixed-token + transformer+ longhistory
     "dstc8long_toptrans": (DSTC8BaselineTopTransModel, SchemaDialogProcessor),
     # snt_pair_match
@@ -217,8 +226,11 @@ def train(args, config, train_dataset, model, processor):
         try:
             # set global_step to gobal_step of last saved checkpoint from model path
             # "checkpoing-xxxx" or "best-model-xxxx"
-            checkpoint_suffix = os.path.basename(os.path.normpath(args.model_name_or_path)).split("-")[-1]
-            global_step = int(checkpoint_suffix)
+            if args.skip_trained_epochs:
+                checkpoint_suffix = os.path.basename(os.path.normpath(args.model_name_or_path)).split("-")[-1]
+                global_step = int(checkpoint_suffix)
+            else:
+                global_step = 0
             epochs_trained = global_step // (len(train_dataloader) // args.gradient_accumulation_steps)
             steps_trained_in_current_epoch = global_step % (len(train_dataloader) // args.gradient_accumulation_steps)
 
@@ -575,10 +587,17 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
 
     # Compute predictions
     start_time = timeit.default_timer()
-    # indexed dialogue, key is (dialogue_id, turn_idx, service_name)
-    indexed_predictions = pred_utils.get_predictions_index_dict(all_predictions)
-    # Here dials will be modified and return
-    all_predicted_dialogues = pred_utils.get_all_prediction_dialogues(dials, indexed_predictions, schemas)
+    if isinstance(processor, SchemaDSTC8Processor):
+        # old utterance features
+        # indexed dialogue, key is (dialogue_id, turn_idx, service_name)
+        indexed_predictions = old_pred_utils.get_predictions_index_dict(all_predictions)
+        # Here dials will be modified and return
+        all_predicted_dialogues = old_pred_utils.get_all_prediction_dialogues(dials, indexed_predictions, schemas)
+    else:
+        # indexed dialogue, key is (dialogue_id, turn_idx, service_name)
+        indexed_predictions = pred_utils.get_predictions_index_dict(all_predictions)
+        # Here dials will be modified and return
+        all_predicted_dialogues = pred_utils.get_all_prediction_dialogues(dials, indexed_predictions, schemas)
     # has ground truth
     ref_dialogs = processor.get_whole_dialogs(args.data_dir, file_split)
     ref_dialogue_dict = evaluate_utils.get_dialogue_dict(ref_dialogs)
@@ -931,6 +950,12 @@ def main():
         type=int,
         help="If > 0: set total number of training steps to perform. Override num_train_epochs.",
     )
+    parser.add_argument(
+        "--skip_trained_epochs",
+        default=False,
+        type=bool,
+        help="When training from checkping, Whether to skip trained epochs, default is not")
+
     parser.add_argument("--warmup_portion", default=0.0, type=float, help="Linear warmup over warmup_portion.")
     parser.add_argument(
         "--n_best_size",
