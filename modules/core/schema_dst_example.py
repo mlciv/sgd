@@ -755,6 +755,7 @@ class SchemaDSTExample(object):
                     # this value id is startin from 0, no special value ids
                     value_id = self.service_schema.get_categorical_slot_value_id(slot, values[0])
                 except:
+                    value_id = 0
                     logger.warning("value {} not fould in {}, {}".format(values[0], self.example_id, self.service_id))
                 # here it only use the first values
                 self.categorical_slot_values[slot_idx] = value_id
