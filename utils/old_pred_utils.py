@@ -167,7 +167,7 @@ def get_predicted_dialog(dialog, all_predictions, schemas):
                             tok_start_idx = predictions["noncat_slot_start"][slot_idx]
                             tok_end_idx = predictions["noncat_slot_end"][slot_idx]
                             if tok_start_idx < 0 or tok_end_idx < 0 or  \
-                               tok_start_idx >= predictions["noncat_alignment_end"].size()[0] or \
+                               tok_start_idx >= predictions["noncat_alignment_start"].size()[0] or \
                                tok_end_idx >= predictions["noncat_alignment_end"].size()[0]:
                                 continue
                             ch_start_idx = predictions["noncat_alignment_start"][tok_start_idx].item()
