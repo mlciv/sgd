@@ -380,8 +380,8 @@ class Schema(object):
 
         j = len(all_intent_names)
         i = len(all_slot_names)
-        logger.info("all_intent_names:{}".format(sorted(all_intent_names, key=lambda x: int(x.split("_")[1]))))
-        logger.info("all_slot_names:{}".format(sorted(all_slot_names, key=lambda x: int(x.split("_")[1]))))
+        # logger.info("all_intent_names:{}".format(sorted(all_intent_names, key=lambda x: int(x.split("_")[1]))))
+        # logger.info("all_slot_names:{}".format(sorted(all_slot_names, key=lambda x: int(x.split("_")[1]))))
         logger.info("initial_intent_index={}, initial_slot_index={}".format(j,i))
         for index, schema in enumerate(self._schemas):
             schema["description"] = ""
