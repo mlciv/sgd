@@ -751,8 +751,11 @@ class SchemaDSTExample(object):
             else:
                 self.categorical_slot_status[slot_idx] = schema_constants.STATUS_ACTIVE
                 cat_slot_status = schema_constants.STATUS_ACTIVE
-                # this value id is startin from 0, no special value ids
-                value_id = self.service_schema.get_categorical_slot_value_id(slot, values[0])
+                try:
+                    # this value id is startin from 0, no special value ids
+                    value_id = self.service_schema.get_categorical_slot_value_id(slot, values[0])
+                except:
+                    logger.warning("value {} not fould in {}, {}".format(values[0], self.example_id, self.service_id))
                 # here it only use the first values
                 self.categorical_slot_values[slot_idx] = value_id
                 # here, only predict the increments, here we only make the slot value as 0, it will not paticipate the loss
