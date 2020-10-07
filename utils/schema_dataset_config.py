@@ -226,6 +226,19 @@ DATASET_CONFIG = {
             max_num_intent=1,
             schema_file="schema.json"
         ),
+    "multiwoz21_index_name":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 18),
+                "dev": range(1, 3),
+                "test": range(1, 3)
+            },
+            max_num_cat_slot=9,
+            max_num_noncat_slot=4,
+            max_num_value_per_cat_slot=47,
+            max_num_intent=1,
+            schema_file="schema.json.index_name"
+        ),
     "multiwoz21_question_nameonly":
         DatasetConfig(
             file_ranges={

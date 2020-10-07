@@ -359,6 +359,43 @@ class Schema(object):
 
         self.save_to_file(self.schema_json_path + ".enrich")
 
+    def gen_index_name2(self, processed_schema_file=None):
+        foldername = os.path.dirname(self.schema_json_path)
+        processed_schemas = {}
+        all_intent_names = set()
+        all_slot_names = set()
+        if processed_schema_file:
+            # matching with processed_schema
+            for f in processed_schema_file:
+                if len(f) == 0 or not f[0]:
+                    continue
+                logger.info("loading {}".format(f[0]))
+                schema_obj = Schema(f[0])
+                for _, s in schema_obj._service_schemas.items():
+                    for intent in s.intents:
+                        all_intent_names.add(intent)
+                    for slot in s.slots:
+                        all_slot_names.add(slot)
+                processed_schemas.update(schema_obj._service_schemas)
+
+        j = len(all_intent_names)
+        i = len(all_slot_names)
+        logger.info("all_intent_names:{}".format(sorted(all_intent_names, key=lambda x: int(x.split("_")[1]))))
+        logger.info("all_slot_names:{}".format(sorted(all_slot_names, key=lambda x: int(x.split("_")[1]))))
+        logger.info("initial_intent_index={}, initial_slot_index={}".format(j,i))
+        for index, schema in enumerate(self._schemas):
+            schema["description"] = ""
+            for slot in schema["slots"]:
+                slot['description'] = "slot_{}".format(i)
+                i = i + 1
+
+            for intent in schema["intents"]:
+                intent['description'] = "intent_{}".format(j)
+                j = j + 1
+
+        logger.info("final_intent_index={}, final_slot_index={}".format(j,i))
+        self.save_to_file(self.schema_json_path + ".index_name")
+
     def gen_index_name(self, processed_schema_file=None):
         foldername = os.path.dirname(self.schema_json_path)
         processed_schemas = {}
@@ -690,7 +727,7 @@ def main():
     elif args.task_name == "enrich":
         schema.gen_enrich()
     elif args.task_name == "index_name":
-        schema.gen_index_name(args.processed_schema)
+        schema.gen_index_name2(args.processed_schema)
     elif args.task_name == "empty_service_desc":
         schema.gen_empty_service_desc()
     elif args.task_name == "servicename_as_desc":
