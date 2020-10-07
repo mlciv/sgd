@@ -47,7 +47,9 @@ from __future__ import print_function
 import collections
 from fuzzywuzzy import fuzz
 import numpy as np
+import logging
 
+logger = logging.getLogger(__name__)
 F1Scores = collections.namedtuple("F1Scores", ["f1", "precision", "recall"])
 
 # Evaluation and other relevant metrics for DSTC8 Schema-guided DST.
@@ -202,13 +204,17 @@ def get_slot_tagging_f1(frame_ref, frame_hyp, utt, service):
     if "slots" not in frame_hyp:
         return None
     else:
-        list_ref = [(s["slot"], utt[s["start"]:s["exclusive_end"]])
-                    for s in frame_ref["slots"]
-                    if s["slot"] in list_noncat_slots]
-        list_hyp = [(s["slot"], utt[s["start"]:s["exclusive_end"]])
-                    for s in frame_hyp["slots"]
-                    if s["slot"] in list_noncat_slots]
-        return compute_f1(list_ref, list_hyp)
+        try:
+            list_ref = [(s["slot"], utt[s["start"]:s["exclusive_end"]])
+                        for s in frame_ref["slots"]
+                        if s["slot"] in list_noncat_slots]
+            list_hyp = [(s["slot"], utt[s["start"]:s["exclusive_end"]])
+                        for s in frame_hyp["slots"]
+                        if s["slot"] in list_noncat_slots]
+            return compute_f1(list_ref, list_hyp)
+        except:
+            logger.warning("Exception happend when metrics slot tagging f1: {} and {} in {}, {}".format(frame_ref, frame_hyp, utt, service))
+
 
 
 def get_requested_slots_f1(frame_ref, frame_hyp):
