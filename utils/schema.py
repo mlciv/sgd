@@ -384,6 +384,11 @@ class Schema(object):
         # logger.info("all_slot_names:{}".format(sorted(all_slot_names, key=lambda x: int(x.split("_")[1]))))
         logger.info("initial_intent_index={}, initial_slot_index={}".format(j,i))
         for index, schema in enumerate(self._schemas):
+            if schema["service_name"] in processed_schemas:
+                # service has been processed
+                self._schemas[index] = processed_schemas[schema["service_name"]].schema_json
+                continue
+
             schema["description"] = ""
             for slot in schema["slots"]:
                 slot['description'] = "slot_{}".format(i)
