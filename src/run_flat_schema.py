@@ -24,6 +24,7 @@ import math
 import random
 import timeit
 import shutil
+from datetime import datetime
 
 import numpy as np
 import torch
@@ -1388,10 +1389,12 @@ def main():
             metrics, per_frame_metrics, all_predictions = evaluate(args, config, model, processor, "test", step=global_step)
             evaluated_global_steps.append(global_step)
             # Write predictions to file in DSTC8 format.
+
             dataset_mark = os.path.basename(args.data_dir)
+            suffix = datetime.now()
             prediction_dir = os.path.join(
-                args.results_dir, "pred_res_{}_{}_{}_{}".format(
-                    int(global_step), args.test_file, args.task_name, dataset_mark))
+                args.results_dir, "pred_res_{}_{}_{}_{}_{}".format(
+                    int(global_step), args.test_file, args.task_name, dataset_mark, suffix))
             if not os.path.exists(prediction_dir):
                 os.makedirs(prediction_dir)
 
