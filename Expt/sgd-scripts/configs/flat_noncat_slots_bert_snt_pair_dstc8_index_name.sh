@@ -16,7 +16,7 @@ ENCODER_CONFIG_NAME=
 # encoder_model_name_path, whether a name or a path for the model
 ENCODER_MODEL_NAME_PATH=$SGD_JSON_CONFIG_DIR/encoders/bert-base-cased.json
 # config name for the task
-CONFIG_NAME=$SGD_JSON_CONFIG_DIR/models/flat_noncat_slots_bert_snt_pair_match.json
+CONFIG_NAME=$SGD_JSON_CONFIG_DIR/models/flat_noncat_slots_bert_snt_pair_match_desc_only.json
 # model_name_path, whether a name or a path for the model
 MODEL_NAME_PATH=
 # cache_dir, the cache_dir for store the mebdding, exampls.
