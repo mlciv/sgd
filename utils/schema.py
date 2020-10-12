@@ -634,7 +634,7 @@ class Schema(object):
                 intent_name.append(intent['name'])
         self.save_to_file(self.schema_json_path + ".question_nameonly")
 
-    def gen_question_template(self):
+    def gen_question_rich(self):
         slot_name = []
         intent_name = []
         for schema in self._schemas:
@@ -653,7 +653,7 @@ class Schema(object):
         with open(self.schema_json_path + ".intent_name", "w") as f:
             f.write("\n".join(intent_name))
 
-        self.save_to_file(self.schema_json_path + ".question_template")
+        self.save_to_file(self.schema_json_path + ".question_rich")
 
     def gen_empty_service_desc(self):
         for schema in self._schemas:
@@ -698,7 +698,7 @@ def main():
         default=None,
         type=str,
         required=True,
-        choices=["empty", "name_only", "question_nameonly", "index_name", "question_template", "back_translation", "enrich", "empty_service_desc", "servicename_as_desc", "empty_service_name_only", "extensional"],
+        choices=["empty", "name_only", "question_nameonly", "index_name", "question_rich", "back_translation", "enrich", "empty_service_desc", "servicename_as_desc", "empty_service_name_only", "extensional"],
         help="for evaluation.")
 
     parser.add_argument(
@@ -725,8 +725,8 @@ def main():
     elif args.task_name == "back_translation":
         schema_description_back_translation_path = args.schema_json_path + ".ori_desc.cs.backtranslated.sorted"
         schema.load_back_translation_file(schema_description_back_translation_path)
-    elif args.task_name == "question_template":
-        schema.gen_question_template()
+    elif args.task_name == "question_rich":
+        schema.gen_question_rich()
     elif args.task_name == "question_nameonly":
         schema.gen_question_nameonly()
     elif args.task_name == "enrich":
