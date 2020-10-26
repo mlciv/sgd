@@ -4,36 +4,39 @@
     "slots": [
       {
         "name": "hotel-pricerange",
-        "description": "slot_29",
+        "description": "What is the price budge of the hotel?",
         "possible_values": [
           "expensive",
           "cheap",
           "moderate"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "price budget of the hotel"
       },
       {
         "name": "hotel-type",
-        "description": "slot_30",
+        "description": "What is the type of hotel?",
         "possible_values": [
           "guesthouse",
           "hotel"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "what is the type of the hotel"
       },
       {
         "name": "hotel-parking",
-        "description": "slot_31",
+        "description": "Whether the hotel offers parking ?",
         "possible_values": [
           "free",
           "no",
           "yes"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "whether the hotel has parking"
       },
       {
         "name": "hotel-bookday",
-        "description": "slot_32",
+        "description": "Which day to book hotel for?",
         "possible_values": [
           "monday",
           "tuesday",
@@ -43,11 +46,12 @@
           "saturday",
           "sunday"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "day of the hotel booking"
       },
       {
         "name": "hotel-bookpeople",
-        "description": "slot_33",
+        "description": "How many people are the hotel reserviation for ?",
         "possible_values": [
           "1",
           "2",
@@ -58,11 +62,12 @@
           "7",
           "8"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "number of people for the hotel booking"
       },
       {
         "name": "hotel-bookstay",
-        "description": "slot_34",
+        "description": "How many days to stay at the hotel ?",
         "possible_values": [
           "1",
           "2",
@@ -73,11 +78,12 @@
           "7",
           "8"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "length of stay at the hotel"
       },
       {
         "name": "hotel-stars",
-        "description": "slot_35",
+        "description": "How is star rating of hotel ?",
         "possible_values": [
           "0",
           "1",
@@ -86,27 +92,30 @@
           "4",
           "5"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "star rating of the hotel"
       },
       {
         "name": "hotel-internet",
-        "description": "slot_36",
+        "description": "Whether the hotel offers internet access ?",
         "possible_values": [
           "free",
           "no",
           "yes"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "whether the hotel has internet"
       },
       {
         "name": "hotel-name",
-        "description": "slot_37",
+        "description": "What is name of the hotel?",
         "possible_values": [],
-        "is_categorical": false
+        "is_categorical": false,
+        "ori_description": "name of the hotel"
       },
       {
         "name": "hotel-area",
-        "description": "slot_38",
+        "description": "Which area of the hotel?",
         "possible_values": [
           "centre",
           "east",
@@ -114,34 +123,39 @@
           "south",
           "west"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "area or place of the hotel"
       },
       {
         "name": "hotel-address",
-        "description": "slot_39",
-        "is_categorical": false
+        "description": "Where is the hotel located at ?",
+        "is_categorical": false,
+        "ori_description": "address of the hotel"
       },
       {
         "name": "hotel-phone",
-        "description": "slot_40",
-        "is_categorical": false
+        "description": "What is phone numer of the hotel?",
+        "is_categorical": false,
+        "ori_description": "phone number of the hotel"
       },
       {
         "name": "hotel-postcode",
-        "description": "slot_41",
-        "is_categorical": false
+        "description": "What is the postal code of the hotel?",
+        "is_categorical": false,
+        "ori_description": "postal code of the hotel"
       },
       {
         "name": "hotel-ref",
-        "description": "slot_42",
-        "is_categorical": false
+        "description": "What is reference number of the hotel booking ?",
+        "is_categorical": false,
+        "ori_description": "reference number of the hotel booking"
       }
     ],
-    "description": "",
+    "description": "hotel reservations and vacation stays",
     "intents": [
       {
         "name": "find_hotel",
-        "description": "intent_5",
+        "description": "Is the user intending to find a hotel to stay in?",
         "is_transactional": false,
         "required_slots": [],
         "optional_slots": {
@@ -155,11 +169,12 @@
           "hotel-internet": "dontcare",
           "hotel-name": "dontcare",
           "hotel-area": "dontcare"
-        }
+        },
+        "ori_description": "search for a hotel to stay in"
       },
       {
         "name": "book_hotel",
-        "description": "intent_6",
+        "description": "Is the user intending to book a hotel to stay in?",
         "is_transactional": true,
         "required_slots": [],
         "optional_slots": {
@@ -173,7 +188,8 @@
           "hotel-internet": "dontcare",
           "hotel-name": "dontcare",
           "hotel-area": "dontcare"
-        }
+        },
+        "ori_description": "book a hotel to stay in"
       }
     ]
   },
@@ -182,13 +198,14 @@
     "slots": [
       {
         "name": "train-arriveby",
-        "description": "slot_0",
+        "description": "When the train will arrive by ?",
         "possible_values": [],
-        "is_categorical": false
+        "is_categorical": false,
+        "ori_description": "arrival time of the train"
       },
       {
         "name": "train-departure",
-        "description": "slot_1",
+        "description": "Which station will train departure from ?",
         "possible_values": [
           "birmingham new street",
           "bishops stortford",
@@ -204,11 +221,12 @@
           "stansted airport",
           "stevenage"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "departure location of the train"
       },
       {
         "name": "train-day",
-        "description": "slot_2",
+        "description": "Which day to booking the train for?",
         "possible_values": [
           "monday",
           "tuesday",
@@ -218,11 +236,12 @@
           "saturday",
           "sunday"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "day of the train"
       },
       {
         "name": "train-bookpeople",
-        "description": "slot_3",
+        "description": "How many train tickets you need ?",
         "possible_values": [
           "0",
           "1",
@@ -237,17 +256,19 @@
           "10",
           "15"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "how many train tickets you need"
       },
       {
         "name": "train-leaveat",
-        "description": "slot_4",
+        "description": "When is the leaving time of of train?",
         "possible_values": [],
-        "is_categorical": false
+        "is_categorical": false,
+        "ori_description": "leaving time for the train"
       },
       {
         "name": "train-destination",
-        "description": "slot_5",
+        "description": "What is the destination of train ?",
         "possible_values": [
           "birmingham new street",
           "bishops stortford",
@@ -263,34 +284,39 @@
           "stansted airport",
           "stevenage"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "destination of the train"
       },
       {
         "name": "train-trainid",
-        "description": "slot_6",
-        "is_categorical": false
+        "description": "What is the id of the train ?",
+        "is_categorical": false,
+        "ori_description": "id of the train"
       },
       {
         "name": "train-ref",
-        "description": "slot_7",
-        "is_categorical": false
+        "description": "What is reference number of the train booking ?",
+        "is_categorical": false,
+        "ori_description": "reference number of the train booking"
       },
       {
         "name": "train-price",
-        "description": "slot_8",
-        "is_categorical": false
+        "description": "What is the value of train-price ?",
+        "is_categorical": false,
+        "ori_description": "price of the train"
       },
       {
         "name": "train-duration",
-        "description": "slot_9",
-        "is_categorical": false
+        "description": "How long will the train trip last?",
+        "is_categorical": false,
+        "ori_description": "duration of the travel"
       }
     ],
-    "description": "",
+    "description": "find trains that take you to places",
     "intents": [
       {
         "name": "find_train",
-        "description": "intent_0",
+        "description": "Is the user intending to find a train to some place?",
         "is_transactional": false,
         "required_slots": [],
         "optional_slots": {
@@ -300,11 +326,12 @@
           "train-day": "dontcare",
           "train-bookpeople": "dontcare",
           "train-leaveat": "dontcare"
-        }
+        },
+        "ori_description": "search for trains that take you places"
       },
       {
         "name": "book_train",
-        "description": "intent_1",
+        "description": "Is the user intending to book train tickets?",
         "is_transactional": true,
         "required_slots": [],
         "optional_slots": {
@@ -314,7 +341,8 @@
           "train-day": "dontcare",
           "train-bookpeople": "dontcare",
           "train-leaveat": "dontcare"
-        }
+        },
+        "ori_description": "book train tickets"
       }
     ]
   },
@@ -323,7 +351,7 @@
     "slots": [
       {
         "name": "attraction-area",
-        "description": "slot_10",
+        "description": "Which area to search for the attractions?",
         "possible_values": [
           "centre",
           "east",
@@ -331,17 +359,19 @@
           "south",
           "west"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "area to search for attractions"
       },
       {
         "name": "attraction-name",
-        "description": "slot_11",
+        "description": "What is the name of the attraction?",
         "possible_values": [],
-        "is_categorical": false
+        "is_categorical": false,
+        "ori_description": "name of the attraction"
       },
       {
         "name": "attraction-type",
-        "description": "slot_12",
+        "description": "What type attraction are the user searching for?",
         "possible_values": [
           "architecture",
           "boat",
@@ -356,46 +386,53 @@
           "swimmingpool",
           "theatre"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "type of the attraction"
       },
       {
         "name": "attraction-entrancefee",
-        "description": "slot_13",
-        "is_categorical": false
+        "description": "How much is the entrance fee of the attraction?",
+        "is_categorical": false,
+        "ori_description": "how much is the entrance fee"
       },
       {
         "name": "attraction-openhours",
-        "description": "slot_14",
-        "is_categorical": false
+        "description": "What are the open hours of attraction?",
+        "is_categorical": false,
+        "ori_description": "open hours of the attraction"
       },
       {
         "name": "attraction-address",
-        "description": "slot_15",
-        "is_categorical": false
+        "description": "What is the address of address ?",
+        "is_categorical": false,
+        "ori_description": "address of the attraction"
       },
       {
         "name": "attraction-phone",
-        "description": "slot_16",
-        "is_categorical": false
+        "description": "What is the phone number of the attraction?",
+        "is_categorical": false,
+        "ori_description": "phone number of the attraction"
       },
       {
         "name": "attraction-postcode",
-        "description": "slot_17",
-        "is_categorical": false
+        "description": "What is the postcode of the attraction?",
+        "is_categorical": false,
+        "ori_description": "postal code of the attraction"
       }
     ],
-    "description": "",
+    "description": "find touristy stuff to do around you",
     "intents": [
       {
         "name": "find_attraction",
-        "description": "intent_2",
+        "description": "Is the user intending to find an attraction ?",
         "is_transactional": false,
         "required_slots": [],
         "optional_slots": {
           "attraction-area": "dontcare",
           "attraction-name": "dontcare",
           "attraction-type": "dontcare"
-        }
+        },
+        "ori_description": "search for places to see for leisure"
       }
     ]
   },
@@ -404,17 +441,18 @@
     "slots": [
       {
         "name": "restaurant-pricerange",
-        "description": "slot_18",
+        "description": "What is the price budget of restaurant?",
         "possible_values": [
           "cheap",
           "expensive",
           "moderate"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "price budget for the restaurant"
       },
       {
         "name": "restaurant-area",
-        "description": "slot_19",
+        "description": "which area of restaurant for reservation ?",
         "possible_values": [
           "centre",
           "east",
@@ -422,22 +460,25 @@
           "south",
           "west"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "area or place of the restaurant"
       },
       {
         "name": "restaurant-food",
-        "description": "slot_20",
-        "is_categorical": false
+        "description": "What is cusince of the restaurant food ?",
+        "is_categorical": false,
+        "ori_description": "the cuisine of the restaurant you are looking for"
       },
       {
         "name": "restaurant-name",
-        "description": "slot_21",
+        "description": "What is the name of restaurant ?",
         "possible_values": [],
-        "is_categorical": false
+        "is_categorical": false,
+        "ori_description": "name of the restaurant"
       },
       {
         "name": "restaurant-bookday",
-        "description": "slot_22",
+        "description": "Which day to book the restaurant ?",
         "possible_values": [
           "monday",
           "tuesday",
@@ -447,11 +488,12 @@
           "saturday",
           "sunday"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "day of the restaurant booking"
       },
       {
         "name": "restaurant-bookpeople",
-        "description": "slot_23",
+        "description": "how many people for the restaurant reservation ?",
         "possible_values": [
           "1",
           "2",
@@ -462,40 +504,46 @@
           "7",
           "8"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "how many people for the restaurant reservation"
       },
       {
         "name": "restaurant-booktime",
-        "description": "slot_24",
+        "description": "Which time for restaurant reservation ?",
         "possible_values": [],
-        "is_categorical": false
+        "is_categorical": false,
+        "ori_description": "time of the restaurant booking"
       },
       {
         "name": "restaurant-address",
-        "description": "slot_25",
-        "is_categorical": false
+        "description": "What is the address of restaurant ?",
+        "is_categorical": false,
+        "ori_description": "address of the restaurant"
       },
       {
         "name": "restaurant-phone",
-        "description": "slot_26",
-        "is_categorical": false
+        "description": "What is the phone number of restaurant ?",
+        "is_categorical": false,
+        "ori_description": "phone number of the restaurant"
       },
       {
         "name": "restaurant-postcode",
-        "description": "slot_27",
-        "is_categorical": false
+        "description": "What is the postcode of the restaurant?",
+        "is_categorical": false,
+        "ori_description": "postal code of the restaurant"
       },
       {
         "name": "restaurant-ref",
-        "description": "slot_28",
-        "is_categorical": false
+        "description": "What is reference number of restaurant booking ?",
+        "is_categorical": false,
+        "ori_description": "reference number of the restaurant booking"
       }
     ],
-    "description": "",
+    "description": "find places to dine and whet your appetite",
     "intents": [
       {
         "name": "find_restaurant",
-        "description": "intent_3",
+        "description": "Is the user intending to search for a restaurant ?",
         "is_transactional": false,
         "required_slots": [],
         "optional_slots": {
@@ -506,11 +554,12 @@
           "restaurant-bookday": "dontcare",
           "restaurant-bookpeople": "dontcare",
           "restaurant-booktime": "dontcare"
-        }
+        },
+        "ori_description": "search for places to wine and dine"
       },
       {
         "name": "book_restaurant",
-        "description": "intent_4",
+        "description": "Is the user decide to book the restaurant ?",
         "is_transactional": true,
         "required_slots": [],
         "optional_slots": {
@@ -521,7 +570,8 @@
           "restaurant-bookday": "dontcare",
           "restaurant-bookpeople": "dontcare",
           "restaurant-booktime": "dontcare"
-        }
+        },
+        "ori_description": "book a table at a restaurant"
       }
     ]
   },
@@ -530,36 +580,41 @@
     "slots": [
       {
         "name": "hospital-department",
-        "description": "slot_49",
+        "description": "What type of medical care are the user looking for ?",
         "possible_values": [],
-        "is_categorical": false
+        "is_categorical": false,
+        "ori_description": "type of medical care"
       },
       {
         "name": "hospital-address",
-        "description": "slot_50",
-        "is_categorical": false
+        "description": "What is the address of hospital?",
+        "is_categorical": false,
+        "ori_description": "address of the hospital"
       },
       {
         "name": "hospital-phone",
-        "description": "slot_51",
-        "is_categorical": false
+        "description": "What is the phone number of the hospital?",
+        "is_categorical": false,
+        "ori_description": "phone number of the hospital"
       },
       {
         "name": "hospital-postcode",
-        "description": "slot_52",
-        "is_categorical": false
+        "description": "What is the postal code of the hospital?",
+        "is_categorical": false,
+        "ori_description": "postal code of the hospital"
       }
     ],
-    "description": "",
+    "description": "making you feel better when you are ill",
     "intents": [
       {
         "name": "find_hospital",
-        "description": "intent_8",
+        "description": "Is the user intending to serch for a medial facility or a doctor?",
         "is_transactional": false,
         "required_slots": [],
         "optional_slots": {
           "hospital-department": "dontcare"
-        }
+        },
+        "ori_description": "search for a medical facility or a doctor"
       }
     ]
   },
@@ -568,44 +623,50 @@
     "slots": [
       {
         "name": "taxi-leaveat",
-        "description": "slot_43",
+        "description": "When will the taxi will leave ?",
         "possible_values": [],
-        "is_categorical": false
+        "is_categorical": false,
+        "ori_description": "leaving time of taxi"
       },
       {
         "name": "taxi-destination",
-        "description": "slot_44",
+        "description": "What is the destination of taxi trip?",
         "possible_values": [],
-        "is_categorical": false
+        "is_categorical": false,
+        "ori_description": "destination of taxi"
       },
       {
         "name": "taxi-departure",
-        "description": "slot_45",
+        "description": "What is the departure location of taxi?",
         "possible_values": [],
-        "is_categorical": false
+        "is_categorical": false,
+        "ori_description": "departure location of taxi"
       },
       {
         "name": "taxi-arriveby",
-        "description": "slot_46",
+        "description": "What is the arrival time of the taxi?",
         "possible_values": [],
-        "is_categorical": false
+        "is_categorical": false,
+        "ori_description": "arrival time of taxi"
       },
       {
         "name": "taxi-type",
-        "description": "slot_47",
-        "is_categorical": false
+        "description": "What type of car would the user want for the taxi ?",
+        "is_categorical": false,
+        "ori_description": "car type of the taxi"
       },
       {
         "name": "taxi-phone",
-        "description": "slot_48",
-        "is_categorical": false
+        "description": "What is the phone number of taxi?",
+        "is_categorical": false,
+        "ori_description": "phone number of the taxi"
       }
     ],
-    "description": "",
+    "description": "rent cheap cabs to avoid traffic",
     "intents": [
       {
         "name": "book_taxi",
-        "description": "intent_7",
+        "description": "Is the user intending to book a taxi to some place?",
         "is_transactional": true,
         "required_slots": [],
         "optional_slots": {
@@ -613,7 +674,8 @@
           "taxi-destination": "dontcare",
           "taxi-departure": "dontcare",
           "taxi-arriveby": "dontcare"
-        }
+        },
+        "ori_description": "book taxis to travel between places"
       }
     ]
   },
@@ -622,42 +684,46 @@
     "slots": [
       {
         "name": "bus-departure",
-        "description": "slot_53",
+        "description": "What is the departure locaion of bus?",
         "possible_values": [
           "cambridge"
         ],
-        "is_categorical": false
+        "is_categorical": false,
+        "ori_description": "departure location of bus"
       },
       {
         "name": "bus-destination",
-        "description": "slot_54",
+        "description": "What is the destination of the bus?",
         "possible_values": [
           "london kings cross",
           "bishops stortford",
           "cambridge",
           "kohinoor"
         ],
-        "is_categorical": false
+        "is_categorical": false,
+        "ori_description": "destination of bus"
       },
       {
         "name": "bus-leaveat",
-        "description": "slot_55",
-        "is_categorical": false
+        "description": "When will the bus leave ?",
+        "is_categorical": false,
+        "ori_description": "leaving time of bus"
       },
       {
         "name": "bus-day",
-        "description": "slot_56",
+        "description": "Which day to use the bus ticket for ?",
         "possible_values": [
           "wednesday"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "day to use the bus tickets"
       }
     ],
-    "description": "",
+    "description": "bus service for traveling",
     "intents": [
       {
         "name": "find_bus",
-        "description": "intent_9",
+        "description": "Is the user intending to find a bus for traveling?",
         "is_transactional": false,
         "required_slots": [],
         "optional_slots": {
@@ -665,7 +731,8 @@
           "bus-destination": "dontcare",
           "bus-day": "dontcare",
           "bus-leaveat": "dontcare"
-        }
+        },
+        "ori_description": "search for a bus"
       }
     ]
   },
@@ -674,38 +741,43 @@
     "slots": [
       {
         "name": "police-address",
-        "description": "slot_57",
-        "is_categorical": false
+        "description": "What is address of police station?",
+        "is_categorical": false,
+        "ori_description": "address of the police station"
       },
       {
         "name": "police-phone",
-        "description": "slot_58",
-        "is_categorical": false
+        "description": "What is the phone number of police station?",
+        "is_categorical": false,
+        "ori_description": "phone number of the police station"
       },
       {
         "name": "police-postcode",
-        "description": "slot_59",
-        "is_categorical": false
+        "description": "What is the postal code of police station?",
+        "is_categorical": false,
+        "ori_description": "postal code of the police station"
       },
       {
         "name": "police-name",
-        "description": "slot_60",
+        "description": "What is the name of police statition?",
         "possible_values": [
           "parkside police station"
         ],
-        "is_categorical": true
+        "is_categorical": true,
+        "ori_description": "name of the police station"
       }
     ],
-    "description": "",
+    "description": "police station",
     "intents": [
       {
         "name": "police",
-        "description": "intent_10",
+        "description": "Is the user intending to find a police station?",
         "is_transactional": false,
         "required_slots": [],
         "optional_slots": {
           "police-name": "dontcare"
-        }
+        },
+        "ori_description": "search for police station"
       }
     ]
   }
