@@ -98,7 +98,7 @@ MODEL_CLASSES = {
     # single bert + transformer
     "toptrans": (TopTransformerModel, SchemaDSTC8Processor),
     # fixed-token + transformer
-    "dstc8baseline_toptrans": (DSTC8BaselineTopTransModel, SchemaDSTC8Processor),
+    "dstc8baseline_toptrans": (DSTC8BaselineTopTransModel, SchemaDialogProcessor),
     "active_intent_fusion": (ActiveIntentFusionModel, SchemaDSTC8Processor),
     "requested_slots_fusion": (RequestedSlotsFusionModel, SchemaDSTC8Processor),
     "noncat_slots_fusion": (NonCatSlotsFusionModel, SchemaDSTC8Processor),

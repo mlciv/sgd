@@ -98,6 +98,7 @@ DATASET_CONFIG = {
             max_num_noncat_slot=12,
             max_num_value_per_cat_slot=12,
             max_num_intent=4,
+            name="dstc8_question_nameonly",
             schema_file="schema.json.question_nameonly"
         ),
      "dstc8_question_rich":
@@ -111,6 +112,7 @@ DATASET_CONFIG = {
             max_num_noncat_slot=12,
             max_num_value_per_cat_slot=12,
             max_num_intent=4,
+            name="dstc8_question_rich",
             schema_file="schema.json.question_rich"
         ),
     "dstc8_empty":

@@ -926,6 +926,7 @@ class SchemaDSTExample(object):
                 elif slot in system_span_boundaries:
                     start, end = system_span_boundaries[slot]
                 else:
+
                     # A span may not be found because the value was cropped out or because
                     # the value was mentioned earlier in the dialogue. Since this model
                     # only makes use of the last two utterances to predict state updates,
