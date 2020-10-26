@@ -141,6 +141,8 @@ class SchemaNonCatSlotProcessor(SchemaDialogProcessor):
             # cross domain carry over is not easyto do here, no slot carryover relations
             # not easy to find the slot matching.
             # Here, in future we just do the string match to find all other spans
+
+            # for multiwoz. we use add_noncategorical_slots_multiwoz(
             noncat_slot_examples = example.add_noncategorical_slots(
                 state_update,
                 system_span_boundaries,
