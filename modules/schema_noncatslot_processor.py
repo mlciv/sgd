@@ -143,10 +143,16 @@ class SchemaNonCatSlotProcessor(SchemaDialogProcessor):
             # Here, in future we just do the string match to find all other spans
 
             # for multiwoz. we use add_noncategorical_slots_multiwoz(
-            noncat_slot_examples = example.add_noncategorical_slots(
-                state_update,
-                system_span_boundaries,
-                user_span_boundaries, utterances, start_turn, start_turn_subtoken_offset, global_subtoken_offsets)
+            if "multiwoz" in self._dataset_config.name:
+                noncat_slot_examples = example.add_noncategorical_slots_multiwoz(
+                    state_update,
+                    system_span_boundaries,
+                    user_span_boundaries, utterances, start_turn, start_turn_subtoken_offset, global_subtoken_offsets)
+            else:
+                noncat_slot_examples = example.add_noncategorical_slots(
+                    state_update,
+                    system_span_boundaries,
+                    user_span_boundaries, utterances, start_turn, start_turn_subtoken_offset, global_subtoken_offsets)
             all_noncat_slot_examples.extend(noncat_slot_examples)
             # logger.info("current_noncat_slot_examples :{}".format(len(all_noncat_slot_examples)))
         return all_noncat_slot_examples, states

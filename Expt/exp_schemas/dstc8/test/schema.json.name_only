@@ -1,7 +1,7 @@
 [
   {
     "service_name": "Alarm_1",
-    "description": "Alarm_1",
+    "description": "Manage alarms by getting and setting them easily",
     "slots": [
       {
         "name": "alarm_time",
@@ -59,7 +59,7 @@
   },
   {
     "service_name": "Buses_3",
-    "description": "Buses_3",
+    "description": "Affordable and comfortable bus travel across the country",
     "slots": [
       {
         "name": "from_city",
@@ -191,7 +191,7 @@
   },
   {
     "service_name": "Events_3",
-    "description": "Events_3",
+    "description": "Find and book tickets to any cultural events in your area",
     "slots": [
       {
         "name": "event_type",
@@ -310,7 +310,7 @@
   },
   {
     "service_name": "Flights_4",
-    "description": "Flights_4",
+    "description": "Find cheap flights in seconds and book flights",
     "slots": [
       {
         "name": "number_of_tickets",
@@ -478,7 +478,7 @@
   },
   {
     "service_name": "Homes_2",
-    "description": "Homes_2",
+    "description": "Service for finding properties to buy and rent",
     "slots": [
       {
         "name": "intent",
@@ -619,7 +619,7 @@
   },
   {
     "service_name": "Hotels_2",
-    "description": "Hotels_2",
+    "description": "A popular service for searching and booking houses for short term stay",
     "slots": [
       {
         "name": "where_to",
@@ -735,7 +735,7 @@
   },
   {
     "service_name": "Hotels_4",
-    "description": "Hotels_4",
+    "description": "Accommodation searching and booking portal",
     "slots": [
       {
         "name": "location",
@@ -865,7 +865,7 @@
   },
   {
     "service_name": "Media_3",
-    "description": "Media_3",
+    "description": "Enjoy instant and unlimited access to best shows, movies, comedy, sports, documentaries and more.",
     "slots": [
       {
         "name": "title",
@@ -936,7 +936,7 @@
   },
   {
     "service_name": "Messaging_1",
-    "description": "Messaging_1",
+    "description": "Connect and share locations with your contacts",
     "slots": [
       {
         "name": "location",
@@ -970,7 +970,7 @@
   },
   {
     "service_name": "Movies_1",
-    "description": "Movies_1",
+    "description": "A go-to provider for finding movies, searching for show times and booking tickets",
     "slots": [
       {
         "name": "price",
@@ -1125,7 +1125,7 @@
   },
   {
     "service_name": "Movies_3",
-    "description": "Movies_3",
+    "description": "A review-aggregation website for movies and television",
     "slots": [
       {
         "name": "movie_title",
@@ -1181,7 +1181,7 @@
   },
   {
     "service_name": "Music_3",
-    "description": "Music_3",
+    "description": "A free, personalized platform that plays music you'll love. Discover new music and enjoy old favorites.",
     "slots": [
       {
         "name": "track",
@@ -1280,7 +1280,7 @@
   },
   {
     "service_name": "Payment_1",
-    "description": "Payment_1",
+    "description": "The fast, simple way to pay in apps, on the web, and in millions of stores",
     "slots": [
       {
         "name": "payment_method",
@@ -1355,7 +1355,7 @@
   },
   {
     "service_name": "RentalCars_3",
-    "description": "RentalCars_3",
+    "description": "A leading global provider of car rental solutions",
     "slots": [
       {
         "name": "car_type",
@@ -1472,7 +1472,7 @@
   },
   {
     "service_name": "Restaurants_2",
-    "description": "Restaurants_2",
+    "description": "A popular restaurant search and reservation service",
     "slots": [
       {
         "name": "restaurant_name",
@@ -1623,7 +1623,7 @@
   },
   {
     "service_name": "RideSharing_2",
-    "description": "RideSharing_2",
+    "description": "App to book a cab to any destination",
     "slots": [
       {
         "name": "destination",
@@ -1688,7 +1688,7 @@
   },
   {
     "service_name": "Services_1",
-    "description": "Services_1",
+    "description": "A widely used service for finding and reserving the hair stylist of your choice",
     "slots": [
       {
         "name": "stylist_name",
@@ -1786,7 +1786,7 @@
   },
   {
     "service_name": "Services_4",
-    "description": "Services_4",
+    "description": "Discover the right therapist for you and make reservations easily",
     "slots": [
       {
         "name": "therapist_name",
@@ -1875,7 +1875,7 @@
   },
   {
     "service_name": "Trains_1",
-    "description": "Trains_1",
+    "description": "Service to find and reserve train journeys between cities",
     "slots": [
       {
         "name": "from",
@@ -2010,7 +2010,7 @@
   },
   {
     "service_name": "Travel_1",
-    "description": "Travel_1",
+    "description": "The biggest database of tourist attractions and points of interest",
     "slots": [
       {
         "name": "location",
@@ -2092,7 +2092,7 @@
   },
   {
     "service_name": "Weather_1",
-    "description": "Weather_1",
+    "description": "Check the weather for any place and any date",
     "slots": [
       {
         "name": "precipitation",

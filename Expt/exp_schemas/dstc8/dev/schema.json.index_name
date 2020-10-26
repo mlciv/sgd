@@ -4,34 +4,34 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_0",
-        "description": "",
+        "name": "alarm_time",
+        "description": "slot_131",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_1",
-        "description": "",
+        "name": "alarm_name",
+        "description": "slot_132",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_2",
-        "description": "",
+        "name": "new_alarm_time",
+        "description": "slot_133",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_3",
-        "description": "",
+        "name": "new_alarm_name",
+        "description": "slot_134",
         "is_categorical": false,
         "possible_values": []
       }
     ],
     "intents": [
       {
-        "name": "intent_0",
-        "description": "",
+        "name": "GetAlarms",
+        "description": "intent_37",
         "is_transactional": false,
         "required_slots": [],
         "optional_slots": {},
@@ -41,8 +41,8 @@
         ]
       },
       {
-        "name": "intent_1",
-        "description": "",
+        "name": "AddAlarm",
+        "description": "intent_38",
         "is_transactional": true,
         "required_slots": [
           "new_alarm_time"
@@ -62,8 +62,8 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_4",
-        "description": "",
+        "name": "account_type",
+        "description": "slot_135",
         "is_categorical": true,
         "possible_values": [
           "checking",
@@ -71,8 +71,8 @@
         ]
       },
       {
-        "name": "slot_5",
-        "description": "",
+        "name": "recipient_account_type",
+        "description": "slot_136",
         "is_categorical": true,
         "possible_values": [
           "checking",
@@ -80,34 +80,34 @@
         ]
       },
       {
-        "name": "slot_6",
-        "description": "",
+        "name": "account_balance",
+        "description": "slot_137",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_7",
-        "description": "",
+        "name": "transfer_amount",
+        "description": "slot_138",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_8",
-        "description": "",
+        "name": "recipient_name",
+        "description": "slot_139",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_9",
-        "description": "",
+        "name": "transfer_time",
+        "description": "slot_140",
         "is_categorical": false,
         "possible_values": []
       }
     ],
     "intents": [
       {
-        "name": "intent_2",
-        "description": "",
+        "name": "CheckBalance",
+        "description": "intent_39",
         "is_transactional": false,
         "required_slots": [
           "account_type"
@@ -119,8 +119,8 @@
         ]
       },
       {
-        "name": "intent_3",
-        "description": "",
+        "name": "TransferMoney",
+        "description": "intent_40",
         "is_transactional": true,
         "required_slots": [
           "account_type",
@@ -145,50 +145,50 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_10",
-        "description": "",
+        "name": "from_location",
+        "description": "slot_5",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_11",
-        "description": "",
+        "name": "to_location",
+        "description": "slot_6",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_12",
-        "description": "",
+        "name": "from_station",
+        "description": "slot_7",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_13",
-        "description": "",
+        "name": "to_station",
+        "description": "slot_8",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_14",
-        "description": "",
+        "name": "leaving_date",
+        "description": "slot_9",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_15",
-        "description": "",
+        "name": "leaving_time",
+        "description": "slot_10",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_16",
-        "description": "",
+        "name": "fare",
+        "description": "slot_11",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_17",
-        "description": "",
+        "name": "travelers",
+        "description": "slot_12",
         "is_categorical": true,
         "possible_values": [
           "1",
@@ -199,8 +199,8 @@
         ]
       },
       {
-        "name": "slot_18",
-        "description": "",
+        "name": "transfers",
+        "description": "slot_13",
         "is_categorical": true,
         "possible_values": [
           "0",
@@ -210,8 +210,8 @@
     ],
     "intents": [
       {
-        "name": "intent_4",
-        "description": "",
+        "name": "FindBus",
+        "description": "intent_2",
         "is_transactional": false,
         "required_slots": [
           "from_location",
@@ -234,8 +234,8 @@
         ]
       },
       {
-        "name": "intent_5",
-        "description": "",
+        "name": "BuyBusTicket",
+        "description": "intent_3",
         "is_transactional": true,
         "required_slots": [
           "from_location",
@@ -264,8 +264,8 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_19",
-        "description": "",
+        "name": "category",
+        "description": "slot_29",
         "is_categorical": true,
         "possible_values": [
           "Music",
@@ -273,32 +273,32 @@
         ]
       },
       {
-        "name": "slot_20",
-        "description": "",
+        "name": "subcategory",
+        "description": "slot_30",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_21",
-        "description": "",
+        "name": "event_name",
+        "description": "slot_31",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_22",
-        "description": "",
+        "name": "date",
+        "description": "slot_32",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_23",
-        "description": "",
+        "name": "time",
+        "description": "slot_33",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_24",
-        "description": "",
+        "name": "number_of_seats",
+        "description": "slot_34",
         "is_categorical": true,
         "possible_values": [
           "1",
@@ -313,36 +313,36 @@
         ]
       },
       {
-        "name": "slot_25",
-        "description": "",
+        "name": "city_of_event",
+        "description": "slot_35",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_26",
-        "description": "",
+        "name": "event_location",
+        "description": "slot_36",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_27",
-        "description": "",
+        "name": "address_of_location",
+        "description": "slot_37",
         "is_categorical": false,
         "possible_values": []
       }
     ],
     "intents": [
       {
-        "name": "intent_6",
-        "description": "",
+        "name": "FindEvents",
+        "description": "intent_9",
         "is_transactional": false,
         "required_slots": [
           "category",
           "city_of_event"
         ],
         "optional_slots": {
-          "subcategory": "dontcare",
-          "date": "dontcare"
+          "date": "dontcare",
+          "subcategory": "dontcare"
         },
         "result_slots": [
           "category",
@@ -356,8 +356,8 @@
         ]
       },
       {
-        "name": "intent_7",
-        "description": "",
+        "name": "BuyEventTickets",
+        "description": "intent_10",
         "is_transactional": true,
         "required_slots": [
           "event_name",
@@ -383,8 +383,8 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_28",
-        "description": "",
+        "name": "passengers",
+        "description": "slot_141",
         "is_categorical": true,
         "possible_values": [
           "1",
@@ -394,8 +394,8 @@
         ]
       },
       {
-        "name": "slot_29",
-        "description": "",
+        "name": "flight_class",
+        "description": "slot_142",
         "is_categorical": true,
         "possible_values": [
           "Economy",
@@ -405,44 +405,44 @@
         ]
       },
       {
-        "name": "slot_30",
-        "description": "",
+        "name": "origin_city",
+        "description": "slot_143",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_31",
-        "description": "",
+        "name": "destination_city",
+        "description": "slot_144",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_32",
-        "description": "",
+        "name": "origin_airport_name",
+        "description": "slot_145",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_33",
-        "description": "",
+        "name": "destination_airport_name",
+        "description": "slot_146",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_34",
-        "description": "",
+        "name": "departure_date",
+        "description": "slot_147",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_35",
-        "description": "",
+        "name": "return_date",
+        "description": "slot_148",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_36",
-        "description": "",
+        "name": "number_stops",
+        "description": "slot_149",
         "is_categorical": true,
         "possible_values": [
           "0",
@@ -450,38 +450,38 @@
         ]
       },
       {
-        "name": "slot_37",
-        "description": "",
+        "name": "outbound_departure_time",
+        "description": "slot_150",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_38",
-        "description": "",
+        "name": "outbound_arrival_time",
+        "description": "slot_151",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_39",
-        "description": "",
+        "name": "inbound_arrival_time",
+        "description": "slot_152",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_40",
-        "description": "",
+        "name": "inbound_departure_time",
+        "description": "slot_153",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_41",
-        "description": "",
+        "name": "price",
+        "description": "slot_154",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_42",
-        "description": "",
+        "name": "number_checked_bags",
+        "description": "slot_155",
         "is_categorical": true,
         "possible_values": [
           "0",
@@ -490,8 +490,8 @@
         ]
       },
       {
-        "name": "slot_43",
-        "description": "",
+        "name": "airlines",
+        "description": "slot_156",
         "is_categorical": true,
         "possible_values": [
           "United Airlines",
@@ -505,8 +505,8 @@
         ]
       },
       {
-        "name": "slot_44",
-        "description": "",
+        "name": "arrives_next_day",
+        "description": "slot_157",
         "is_categorical": true,
         "possible_values": [
           "True",
@@ -516,8 +516,8 @@
     ],
     "intents": [
       {
-        "name": "intent_8",
-        "description": "",
+        "name": "SearchOnewayFlight",
+        "description": "intent_41",
         "is_transactional": false,
         "required_slots": [
           "origin_city",
@@ -548,8 +548,8 @@
         ]
       },
       {
-        "name": "intent_9",
-        "description": "",
+        "name": "SearchRoundtripFlights",
+        "description": "intent_42",
         "is_transactional": false,
         "required_slots": [
           "origin_city",
@@ -590,32 +590,32 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_45",
-        "description": "",
+        "name": "area",
+        "description": "slot_79",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_46",
-        "description": "",
+        "name": "address",
+        "description": "slot_80",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_47",
-        "description": "",
+        "name": "property_name",
+        "description": "slot_81",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_48",
-        "description": "",
+        "name": "phone_number",
+        "description": "slot_82",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_49",
-        "description": "",
+        "name": "furnished",
+        "description": "slot_83",
         "is_categorical": true,
         "possible_values": [
           "True",
@@ -623,8 +623,8 @@
         ]
       },
       {
-        "name": "slot_50",
-        "description": "",
+        "name": "pets_allowed",
+        "description": "slot_84",
         "is_categorical": true,
         "possible_values": [
           "True",
@@ -632,20 +632,20 @@
         ]
       },
       {
-        "name": "slot_51",
-        "description": "",
+        "name": "rent",
+        "description": "slot_85",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_52",
-        "description": "",
+        "name": "visit_date",
+        "description": "slot_86",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_53",
-        "description": "",
+        "name": "number_of_beds",
+        "description": "slot_87",
         "is_categorical": true,
         "possible_values": [
           "1",
@@ -655,8 +655,8 @@
         ]
       },
       {
-        "name": "slot_54",
-        "description": "",
+        "name": "number_of_baths",
+        "description": "slot_88",
         "is_categorical": true,
         "possible_values": [
           "1",
@@ -668,8 +668,8 @@
     ],
     "intents": [
       {
-        "name": "intent_10",
-        "description": "",
+        "name": "FindApartment",
+        "description": "intent_20",
         "is_transactional": false,
         "required_slots": [
           "area",
@@ -677,8 +677,8 @@
         ],
         "optional_slots": {
           "furnished": "dontcare",
-          "number_of_baths": "dontcare",
-          "pets_allowed": "dontcare"
+          "pets_allowed": "dontcare",
+          "number_of_baths": "dontcare"
         },
         "result_slots": [
           "area",
@@ -693,8 +693,8 @@
         ]
       },
       {
-        "name": "intent_11",
-        "description": "",
+        "name": "ScheduleVisit",
+        "description": "intent_21",
         "is_transactional": true,
         "required_slots": [
           "property_name",
@@ -720,14 +720,14 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_55",
-        "description": "",
+        "name": "destination",
+        "description": "slot_89",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_56",
-        "description": "",
+        "name": "number_of_rooms",
+        "description": "slot_90",
         "is_categorical": true,
         "possible_values": [
           "1",
@@ -736,20 +736,20 @@
         ]
       },
       {
-        "name": "slot_57",
-        "description": "",
+        "name": "check_in_date",
+        "description": "slot_91",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_58",
-        "description": "",
+        "name": "number_of_days",
+        "description": "slot_92",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_59",
-        "description": "",
+        "name": "star_rating",
+        "description": "slot_93",
         "is_categorical": true,
         "possible_values": [
           "1",
@@ -760,32 +760,32 @@
         ]
       },
       {
-        "name": "slot_60",
-        "description": "",
+        "name": "hotel_name",
+        "description": "slot_94",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_61",
-        "description": "",
+        "name": "street_address",
+        "description": "slot_95",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_62",
-        "description": "",
+        "name": "phone_number",
+        "description": "slot_96",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_63",
-        "description": "",
+        "name": "price_per_night",
+        "description": "slot_97",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_64",
-        "description": "",
+        "name": "has_wifi",
+        "description": "slot_98",
         "is_categorical": true,
         "possible_values": [
           "True",
@@ -795,8 +795,8 @@
     ],
     "intents": [
       {
-        "name": "intent_12",
-        "description": "",
+        "name": "ReserveHotel",
+        "description": "intent_22",
         "is_transactional": true,
         "required_slots": [
           "hotel_name",
@@ -821,16 +821,16 @@
         ]
       },
       {
-        "name": "intent_13",
-        "description": "",
+        "name": "SearchHotel",
+        "description": "intent_23",
         "is_transactional": false,
         "required_slots": [
           "destination"
         ],
         "optional_slots": {
+          "number_of_rooms": "dontcare",
           "has_wifi": "dontcare",
-          "star_rating": "dontcare",
-          "number_of_rooms": "dontcare"
+          "star_rating": "dontcare"
         },
         "result_slots": [
           "destination",
@@ -850,14 +850,14 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_65",
-        "description": "",
+        "name": "location",
+        "description": "slot_158",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_66",
-        "description": "",
+        "name": "number_of_rooms",
+        "description": "slot_159",
         "is_categorical": true,
         "possible_values": [
           "1",
@@ -866,20 +866,20 @@
         ]
       },
       {
-        "name": "slot_67",
-        "description": "",
+        "name": "check_in_date",
+        "description": "slot_160",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_68",
-        "description": "",
+        "name": "stay_length",
+        "description": "slot_161",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_69",
-        "description": "",
+        "name": "star_rating",
+        "description": "slot_162",
         "is_categorical": true,
         "possible_values": [
           "1",
@@ -890,32 +890,32 @@
         ]
       },
       {
-        "name": "slot_70",
-        "description": "",
+        "name": "place_name",
+        "description": "slot_163",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_71",
-        "description": "",
+        "name": "street_address",
+        "description": "slot_164",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_72",
-        "description": "",
+        "name": "phone_number",
+        "description": "slot_165",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_73",
-        "description": "",
+        "name": "price_per_night",
+        "description": "slot_166",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_74",
-        "description": "",
+        "name": "smoking_allowed",
+        "description": "slot_167",
         "is_categorical": true,
         "possible_values": [
           "True",
@@ -925,8 +925,8 @@
     ],
     "intents": [
       {
-        "name": "intent_14",
-        "description": "",
+        "name": "ReserveHotel",
+        "description": "intent_43",
         "is_transactional": true,
         "required_slots": [
           "place_name",
@@ -951,8 +951,8 @@
         ]
       },
       {
-        "name": "intent_15",
-        "description": "",
+        "name": "SearchHotel",
+        "description": "intent_44",
         "is_transactional": false,
         "required_slots": [
           "location"
@@ -980,20 +980,20 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_75",
-        "description": "",
+        "name": "movie_name",
+        "description": "slot_168",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_76",
-        "description": "",
+        "name": "genre",
+        "description": "slot_169",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_77",
-        "description": "",
+        "name": "subtitle_language",
+        "description": "slot_170",
         "is_categorical": true,
         "possible_values": [
           "None",
@@ -1003,28 +1003,28 @@
         ]
       },
       {
-        "name": "slot_78",
-        "description": "",
+        "name": "director",
+        "description": "slot_171",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_79",
-        "description": "",
+        "name": "actors",
+        "description": "slot_172",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_80",
-        "description": "",
+        "name": "price",
+        "description": "slot_173",
         "is_categorical": false,
         "possible_values": []
       }
     ],
     "intents": [
       {
-        "name": "intent_16",
-        "description": "",
+        "name": "FindMovies",
+        "description": "intent_45",
         "is_transactional": false,
         "required_slots": [
           "genre"
@@ -1043,8 +1043,8 @@
         ]
       },
       {
-        "name": "intent_17",
-        "description": "",
+        "name": "RentMovie",
+        "description": "intent_46",
         "is_transactional": true,
         "required_slots": [
           "movie_name"
@@ -1068,40 +1068,40 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_81",
-        "description": "",
+        "name": "title",
+        "description": "slot_174",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_82",
-        "description": "",
+        "name": "genre",
+        "description": "slot_175",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_83",
-        "description": "",
+        "name": "aggregate_rating",
+        "description": "slot_176",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_84",
-        "description": "",
+        "name": "starring",
+        "description": "slot_177",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_85",
-        "description": "",
+        "name": "director",
+        "description": "slot_178",
         "is_categorical": false,
         "possible_values": []
       }
     ],
     "intents": [
       {
-        "name": "intent_18",
-        "description": "",
+        "name": "FindMovies",
+        "description": "intent_47",
         "is_transactional": false,
         "required_slots": [],
         "optional_slots": {
@@ -1124,32 +1124,32 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_86",
-        "description": "",
+        "name": "song_name",
+        "description": "slot_132",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_87",
-        "description": "",
+        "name": "artist",
+        "description": "slot_133",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_88",
-        "description": "",
+        "name": "album",
+        "description": "slot_134",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_89",
-        "description": "",
+        "name": "genre",
+        "description": "slot_135",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_90",
-        "description": "",
+        "name": "year",
+        "description": "slot_136",
         "is_categorical": true,
         "possible_values": [
           "2010",
@@ -1165,8 +1165,8 @@
         ]
       },
       {
-        "name": "slot_91",
-        "description": "",
+        "name": "playback_device",
+        "description": "slot_137",
         "is_categorical": true,
         "possible_values": [
           "TV",
@@ -1177,15 +1177,15 @@
     ],
     "intents": [
       {
-        "name": "intent_19",
-        "description": "",
+        "name": "LookupSong",
+        "description": "intent_33",
         "is_transactional": false,
         "required_slots": [],
         "optional_slots": {
-          "year": "dontcare",
           "genre": "dontcare",
           "artist": "dontcare",
-          "album": "dontcare"
+          "album": "dontcare",
+          "year": "dontcare"
         },
         "result_slots": [
           "song_name",
@@ -1196,8 +1196,8 @@
         ]
       },
       {
-        "name": "intent_20",
-        "description": "",
+        "name": "PlaySong",
+        "description": "intent_34",
         "is_transactional": true,
         "required_slots": [
           "song_name"
@@ -1222,8 +1222,8 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_92",
-        "description": "",
+        "name": "type",
+        "description": "slot_143",
         "is_categorical": true,
         "possible_values": [
           "Compact",
@@ -1232,52 +1232,52 @@
         ]
       },
       {
-        "name": "slot_93",
-        "description": "",
+        "name": "car_name",
+        "description": "slot_144",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_94",
-        "description": "",
+        "name": "pickup_location",
+        "description": "slot_145",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_95",
-        "description": "",
+        "name": "pickup_date",
+        "description": "slot_146",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_96",
-        "description": "",
+        "name": "pickup_time",
+        "description": "slot_147",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_97",
-        "description": "",
+        "name": "pickup_city",
+        "description": "slot_148",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_98",
-        "description": "",
+        "name": "dropoff_date",
+        "description": "slot_149",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_99",
-        "description": "",
+        "name": "total_price",
+        "description": "slot_150",
         "is_categorical": false,
         "possible_values": []
       }
     ],
     "intents": [
       {
-        "name": "intent_21",
-        "description": "",
+        "name": "GetCarsAvailable",
+        "description": "intent_37",
         "is_transactional": false,
         "required_slots": [
           "pickup_city",
@@ -1300,8 +1300,8 @@
         ]
       },
       {
-        "name": "intent_22",
-        "description": "",
+        "name": "ReserveCar",
+        "description": "intent_38",
         "is_transactional": true,
         "required_slots": [
           "pickup_location",
@@ -1328,26 +1328,26 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_100",
-        "description": "",
+        "name": "restaurant_name",
+        "description": "slot_179",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_101",
-        "description": "",
+        "name": "date",
+        "description": "slot_180",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_102",
-        "description": "",
+        "name": "time",
+        "description": "slot_181",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_103",
-        "description": "",
+        "name": "has_seating_outdoors",
+        "description": "slot_182",
         "is_categorical": true,
         "possible_values": [
           "True",
@@ -1355,8 +1355,8 @@
         ]
       },
       {
-        "name": "slot_104",
-        "description": "",
+        "name": "has_vegetarian_options",
+        "description": "slot_183",
         "is_categorical": true,
         "possible_values": [
           "True",
@@ -1364,26 +1364,26 @@
         ]
       },
       {
-        "name": "slot_105",
-        "description": "",
+        "name": "phone_number",
+        "description": "slot_184",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_106",
-        "description": "",
+        "name": "rating",
+        "description": "slot_185",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_107",
-        "description": "",
+        "name": "address",
+        "description": "slot_186",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_108",
-        "description": "",
+        "name": "number_of_seats",
+        "description": "slot_187",
         "is_categorical": true,
         "possible_values": [
           "1",
@@ -1395,8 +1395,8 @@
         ]
       },
       {
-        "name": "slot_109",
-        "description": "",
+        "name": "price_range",
+        "description": "slot_188",
         "is_categorical": true,
         "possible_values": [
           "cheap",
@@ -1406,22 +1406,22 @@
         ]
       },
       {
-        "name": "slot_110",
-        "description": "",
+        "name": "location",
+        "description": "slot_189",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_111",
-        "description": "",
+        "name": "category",
+        "description": "slot_190",
         "is_categorical": false,
         "possible_values": []
       }
     ],
     "intents": [
       {
-        "name": "intent_23",
-        "description": "",
+        "name": "ReserveRestaurant",
+        "description": "intent_48",
         "is_transactional": true,
         "required_slots": [
           "restaurant_name",
@@ -1448,8 +1448,8 @@
         ]
       },
       {
-        "name": "intent_24",
-        "description": "",
+        "name": "FindRestaurants",
+        "description": "intent_49",
         "is_transactional": false,
         "required_slots": [
           "category",
@@ -1479,14 +1479,14 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_112",
-        "description": "",
+        "name": "destination",
+        "description": "slot_170",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_113",
-        "description": "",
+        "name": "shared_ride",
+        "description": "slot_171",
         "is_categorical": true,
         "possible_values": [
           "True",
@@ -1494,20 +1494,20 @@
         ]
       },
       {
-        "name": "slot_114",
-        "description": "",
+        "name": "ride_fare",
+        "description": "slot_172",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_115",
-        "description": "",
+        "name": "approximate_ride_duration",
+        "description": "slot_173",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_116",
-        "description": "",
+        "name": "number_of_riders",
+        "description": "slot_174",
         "is_categorical": true,
         "possible_values": [
           "1",
@@ -1519,8 +1519,8 @@
     ],
     "intents": [
       {
-        "name": "intent_25",
-        "description": "",
+        "name": "GetRide",
+        "description": "intent_43",
         "is_transactional": true,
         "required_slots": [
           "destination",
@@ -1543,44 +1543,44 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_117",
-        "description": "",
+        "name": "therapist_name",
+        "description": "slot_191",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_118",
-        "description": "",
+        "name": "phone_number",
+        "description": "slot_192",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_119",
-        "description": "",
+        "name": "address",
+        "description": "slot_193",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_120",
-        "description": "",
+        "name": "city",
+        "description": "slot_194",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_121",
-        "description": "",
+        "name": "appointment_date",
+        "description": "slot_195",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_122",
-        "description": "",
+        "name": "appointment_time",
+        "description": "slot_196",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_123",
-        "description": "",
+        "name": "type",
+        "description": "slot_197",
         "is_categorical": true,
         "possible_values": [
           "Psychologist",
@@ -1591,8 +1591,8 @@
     ],
     "intents": [
       {
-        "name": "intent_26",
-        "description": "",
+        "name": "BookAppointment",
+        "description": "intent_50",
         "is_transactional": true,
         "required_slots": [
           "therapist_name",
@@ -1609,8 +1609,8 @@
         ]
       },
       {
-        "name": "intent_27",
-        "description": "",
+        "name": "FindProvider",
+        "description": "intent_51",
         "is_transactional": false,
         "required_slots": [
           "city",
@@ -1632,20 +1632,20 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_124",
-        "description": "",
+        "name": "location",
+        "description": "slot_203",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_125",
-        "description": "",
+        "name": "attraction_name",
+        "description": "slot_204",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_126",
-        "description": "",
+        "name": "category",
+        "description": "slot_205",
         "is_categorical": true,
         "possible_values": [
           "Place of Worship",
@@ -1661,14 +1661,14 @@
         ]
       },
       {
-        "name": "slot_127",
-        "description": "",
+        "name": "phone_number",
+        "description": "slot_206",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_128",
-        "description": "",
+        "name": "free_entry",
+        "description": "slot_207",
         "is_categorical": true,
         "possible_values": [
           "True",
@@ -1676,8 +1676,8 @@
         ]
       },
       {
-        "name": "slot_129",
-        "description": "",
+        "name": "good_for_kids",
+        "description": "slot_208",
         "is_categorical": true,
         "possible_values": [
           "True",
@@ -1687,16 +1687,16 @@
     ],
     "intents": [
       {
-        "name": "intent_28",
-        "description": "",
+        "name": "FindAttractions",
+        "description": "intent_51",
         "is_transactional": false,
         "required_slots": [
           "location"
         ],
         "optional_slots": {
+          "category": "dontcare",
           "free_entry": "dontcare",
-          "good_for_kids": "dontcare",
-          "category": "dontcare"
+          "good_for_kids": "dontcare"
         },
         "result_slots": [
           "location",
@@ -1714,46 +1714,46 @@
     "description": "",
     "slots": [
       {
-        "name": "slot_130",
-        "description": "",
+        "name": "precipitation",
+        "description": "slot_209",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_131",
-        "description": "",
+        "name": "humidity",
+        "description": "slot_210",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_132",
-        "description": "",
+        "name": "wind",
+        "description": "slot_211",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_133",
-        "description": "",
+        "name": "temperature",
+        "description": "slot_212",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_134",
-        "description": "",
+        "name": "city",
+        "description": "slot_213",
         "is_categorical": false,
         "possible_values": []
       },
       {
-        "name": "slot_135",
-        "description": "",
+        "name": "date",
+        "description": "slot_214",
         "is_categorical": false,
         "possible_values": []
       }
     ],
     "intents": [
       {
-        "name": "intent_29",
-        "description": "",
+        "name": "GetWeather",
+        "description": "intent_52",
         "is_transactional": false,
         "required_slots": [
           "city"

@@ -244,10 +244,19 @@ class SchemaDialogProcessor(DataProcessor):
             # cross domain carry over is not easyto do here, no slot carryover relations
             # not easy to find the slot matching.
             # Here, in future we just do the string match to find all other spans
-            noncat_slot_examples = example.add_noncategorical_slots(
-                state_update,
-                system_span_boundaries,
-                user_span_boundaries, utterances, start_turn, start_turn_subtoken_offset, global_subtoken_offsets)
+
+            # for multiwoz. we use add_noncategorical_slots_multiwoz(
+            if "multiwoz" in self._dataset_config.name:
+                noncat_slot_examples = example.add_noncategorical_slots_multiwoz(
+                    state_update,
+                    system_span_boundaries,
+                    user_span_boundaries, utterances, start_turn, start_turn_subtoken_offset, global_subtoken_offsets)
+            else:
+                noncat_slot_examples = example.add_noncategorical_slots(
+                    state_update,
+                    system_span_boundaries,
+                    user_span_boundaries, utterances, start_turn, start_turn_subtoken_offset, global_subtoken_offsets)
+
             req_slot_examples = example.add_requested_slots(user_frame)
             intent_examples = example.add_intents(user_frame)
             examples.append(example)

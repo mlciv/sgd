@@ -17,7 +17,7 @@ pargs="
 --eval_set $split \
 --output_metric_file $prediction_dir/eval.metrics  \
 --joint_acc_across_turn=x \
---use_fuzzy_match= \
+--use_fuzzy_match=x \
 "
 
 pushd $EVAL_DIR

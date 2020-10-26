@@ -4,7 +4,7 @@
     "slots": [
       {
         "name": "hotel-pricerange",
-        "description": "slot_29",
+        "description": "",
         "possible_values": [
           "expensive",
           "cheap",
@@ -14,7 +14,7 @@
       },
       {
         "name": "hotel-type",
-        "description": "slot_30",
+        "description": "",
         "possible_values": [
           "guesthouse",
           "hotel"
@@ -23,7 +23,7 @@
       },
       {
         "name": "hotel-parking",
-        "description": "slot_31",
+        "description": "",
         "possible_values": [
           "free",
           "no",
@@ -33,7 +33,7 @@
       },
       {
         "name": "hotel-bookday",
-        "description": "slot_32",
+        "description": "",
         "possible_values": [
           "monday",
           "tuesday",
@@ -47,7 +47,7 @@
       },
       {
         "name": "hotel-bookpeople",
-        "description": "slot_33",
+        "description": "",
         "possible_values": [
           "1",
           "2",
@@ -62,7 +62,7 @@
       },
       {
         "name": "hotel-bookstay",
-        "description": "slot_34",
+        "description": "",
         "possible_values": [
           "1",
           "2",
@@ -77,7 +77,7 @@
       },
       {
         "name": "hotel-stars",
-        "description": "slot_35",
+        "description": "",
         "possible_values": [
           "0",
           "1",
@@ -90,7 +90,7 @@
       },
       {
         "name": "hotel-internet",
-        "description": "slot_36",
+        "description": "",
         "possible_values": [
           "free",
           "no",
@@ -100,13 +100,13 @@
       },
       {
         "name": "hotel-name",
-        "description": "slot_37",
+        "description": "",
         "possible_values": [],
         "is_categorical": false
       },
       {
         "name": "hotel-area",
-        "description": "slot_38",
+        "description": "",
         "possible_values": [
           "centre",
           "east",
@@ -118,30 +118,30 @@
       },
       {
         "name": "hotel-address",
-        "description": "slot_39",
+        "description": "",
         "is_categorical": false
       },
       {
         "name": "hotel-phone",
-        "description": "slot_40",
+        "description": "",
         "is_categorical": false
       },
       {
         "name": "hotel-postcode",
-        "description": "slot_41",
+        "description": "",
         "is_categorical": false
       },
       {
         "name": "hotel-ref",
-        "description": "slot_42",
+        "description": "",
         "is_categorical": false
       }
     ],
-    "description": "",
+    "description": "hotel reservations and vacation stays",
     "intents": [
       {
         "name": "find_hotel",
-        "description": "intent_5",
+        "description": "",
         "is_transactional": false,
         "required_slots": [],
         "optional_slots": {
@@ -159,7 +159,7 @@
       },
       {
         "name": "book_hotel",
-        "description": "intent_6",
+        "description": "",
         "is_transactional": true,
         "required_slots": [],
         "optional_slots": {
@@ -182,13 +182,13 @@
     "slots": [
       {
         "name": "train-arriveby",
-        "description": "slot_0",
+        "description": "",
         "possible_values": [],
         "is_categorical": false
       },
       {
         "name": "train-departure",
-        "description": "slot_1",
+        "description": "",
         "possible_values": [
           "birmingham new street",
           "bishops stortford",
@@ -208,7 +208,7 @@
       },
       {
         "name": "train-day",
-        "description": "slot_2",
+        "description": "",
         "possible_values": [
           "monday",
           "tuesday",
@@ -222,7 +222,7 @@
       },
       {
         "name": "train-bookpeople",
-        "description": "slot_3",
+        "description": "",
         "possible_values": [
           "0",
           "1",
@@ -241,13 +241,13 @@
       },
       {
         "name": "train-leaveat",
-        "description": "slot_4",
+        "description": "",
         "possible_values": [],
         "is_categorical": false
       },
       {
         "name": "train-destination",
-        "description": "slot_5",
+        "description": "",
         "possible_values": [
           "birmingham new street",
           "bishops stortford",
@@ -267,30 +267,30 @@
       },
       {
         "name": "train-trainid",
-        "description": "slot_6",
+        "description": "",
         "is_categorical": false
       },
       {
         "name": "train-ref",
-        "description": "slot_7",
+        "description": "",
         "is_categorical": false
       },
       {
         "name": "train-price",
-        "description": "slot_8",
+        "description": "",
         "is_categorical": false
       },
       {
         "name": "train-duration",
-        "description": "slot_9",
+        "description": "",
         "is_categorical": false
       }
     ],
-    "description": "",
+    "description": "find trains that take you to places",
     "intents": [
       {
         "name": "find_train",
-        "description": "intent_0",
+        "description": "",
         "is_transactional": false,
         "required_slots": [],
         "optional_slots": {
@@ -304,7 +304,7 @@
       },
       {
         "name": "book_train",
-        "description": "intent_1",
+        "description": "",
         "is_transactional": true,
         "required_slots": [],
         "optional_slots": {
@@ -323,7 +323,7 @@
     "slots": [
       {
         "name": "attraction-area",
-        "description": "slot_10",
+        "description": "",
         "possible_values": [
           "centre",
           "east",
@@ -335,13 +335,13 @@
       },
       {
         "name": "attraction-name",
-        "description": "slot_11",
+        "description": "",
         "possible_values": [],
         "is_categorical": false
       },
       {
         "name": "attraction-type",
-        "description": "slot_12",
+        "description": "",
         "possible_values": [
           "architecture",
           "boat",
@@ -360,35 +360,35 @@
       },
       {
         "name": "attraction-entrancefee",
-        "description": "slot_13",
+        "description": "",
         "is_categorical": false
       },
       {
         "name": "attraction-openhours",
-        "description": "slot_14",
+        "description": "",
         "is_categorical": false
       },
       {
         "name": "attraction-address",
-        "description": "slot_15",
+        "description": "",
         "is_categorical": false
       },
       {
         "name": "attraction-phone",
-        "description": "slot_16",
+        "description": "",
         "is_categorical": false
       },
       {
         "name": "attraction-postcode",
-        "description": "slot_17",
+        "description": "",
         "is_categorical": false
       }
     ],
-    "description": "",
+    "description": "find touristy stuff to do around you",
     "intents": [
       {
         "name": "find_attraction",
-        "description": "intent_2",
+        "description": "",
         "is_transactional": false,
         "required_slots": [],
         "optional_slots": {
@@ -404,7 +404,7 @@
     "slots": [
       {
         "name": "restaurant-pricerange",
-        "description": "slot_18",
+        "description": "",
         "possible_values": [
           "cheap",
           "expensive",
@@ -414,7 +414,7 @@
       },
       {
         "name": "restaurant-area",
-        "description": "slot_19",
+        "description": "",
         "possible_values": [
           "centre",
           "east",
@@ -426,18 +426,18 @@
       },
       {
         "name": "restaurant-food",
-        "description": "slot_20",
+        "description": "",
         "is_categorical": false
       },
       {
         "name": "restaurant-name",
-        "description": "slot_21",
+        "description": "",
         "possible_values": [],
         "is_categorical": false
       },
       {
         "name": "restaurant-bookday",
-        "description": "slot_22",
+        "description": "",
         "possible_values": [
           "monday",
           "tuesday",
@@ -451,7 +451,7 @@
       },
       {
         "name": "restaurant-bookpeople",
-        "description": "slot_23",
+        "description": "",
         "possible_values": [
           "1",
           "2",
@@ -466,36 +466,36 @@
       },
       {
         "name": "restaurant-booktime",
-        "description": "slot_24",
+        "description": "",
         "possible_values": [],
         "is_categorical": false
       },
       {
         "name": "restaurant-address",
-        "description": "slot_25",
+        "description": "",
         "is_categorical": false
       },
       {
         "name": "restaurant-phone",
-        "description": "slot_26",
+        "description": "",
         "is_categorical": false
       },
       {
         "name": "restaurant-postcode",
-        "description": "slot_27",
+        "description": "",
         "is_categorical": false
       },
       {
         "name": "restaurant-ref",
-        "description": "slot_28",
+        "description": "",
         "is_categorical": false
       }
     ],
-    "description": "",
+    "description": "find places to dine and whet your appetite",
     "intents": [
       {
         "name": "find_restaurant",
-        "description": "intent_3",
+        "description": "",
         "is_transactional": false,
         "required_slots": [],
         "optional_slots": {
@@ -510,7 +510,7 @@
       },
       {
         "name": "book_restaurant",
-        "description": "intent_4",
+        "description": "",
         "is_transactional": true,
         "required_slots": [],
         "optional_slots": {
@@ -526,48 +526,86 @@
     ]
   },
   {
+    "service_name": "hospital",
+    "slots": [
+      {
+        "name": "hospital-department",
+        "description": "",
+        "possible_values": [],
+        "is_categorical": false
+      },
+      {
+        "name": "hospital-address",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "hospital-phone",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "hospital-postcode",
+        "description": "",
+        "is_categorical": false
+      }
+    ],
+    "description": "making you feel better when you are ill",
+    "intents": [
+      {
+        "name": "find_hospital",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "hospital-department": "dontcare"
+        }
+      }
+    ]
+  },
+  {
     "service_name": "taxi",
     "slots": [
       {
         "name": "taxi-leaveat",
-        "description": "slot_43",
+        "description": "",
         "possible_values": [],
         "is_categorical": false
       },
       {
         "name": "taxi-destination",
-        "description": "slot_44",
+        "description": "",
         "possible_values": [],
         "is_categorical": false
       },
       {
         "name": "taxi-departure",
-        "description": "slot_45",
+        "description": "",
         "possible_values": [],
         "is_categorical": false
       },
       {
         "name": "taxi-arriveby",
-        "description": "slot_46",
+        "description": "",
         "possible_values": [],
         "is_categorical": false
       },
       {
         "name": "taxi-type",
-        "description": "slot_47",
+        "description": "",
         "is_categorical": false
       },
       {
         "name": "taxi-phone",
-        "description": "slot_48",
+        "description": "",
         "is_categorical": false
       }
     ],
-    "description": "",
+    "description": "rent cheap cabs to avoid traffic",
     "intents": [
       {
         "name": "book_taxi",
-        "description": "intent_7",
+        "description": "",
         "is_transactional": true,
         "required_slots": [],
         "optional_slots": {
@@ -575,6 +613,98 @@
           "taxi-destination": "dontcare",
           "taxi-departure": "dontcare",
           "taxi-arriveby": "dontcare"
+        }
+      }
+    ]
+  },
+  {
+    "service_name": "bus",
+    "slots": [
+      {
+        "name": "bus-departure",
+        "description": "",
+        "possible_values": [
+          "cambridge"
+        ],
+        "is_categorical": false
+      },
+      {
+        "name": "bus-destination",
+        "description": "",
+        "possible_values": [
+          "london kings cross",
+          "bishops stortford",
+          "cambridge",
+          "kohinoor"
+        ],
+        "is_categorical": false
+      },
+      {
+        "name": "bus-leaveat",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "bus-day",
+        "description": "",
+        "possible_values": [
+          "wednesday"
+        ],
+        "is_categorical": true
+      }
+    ],
+    "description": "bus service for traveling",
+    "intents": [
+      {
+        "name": "find_bus",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "bus-departure": "dontcare",
+          "bus-destination": "dontcare",
+          "bus-day": "dontcare",
+          "bus-leaveat": "dontcare"
+        }
+      }
+    ]
+  },
+  {
+    "service_name": "police",
+    "slots": [
+      {
+        "name": "police-address",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "police-phone",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "police-postcode",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "police-name",
+        "description": "",
+        "possible_values": [
+          "parkside police station"
+        ],
+        "is_categorical": true
+      }
+    ],
+    "description": "police station",
+    "intents": [
+      {
+        "name": "police",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "police-name": "dontcare"
         }
       }
     ]
