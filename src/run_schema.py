@@ -334,6 +334,8 @@ def train(args, config, train_dataset, model, processor):
             losses = outputs[1]
             tmp_loss_dict = {}
             for loss_name, loss in losses.items():
+                if "multiwoz" in args.dataset_config.name and ("intent" in loss_name or "requested_slot" in loss_name):
+                    continue
                 if isinstance(loss, torch.Tensor):
                     loss = loss.sum()
                 tb_writer.add_scalar(loss_name, loss, global_step)
@@ -347,7 +349,14 @@ def train(args, config, train_dataset, model, processor):
 #                )
 #            )
 
-            loss = sum(losses.values())
+            if "multiwoz" in args.dataset_config.name:
+                loss = 0.0
+                for loss_name, value in losses.items():
+                    if "intent" in loss_name or "requested_slot" in loss_name:
+                        continue
+                    loss = loss + value
+            else:
+                loss = sum(losses.values())
             # loss = losses["span_start_loss"] + losses["span_end_loss"] + losses["noncat_slot_status_loss"]
 
             if args.n_gpu > 1:
