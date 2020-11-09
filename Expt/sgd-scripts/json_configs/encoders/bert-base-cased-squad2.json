@@ -1,0 +1,4 @@
+{
+  "enc_model_type": "bert-squad2",
+  "enc_checkpoint": "deepset/bert-base-cased-squad2"
+}

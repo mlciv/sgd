@@ -1,0 +1,4 @@
+{
+  "enc_model_type": "bert-uncase",
+  "enc_checkpoint": "bert-base-uncased"
+}

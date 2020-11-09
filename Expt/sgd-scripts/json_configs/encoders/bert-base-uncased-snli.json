@@ -1,0 +1,4 @@
+{
+  "enc_model_type": "bert-uncase-snli",
+  "enc_checkpoint": "textattack/bert-base-uncased-snli"
+}
