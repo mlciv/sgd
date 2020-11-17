@@ -372,7 +372,7 @@ def train(args, config, train_dataset, model, processor):
                     # Only evaluate when single GPU otherwise metrics may not average well
                     if args.local_rank == -1 and args.evaluate_during_training:
                         # we need a metric here to track and save the checkpoints.
-                        results, per_frame_metrics, _ = evaluate(args, config, model, processor, "dev", step=global_step, tb_writer=tb_writer)
+                        results, per_frame_metrics, _, _, _ = evaluate(args, config, model, processor, "dev", step=global_step, tb_writer=tb_writer)
 
                         for key, value in results.items():
                             # tb_writer.add_scalar("eval_{}".format(key), value, global_step)
@@ -724,7 +724,7 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
     ref_dialogs = processor.get_whole_dialogs(args.data_dir, file_split)
     ref_dialogue_dict = evaluate_utils.get_dialogue_dict(ref_dialogs)
     predicted_dialogue_dict = evaluate_utils.get_dialogue_dict(all_predicted_dialogues)
-    all_metric_aggregate, per_frame_metrics = evaluate_utils.get_metrics_result(
+    all_metric_aggregate, per_frame_metrics, service_cat_metrics, service_noncat_metrics = evaluate_utils.get_metrics_result(
         ref_dialogue_dict, predicted_dialogue_dict,
         args.data_dir, file_split,
         args.use_fuzzy_match,
@@ -749,7 +749,7 @@ def evaluate(args, config, model, processor, mode, step="", tb_writer=None):
     metric_time = timeit.default_timer() - start_time
     logger.info("Metrics done in total %f secs (%f sec per example)",
                 metric_time, metric_time / len(dataset))
-    return all_metric_aggregate, per_frame_metrics, all_predictions
+    return all_metric_aggregate, per_frame_metrics, all_predictions, service_cat_metrics, service_noncat_metrics
 
 
 def load_and_cache_examples(args, processor, mode, output_examples=False):
@@ -1386,7 +1386,7 @@ def main():
                 log_data_warnings=args.log_data_warnings)
 
             # Evaluate
-            metrics, per_frame_metrics, all_predictions = evaluate(args, config, model, processor, "test", step=global_step)
+            metrics, per_frame_metrics, all_predictions, service_cat_metrics, service_noncat_metrics = evaluate(args, config, model, processor, "test", step=global_step)
             evaluated_global_steps.append(global_step)
             # Write predictions to file in DSTC8 format.
 
@@ -1406,9 +1406,11 @@ def main():
 
             output_metric_file = os.path.join(prediction_dir, "eval_metrics.json")
             evaluate_utils.write_metrics_to_file(output_metric_file, metrics)
+            # error analysis
+            evaluate_utils.write_metrics_to_file(output_metric_file + ".cat", service_cat_metrics)
+            evaluate_utils.write_metrics_to_file(output_metric_file + ".noncat", service_noncat_metrics)
             evaluate_utils.write_per_frame_metrics_and_splits(prediction_dir, per_frame_metrics)
             logger.info("metrics for checkpoint:{} is :{}".format(checkpoint, metrics))
-            # TODO: do some error analysis
 
 if __name__ == "__main__":
     main()
