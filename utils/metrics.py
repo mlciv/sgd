@@ -145,8 +145,10 @@ def compare_slot_values(slot_values_ref, slot_values_hyp, service,
     list_cor = []
     slot_active = []
     slot_cat = []
+    slot_ids = [] # {slot_id}
     for slot in service["slots"]:
         slot_name = slot["name"]
+        slot_ids.append(slot["name"])
         slot_cat.append(slot["is_categorical"])
         if slot_name in slot_values_ref:  # REF=active
             slot_active.append(True)
@@ -171,7 +173,7 @@ def compare_slot_values(slot_values_ref, slot_values_hyp, service,
     assert len(list_cor) == len(service["slots"])
     assert len(slot_active) == len(service["slots"])
     assert len(slot_cat) == len(service["slots"])
-    return list_cor, slot_active, slot_cat
+    return list_cor, slot_active, slot_cat, slot_ids
 
 
 def get_active_intent_accuracy(frame_ref, frame_hyp):
@@ -244,7 +246,7 @@ def get_average_and_joint_goal_accuracy(frame_ref, frame_hyp, service,
         all-goal / categorical-goal / non-categorical-goal accuracies.
     """
     goal_acc = {}
-    list_acc, slot_active, slot_cat = compare_slot_values(
+    list_acc, slot_active, slot_cat, slot_ids = compare_slot_values(
         frame_ref["state"]["slot_values"], frame_hyp["state"]["slot_values"],
         service, use_fuzzy_match)
     # (4) Average goal accuracy.
@@ -276,4 +278,19 @@ def get_average_and_joint_goal_accuracy(frame_ref, frame_hyp, service,
     noncat_acc = [acc for acc, cat in zip(list_acc, slot_cat) if not cat]
     goal_acc[JOINT_NONCAT_ACCURACY] = np.prod(
         noncat_acc) if noncat_acc else NAN_VAL
-    return goal_acc
+
+    cat_slot_dict = collections.defaultdict(list)
+    noncat_slot_dict = collections.defaultdict(list)
+    for slot_key, cat, acc in zip(slot_ids, slot_cat, list_acc):
+        if cat:
+            cat_slot_dict[slot_key].append(acc)
+        else:
+            noncat_slot_dict[slot_key].append(acc)
+
+    for k, v in cat_slot_dict.items():
+        cat_slot_dict[k] = [sum(v), len(v)]
+
+    for k, v in noncat_slot_dict.items():
+        noncat_slot_dict[k] = [sum(v), len(v)]
+
+    return goal_acc, cat_slot_dict, noncat_slot_dict

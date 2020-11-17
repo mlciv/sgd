@@ -143,6 +143,10 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services, u
     # the metric on a frame.
     metric_collections = collections.defaultdict(
         lambda: collections.defaultdict(list))
+    service_cat_collections = collections.defaultdict(
+        lambda: collections.defaultdict(list))
+    service_noncat_collections = collections.defaultdict(
+        lambda: collections.defaultdict(list))
 
     # Ensure the dialogs in dataset_hyp also occur in dataset_ref.
     assert set(dataset_hyp.keys()).issubset(set(dataset_ref.keys()))
@@ -207,8 +211,20 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services, u
                     frame_ref, frame_hyp, turn_ref["utterance"], service)
                 requested_slots_f1_scores = metrics.get_requested_slots_f1(
                     frame_ref, frame_hyp)
-                goal_accuracy_dict = metrics.get_average_and_joint_goal_accuracy(
-                    frame_ref, frame_hyp, service, use_fuzzy_match)
+                goal_accuracy_dict, frame_cat_slot_dict, frame_noncat_slot_dict = metrics.get_average_and_joint_goal_accuracy(
+                frame_ref, frame_hyp, service, use_fuzzy_match)
+                for k, v in frame_cat_slot_dict.items():
+                    if k in service_cat_collections[service_name]:
+                        l = service_cat_collections[service_name][k]
+                        service_cat_collections[service_name][k] = [l[0]+v[0], l[1]+v[1]]
+                    else:
+                        service_cat_collections[service_name][k] = [0, 0]
+                for k, v in frame_noncat_slot_dict.items():
+                    if k in service_noncat_collections[service_name]:
+                        l = service_noncat_collections[service_name][k]
+                        service_noncat_collections[service_name][k] = [l[0]+v[0], l[1]+v[1]]
+                    else:
+                        service_noncat_collections[service_name][k] = [0, 0]
 
                 frame_metric = {
                     metrics.ACTIVE_INTENT_ACCURACY:
@@ -267,7 +283,7 @@ def get_metrics(dataset_ref, dataset_hyp, service_schemas, in_domain_services, u
             else:
                 domain_metric_aggregate[metric_key] = metrics.NAN_VAL
         all_metric_aggregate[domain_key] = domain_metric_aggregate
-    return all_metric_aggregate, per_frame_metric
+    return all_metric_aggregate, per_frame_metric, service_cat_collections, service_noncat_collections
 
 
 def main():
@@ -330,7 +346,7 @@ def main():
     dataset_hyp = get_dataset_as_dict(
         os.path.join(args.prediction_dir, "dialogues_*.json"))
 
-    all_metric_aggregate, per_frame_metrics = get_metrics_result(
+    all_metric_aggregate, per_frame_metrics, service_cat_metrics, service_noncat_metrics = get_metrics_result(
         dataset_ref, dataset_hyp,
         args.dstc8_data_dir, args.eval_set,
         args.use_fuzzy_match,
@@ -342,6 +358,23 @@ def main():
     with open(args.output_metric_file, "w") as f:
         json.dump(
             all_metric_aggregate,
+            f,
+            indent=2,
+            separators=(",", ": "),
+            sort_keys=True)
+
+    # Write the cat metrics values.
+    with open(args.output_metric_file + ".cat", "w") as f:
+        json.dump(
+            service_cat_metrics,
+            f,
+            indent=2,
+            separators=(",", ": "),
+            sort_keys=True)
+
+    with open(args.output_metric_file + ".noncat", "w") as f:
+        json.dump(
+            service_noncat_metrics,
             f,
             indent=2,
             separators=(",", ": "),
@@ -402,10 +435,10 @@ def get_metrics_result(dataset_ref, dataset_hyp, data_dir, split, use_fuzzy_matc
         for service in list_services:
             eval_services[service["service_name"]] = service
 
-    all_metric_aggregate, per_frame_metrics = get_metrics(dataset_ref, dataset_hyp,
+    all_metric_aggregate, per_frame_metrics, service_cat_metrics, service_noncat_metrics = get_metrics(dataset_ref, dataset_hyp,
                                           eval_services, in_domain_services,
                                           use_fuzzy_match, joint_acc_across_turn)
-    return all_metric_aggregate, per_frame_metrics
+    return all_metric_aggregate, per_frame_metrics, service_cat_metrics, service_noncat_metrics
 
 
 

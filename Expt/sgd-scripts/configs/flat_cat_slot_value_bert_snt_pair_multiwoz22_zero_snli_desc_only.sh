@@ -10,13 +10,13 @@ EXP_SUMMARY=$EXP_DIR/summary/
 EXP_RESULTS=$EXP_DIR/results/
 
 # model_type, some model name to initialize or load pretrained model
-MODEL_TYPE=dstc8baseline_toptrans
+MODEL_TYPE=flat_cat_slot_value_bert_snt_pair_match
 # encoder config name for the task
 ENCODER_CONFIG_NAME=
 # encoder_model_name_path, whether a name or a path for the model
-ENCODER_MODEL_NAME_PATH=$SGD_JSON_CONFIG_DIR/encoders/bert-base-cased.json
+ENCODER_MODEL_NAME_PATH=$SGD_JSON_CONFIG_DIR/encoders/bert-base-uncased-snli.json
 # config name for the task
-CONFIG_NAME=$SGD_JSON_CONFIG_DIR/models/dstc8baseline_toptrans_2_2_768_1024.json
+CONFIG_NAME=$SGD_JSON_CONFIG_DIR/models/flat_cat_slot_value_bert_snt_pair_match_desc_value.json
 # model_name_path, whether a name or a path for the model
 MODEL_NAME_PATH=
 # cache_dir, the cache_dir for store the mebdding, exampls.
@@ -30,24 +30,26 @@ DEV_FILE=dev
 # test_file, the file for eval
 TEST_FILE=test
 # per_gpu_eval_batch_size
-PER_GPU_EVAL_BATCH_SIZE=2
+PER_GPU_EVAL_BATCH_SIZE=16
 # per_gpu_train_batch_size
-PER_GPU_TRAIN_BATCH_SIZE=2
+PER_GPU_TRAIN_BATCH_SIZE=16
 # num_train_epochs
-NUM_TRAIN_EPOCHS=100
+NUM_TRAIN_EPOCHS=10
 # learning_rate
-LEARNING_RATE=0.0001
+LEARNING_RATE=2e-5
 # gradient_accumulation_steps
-GRADIENT_ACCUMULATION_STEPS=64
+GRADIENT_ACCUMULATION_STEPS=8
 # logging_steps
-LOGGING_STEPS=3000
+LOGGING_STEPS=8000
 # save_steps 
-SAVE_STEPS=100000
+SAVE_STEPS=1000000
 # JOINT_ACC_ACROSS_TURN
 JOINT_ACC_ACROSS_TURN=x
 # USE_FUZZY_MATCH
-USE_FUZZY_MATCH=x
+USE_FUZZY_MATCH=
 # MAX_SEQ_LENGTH
-MAX_SEQ_LENGTH=160
+MAX_SEQ_LENGTH=512
 # warmup_step
 WARMUP_PORTION=0.1
+# whether finetuning the encoder
+ENCODER_FINETUNING=x
