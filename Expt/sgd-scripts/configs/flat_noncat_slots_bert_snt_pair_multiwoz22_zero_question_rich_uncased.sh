@@ -14,7 +14,7 @@ MODEL_TYPE=flat_noncat_slots_bert_snt_pair_match
 # encoder config name for the task
 ENCODER_CONFIG_NAME=
 # encoder_model_name_path, whether a name or a path for the model
-ENCODER_MODEL_NAME_PATH=$SGD_JSON_CONFIG_DIR/encoders/bert-base-cased-squad2.json
+ENCODER_MODEL_NAME_PATH=$SGD_JSON_CONFIG_DIR/encoders/bert-base-uncased.json
 # config name for the task
 CONFIG_NAME=$SGD_JSON_CONFIG_DIR/models/flat_noncat_slots_bert_snt_pair_match_desc_only.json
 # model_name_path, whether a name or a path for the model
@@ -36,11 +36,11 @@ PER_GPU_TRAIN_BATCH_SIZE=16
 # num_train_epochs
 NUM_TRAIN_EPOCHS=10
 # learning_rate
-LEARNING_RATE=1e-5
+LEARNING_RATE=2e-5
 # gradient_accumulation_steps
 GRADIENT_ACCUMULATION_STEPS=8
 # logging_steps
-LOGGING_STEPS=3000
+LOGGING_STEPS=6000
 # save_steps 
 SAVE_STEPS=1000000
 # JOINT_ACC_ACROSS_TURN
