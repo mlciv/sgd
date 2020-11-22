@@ -584,7 +584,6 @@ class Schema(object):
 
     def gen_name_only_change(self):
         for schema in self._schemas:
-            schema["description"] = schema["service_name"]
             for slot in schema["slots"]:
                 ori_slot_desc = slot['description']
                 slot['description'] = slot["name"]
