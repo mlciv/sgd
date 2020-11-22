@@ -698,7 +698,7 @@ def main():
         default=None,
         type=str,
         required=True,
-        choices=["empty", "name_only", "question_nameonly", "index_name", "question_rich", "back_translation", "enrich", "empty_service_desc", "servicename_as_desc", "empty_service_name_only", "extensional"],
+        choices=["empty", "name_only", "name_change", "question_nameonly", "index_name", "question_rich", "back_translation", "enrich", "empty_service_desc", "servicename_as_desc", "empty_service_name_only", "extensional"],
         help="for evaluation.")
 
     parser.add_argument(
@@ -721,7 +721,7 @@ def main():
     elif args.task_name == "all_name_only":
         schema.gen_all_name_only_description()
     elif args.task_name == "name_change":
-        schema.gen_name_change_description()
+        schema.gen_name_only_change()
     elif args.task_name == "back_translation":
         schema_description_back_translation_path = args.schema_json_path + ".ori_desc.cs.backtranslated.sorted"
         schema.load_back_translation_file(schema_description_back_translation_path)
