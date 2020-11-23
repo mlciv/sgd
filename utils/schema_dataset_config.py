@@ -446,6 +446,20 @@ DATASET_CONFIG = {
             name="multiwoz22_zero_question_nameonly",
             schema_file="schema.json.question_nameonly"
         ),
+    "multiwoz22_zero_name_para":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 18),
+                "dev": range(1, 4),
+                "test": range(1, 5)
+            },
+            max_num_cat_slot=9,
+            max_num_noncat_slot=7,
+            max_num_value_per_cat_slot=13,
+            max_num_intent=2,
+            name="multiwoz22_zero_name_para",
+            schema_file="schema.json.name_para"
+        ),
     "multiwoz22_zero_question_rich":
         DatasetConfig(
             file_ranges={
