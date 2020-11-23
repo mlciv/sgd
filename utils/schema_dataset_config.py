@@ -101,6 +101,20 @@ DATASET_CONFIG = {
             name="dstc8_question_nameonly",
             schema_file="schema.json.question_nameonly"
         ),
+       "dstc8_name_para":
+        DatasetConfig(
+            file_ranges={
+                "train": range(1, 128),
+                "dev": range(1, 21),
+                "test": range(1, 35)
+            },
+            max_num_cat_slot=6,
+            max_num_noncat_slot=12,
+            max_num_value_per_cat_slot=12,
+            max_num_intent=4,
+            name="dstc8_name_para",
+            schema_file="schema.json.name_para"
+        ),
      "dstc8_question_rich":
         DatasetConfig(
             file_ranges={
