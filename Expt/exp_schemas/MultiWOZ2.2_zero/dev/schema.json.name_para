@@ -1,0 +1,639 @@
+[
+  {
+    "service_name": "hotel",
+    "slots": [
+      {
+        "name": "hotel-pricerange",
+        "description": "hotel-pricerange",
+        "possible_values": [
+          "expensive",
+          "cheap",
+          "moderate"
+        ],
+        "is_categorical": true,
+        "ori_description": "price budget of the hotel"
+      },
+      {
+        "name": "hotel-type",
+        "description": "hotel-type",
+        "possible_values": [
+          "guesthouse",
+          "hotel"
+        ],
+        "is_categorical": true,
+        "ori_description": "what is the type of the hotel"
+      },
+      {
+        "name": "hotel-parking",
+        "description": "hotel-has-parking",
+        "possible_values": [
+          "free",
+          "no",
+          "yes"
+        ],
+        "is_categorical": true,
+        "ori_description": "whether the hotel has parking"
+      },
+      {
+        "name": "hotel-bookday",
+        "description": "hotel-bookday",
+        "possible_values": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday"
+        ],
+        "is_categorical": true,
+        "ori_description": "day of the hotel booking"
+      },
+      {
+        "name": "hotel-bookpeople",
+        "description": "hotel-num-bookpeople",
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8"
+        ],
+        "is_categorical": true,
+        "ori_description": "number of people for the hotel booking"
+      },
+      {
+        "name": "hotel-bookstay",
+        "description": "hotel-bookstay",
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8"
+        ],
+        "is_categorical": true,
+        "ori_description": "length of stay at the hotel"
+      },
+      {
+        "name": "hotel-stars",
+        "description": "hotel-stars",
+        "possible_values": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "is_categorical": true,
+        "ori_description": "star rating of the hotel"
+      },
+      {
+        "name": "hotel-internet",
+        "description": "hotel-has-internet",
+        "possible_values": [
+          "free",
+          "no",
+          "yes"
+        ],
+        "is_categorical": true,
+        "ori_description": "whether the hotel has internet"
+      },
+      {
+        "name": "hotel-name",
+        "description": "hotel-name",
+        "possible_values": [],
+        "is_categorical": false,
+        "ori_description": "name of the hotel"
+      },
+      {
+        "name": "hotel-area",
+        "description": "hotel-area",
+        "possible_values": [
+          "centre",
+          "east",
+          "north",
+          "south",
+          "west"
+        ],
+        "is_categorical": true,
+        "ori_description": "area or place of the hotel"
+      },
+      {
+        "name": "hotel-address",
+        "description": "hotel-addr",
+        "is_categorical": false,
+        "ori_description": "address of the hotel"
+      },
+      {
+        "name": "hotel-phone",
+        "description": "hotel-phone",
+        "is_categorical": false,
+        "ori_description": "phone number of the hotel"
+      },
+      {
+        "name": "hotel-postcode",
+        "description": "hotel-postcode",
+        "is_categorical": false,
+        "ori_description": "postal code of the hotel"
+      },
+      {
+        "name": "hotel-ref",
+        "description": "hotel-ref",
+        "is_categorical": false,
+        "ori_description": "reference number of the hotel booking"
+      }
+    ],
+    "description": "hotel reservations and vacation stays",
+    "intents": [
+      {
+        "name": "find_hotel",
+        "description": "find_hotel",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "hotel-pricerange": "dontcare",
+          "hotel-type": "dontcare",
+          "hotel-parking": "dontcare",
+          "hotel-bookday": "dontcare",
+          "hotel-bookpeople": "dontcare",
+          "hotel-bookstay": "dontcare",
+          "hotel-stars": "dontcare",
+          "hotel-internet": "dontcare",
+          "hotel-name": "dontcare",
+          "hotel-area": "dontcare"
+        },
+        "ori_description": "search for a hotel to stay in"
+      },
+      {
+        "name": "book_hotel",
+        "description": "book_hotel",
+        "is_transactional": true,
+        "required_slots": [],
+        "optional_slots": {
+          "hotel-pricerange": "dontcare",
+          "hotel-type": "dontcare",
+          "hotel-parking": "dontcare",
+          "hotel-bookday": "dontcare",
+          "hotel-bookpeople": "dontcare",
+          "hotel-bookstay": "dontcare",
+          "hotel-stars": "dontcare",
+          "hotel-internet": "dontcare",
+          "hotel-name": "dontcare",
+          "hotel-area": "dontcare"
+        },
+        "ori_description": "book a hotel to stay in"
+      }
+    ]
+  },
+  {
+    "service_name": "train",
+    "slots": [
+      {
+        "name": "train-arriveby",
+        "description": "train-arrive-time",
+        "possible_values": [],
+        "is_categorical": false,
+        "ori_description": "arrival time of the train"
+      },
+      {
+        "name": "train-departure",
+        "description": "train-from-loc",
+        "possible_values": [
+          "birmingham new street",
+          "bishops stortford",
+          "broxbourne",
+          "cambridge",
+          "ely",
+          "kings lynn",
+          "leicester",
+          "london kings cross",
+          "london liverpool street",
+          "norwich",
+          "peterborough",
+          "stansted airport",
+          "stevenage"
+        ],
+        "is_categorical": true,
+        "ori_description": "departure location of the train"
+      },
+      {
+        "name": "train-day",
+        "description": "train-day",
+        "possible_values": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday"
+        ],
+        "is_categorical": true,
+        "ori_description": "day of the train"
+      },
+      {
+        "name": "train-bookpeople",
+        "description": "train-num-bookpeople",
+        "possible_values": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "15"
+        ],
+        "is_categorical": true,
+        "ori_description": "how many train tickets you need"
+      },
+      {
+        "name": "train-leaveat",
+        "description": "train-leaving-time",
+        "possible_values": [],
+        "is_categorical": false,
+        "ori_description": "leaving time for the train"
+      },
+      {
+        "name": "train-destination",
+        "description": "train-destination",
+        "possible_values": [
+          "birmingham new street",
+          "bishops stortford",
+          "broxbourne",
+          "cambridge",
+          "ely",
+          "kings lynn",
+          "leicester",
+          "london kings cross",
+          "london liverpool street",
+          "norwich",
+          "peterborough",
+          "stansted airport",
+          "stevenage"
+        ],
+        "is_categorical": true,
+        "ori_description": "destination of the train"
+      },
+      {
+        "name": "train-trainid",
+        "description": "train-trainid",
+        "is_categorical": false,
+        "ori_description": "id of the train"
+      },
+      {
+        "name": "train-ref",
+        "description": "train-ref",
+        "is_categorical": false,
+        "ori_description": "reference number of the train booking"
+      },
+      {
+        "name": "train-price",
+        "description": "train-price",
+        "is_categorical": false,
+        "ori_description": "price of the train"
+      },
+      {
+        "name": "train-duration",
+        "description": "train-duration",
+        "is_categorical": false,
+        "ori_description": "duration of the travel"
+      }
+    ],
+    "description": "find trains that take you to places",
+    "intents": [
+      {
+        "name": "find_train",
+        "description": "find_train",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "train-destination": "dontcare",
+          "train-arriveby": "dontcare",
+          "train-departure": "dontcare",
+          "train-day": "dontcare",
+          "train-bookpeople": "dontcare",
+          "train-leaveat": "dontcare"
+        },
+        "ori_description": "search for trains that take you places"
+      },
+      {
+        "name": "book_train",
+        "description": "book_train",
+        "is_transactional": true,
+        "required_slots": [],
+        "optional_slots": {
+          "train-destination": "dontcare",
+          "train-arriveby": "dontcare",
+          "train-departure": "dontcare",
+          "train-day": "dontcare",
+          "train-bookpeople": "dontcare",
+          "train-leaveat": "dontcare"
+        },
+        "ori_description": "book train tickets"
+      }
+    ]
+  },
+  {
+    "service_name": "attraction",
+    "slots": [
+      {
+        "name": "attraction-area",
+        "description": "attraction-searcharea",
+        "possible_values": [
+          "centre",
+          "east",
+          "north",
+          "south",
+          "west"
+        ],
+        "is_categorical": true,
+        "ori_description": "area to search for attractions"
+      },
+      {
+        "name": "attraction-name",
+        "description": "attraction-name",
+        "possible_values": [],
+        "is_categorical": false,
+        "ori_description": "name of the attraction"
+      },
+      {
+        "name": "attraction-type",
+        "description": "attraction-type",
+        "possible_values": [
+          "architecture",
+          "boat",
+          "cinema",
+          "college",
+          "concerthall",
+          "entertainment",
+          "museum",
+          "multiple sports",
+          "nightclub",
+          "park",
+          "swimmingpool",
+          "theatre"
+        ],
+        "is_categorical": true,
+        "ori_description": "type of the attraction"
+      },
+      {
+        "name": "attraction-entrancefee",
+        "description": "attraction-ticket-fee",
+        "is_categorical": false,
+        "ori_description": "how much is the entrance fee"
+      },
+      {
+        "name": "attraction-openhours",
+        "description": "attraction-openhours",
+        "is_categorical": false,
+        "ori_description": "open hours of the attraction"
+      },
+      {
+        "name": "attraction-address",
+        "description": "attraction-addr",
+        "is_categorical": false,
+        "ori_description": "address of the attraction"
+      },
+      {
+        "name": "attraction-phone",
+        "description": "attraction-phonenumber",
+        "is_categorical": false,
+        "ori_description": "phone number of the attraction"
+      },
+      {
+        "name": "attraction-postcode",
+        "description": "attraction-postcode",
+        "is_categorical": false,
+        "ori_description": "postal code of the attraction"
+      }
+    ],
+    "description": "find touristy stuff to do around you",
+    "intents": [
+      {
+        "name": "find_attraction",
+        "description": "find_attraction",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "attraction-area": "dontcare",
+          "attraction-name": "dontcare",
+          "attraction-type": "dontcare"
+        },
+        "ori_description": "search for places to see for leisure"
+      }
+    ]
+  },
+  {
+    "service_name": "restaurant",
+    "slots": [
+      {
+        "name": "restaurant-pricerange",
+        "description": "restaurant-pricelevel",
+        "possible_values": [
+          "cheap",
+          "expensive",
+          "moderate"
+        ],
+        "is_categorical": true,
+        "ori_description": "price budget for the restaurant"
+      },
+      {
+        "name": "restaurant-area",
+        "description": "restaurant-area",
+        "possible_values": [
+          "centre",
+          "east",
+          "north",
+          "south",
+          "west"
+        ],
+        "is_categorical": true,
+        "ori_description": "area or place of the restaurant"
+      },
+      {
+        "name": "restaurant-food",
+        "description": "restaurant-cuisine",
+        "is_categorical": false,
+        "ori_description": "the cuisine of the restaurant you are looking for"
+      },
+      {
+        "name": "restaurant-name",
+        "description": "restaurant-name",
+        "possible_values": [],
+        "is_categorical": false,
+        "ori_description": "name of the restaurant"
+      },
+      {
+        "name": "restaurant-bookday",
+        "description": "restaurant-bookday",
+        "possible_values": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday"
+        ],
+        "is_categorical": true,
+        "ori_description": "day of the restaurant booking"
+      },
+      {
+        "name": "restaurant-bookpeople",
+        "description": "restaurant-num-bookpeople",
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8"
+        ],
+        "is_categorical": true,
+        "ori_description": "how many people for the restaurant reservation"
+      },
+      {
+        "name": "restaurant-booktime",
+        "description": "restaurant-booktime",
+        "possible_values": [],
+        "is_categorical": false,
+        "ori_description": "time of the restaurant booking"
+      },
+      {
+        "name": "restaurant-address",
+        "description": "restaurant-address",
+        "is_categorical": false,
+        "ori_description": "address of the restaurant"
+      },
+      {
+        "name": "restaurant-phone",
+        "description": "restaurant-phone",
+        "is_categorical": false,
+        "ori_description": "phone number of the restaurant"
+      },
+      {
+        "name": "restaurant-postcode",
+        "description": "restaurant-postcode",
+        "is_categorical": false,
+        "ori_description": "postal code of the restaurant"
+      },
+      {
+        "name": "restaurant-ref",
+        "description": "restaurant-ref",
+        "is_categorical": false,
+        "ori_description": "reference number of the restaurant booking"
+      }
+    ],
+    "description": "find places to dine and whet your appetite",
+    "intents": [
+      {
+        "name": "find_restaurant",
+        "description": "find_restaurant",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "restaurant-pricerange": "dontcare",
+          "restaurant-area": "dontcare",
+          "restaurant-food": "dontcare",
+          "restaurant-name": "dontcare",
+          "restaurant-bookday": "dontcare",
+          "restaurant-bookpeople": "dontcare",
+          "restaurant-booktime": "dontcare"
+        },
+        "ori_description": "search for places to wine and dine"
+      },
+      {
+        "name": "book_restaurant",
+        "description": "book_restaurant",
+        "is_transactional": true,
+        "required_slots": [],
+        "optional_slots": {
+          "restaurant-pricerange": "dontcare",
+          "restaurant-area": "dontcare",
+          "restaurant-food": "dontcare",
+          "restaurant-name": "dontcare",
+          "restaurant-bookday": "dontcare",
+          "restaurant-bookpeople": "dontcare",
+          "restaurant-booktime": "dontcare"
+        },
+        "ori_description": "book a table at a restaurant"
+      }
+    ]
+  },
+  {
+    "service_name": "taxi",
+    "slots": [
+      {
+        "name": "taxi-leaveat",
+        "description": "taxi-leavingtime",
+        "possible_values": [],
+        "is_categorical": false,
+        "ori_description": "leaving time of taxi"
+      },
+      {
+        "name": "taxi-destination",
+        "description": "taxi-destination",
+        "possible_values": [],
+        "is_categorical": false,
+        "ori_description": "destination of taxi"
+      },
+      {
+        "name": "taxi-departure",
+        "description": "taxi-departure",
+        "possible_values": [],
+        "is_categorical": false,
+        "ori_description": "departure location of taxi"
+      },
+      {
+        "name": "taxi-arriveby",
+        "description": "taxi-arrivingtime",
+        "possible_values": [],
+        "is_categorical": false,
+        "ori_description": "arrival time of taxi"
+      },
+      {
+        "name": "taxi-type",
+        "description": "taxi-type",
+        "is_categorical": false,
+        "ori_description": "car type of the taxi"
+      },
+      {
+        "name": "taxi-phone",
+        "description": "taxi-phone",
+        "is_categorical": false,
+        "ori_description": "phone number of the taxi"
+      }
+    ],
+    "description": "rent cheap cabs to avoid traffic",
+    "intents": [
+      {
+        "name": "book_taxi",
+        "description": "book_taxi",
+        "is_transactional": true,
+        "required_slots": [],
+        "optional_slots": {
+          "taxi-leaveat": "dontcare",
+          "taxi-destination": "dontcare",
+          "taxi-departure": "dontcare",
+          "taxi-arriveby": "dontcare"
+        },
+        "ori_description": "book taxis to travel between places"
+      }
+    ]
+  }
+]

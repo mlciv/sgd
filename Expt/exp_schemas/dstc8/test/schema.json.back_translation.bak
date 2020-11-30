@@ -225,7 +225,7 @@
       },
       {
         "name": "event_name",
-        "description": "Name of artist or play",
+        "description": "Name of an artist or play",
         "is_categorical": false,
         "possible_values": [],
         "description_ori": "Name of artist or play"
@@ -369,14 +369,14 @@
       },
       {
         "name": "origin_airport",
-        "description": "Name of the airport or city to departure from",
+        "description": "Name of the airport to departure from",
         "is_categorical": false,
         "possible_values": [],
         "description_ori": "The name of the airport or city to depart from"
       },
       {
         "name": "destination_airport",
-        "description": "Name of the airport or city to attrive at",
+        "description": "Name of the airport to attrive at",
         "is_categorical": false,
         "possible_values": [],
         "description_ori": "The name of the airport or city to arrive at"
@@ -1430,7 +1430,7 @@
       },
       {
         "name": "receiver",
-        "description": "Name of the recipient or account in the transacation",
+        "description": "Name of the recipient in the transacation",
         "is_categorical": false,
         "possible_values": [],
         "description_ori": "Name of the contact or account to make the transaction with"
