@@ -1,0 +1,384 @@
+[
+  {
+    "service_name": "train",
+    "slots": [
+      {
+        "name": "train-arriveby",
+        "description": "arrival time of the train, a time stamp when the train will arrive",
+        "possible_values": [],
+        "is_categorical": false,
+        "ori_description": "arrival time of the train"
+      },
+      {
+        "name": "train-departure",
+        "description": "departure location of the train, e.g. birmingham new street, bishops stortford, broxbourne, cambridge, ely, kings lynn, leicester, london kings cross, london liverpool street, norwich, peterborough, stansted airport, stevenage",
+        "possible_values": [
+          "birmingham new street",
+          "bishops stortford",
+          "broxbourne",
+          "cambridge",
+          "ely",
+          "kings lynn",
+          "leicester",
+          "london kings cross",
+          "london liverpool street",
+          "norwich",
+          "peterborough",
+          "stansted airport",
+          "stevenage"
+        ],
+        "is_categorical": true,
+        "ori_description": "departure location of the train"
+      },
+      {
+        "name": "train-day",
+        "description": "day of the train, e.g. monday, tuesday, wednesday, thursday, friday, saturday, sunday",
+        "possible_values": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday"
+        ],
+        "is_categorical": true,
+        "ori_description": "day of the train"
+      },
+      {
+        "name": "train-bookpeople",
+        "description": "how many train tickets you need, e.g. 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15",
+        "possible_values": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "15"
+        ],
+        "is_categorical": true,
+        "ori_description": "how many train tickets you need"
+      },
+      {
+        "name": "train-leaveat",
+        "description": "leaving time for the train, a timestamp when the train will leave",
+        "possible_values": [],
+        "is_categorical": false,
+        "ori_description": "leaving time for the train"
+      },
+      {
+        "name": "train-destination",
+        "description": "destination of the train, e.g. birmingham new street, bishops stortford, broxbourne, cambridge, ely, kings lynn, leicester, london kings cross, london liverpool street, norwich, peterborough, stansted airport, stevenage",
+        "possible_values": [
+          "birmingham new street",
+          "bishops stortford",
+          "broxbourne",
+          "cambridge",
+          "ely",
+          "kings lynn",
+          "leicester",
+          "london kings cross",
+          "london liverpool street",
+          "norwich",
+          "peterborough",
+          "stansted airport",
+          "stevenage"
+        ],
+        "is_categorical": true,
+        "ori_description": "destination of the train"
+      },
+      {
+        "name": "train-trainid",
+        "description": "id of the train, to identify the train",
+        "is_categorical": false,
+        "ori_description": "id of the train"
+      },
+      {
+        "name": "train-ref",
+        "description": "reference number of the train booking, a number to identify this train booking",
+        "is_categorical": false,
+        "ori_description": "reference number of the train booking"
+      },
+      {
+        "name": "train-price",
+        "description": "price of the train, the amount of money to pay for the ticket of the train",
+        "is_categorical": false,
+        "ori_description": "price of the train"
+      },
+      {
+        "name": "train-duration",
+        "description": "duration of the travel, how long it last for the train journey",
+        "is_categorical": false,
+        "ori_description": "duration of the travel"
+      }
+    ],
+    "description": "find trains that take you to places",
+    "intents": [
+      {
+        "name": "find_train",
+        "description": "search for trains that take you places, given destination, departure and arrival location",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "train-destination": "dontcare",
+          "train-arriveby": "dontcare",
+          "train-departure": "dontcare",
+          "train-day": "dontcare",
+          "train-bookpeople": "dontcare",
+          "train-leaveat": "dontcare"
+        },
+        "ori_description": "search for trains that take you places"
+      },
+      {
+        "name": "book_train",
+        "description": "book train tickets, given destination, departure and arrival location",
+        "is_transactional": true,
+        "required_slots": [],
+        "optional_slots": {
+          "train-destination": "dontcare",
+          "train-arriveby": "dontcare",
+          "train-departure": "dontcare",
+          "train-day": "dontcare",
+          "train-bookpeople": "dontcare",
+          "train-leaveat": "dontcare"
+        },
+        "ori_description": "book train tickets"
+      }
+    ]
+  },
+  {
+    "service_name": "attraction",
+    "slots": [
+      {
+        "name": "attraction-area",
+        "description": "area to search for attractions, e.g. centre, east, north, south, west",
+        "possible_values": [
+          "centre",
+          "east",
+          "north",
+          "south",
+          "west"
+        ],
+        "is_categorical": true,
+        "ori_description": "area to search for attractions"
+      },
+      {
+        "name": "attraction-name",
+        "description": "name of the attraction, as an indentifier for the attraction",
+        "possible_values": [],
+        "is_categorical": false,
+        "ori_description": "name of the attraction"
+      },
+      {
+        "name": "attraction-type",
+        "description": "type of the attraction, e.g. architecture, boat, cinema, college, concerthall, entertainment, museum, multiple sports, nightclub, park, swimmingpool, theatre",
+        "possible_values": [
+          "architecture",
+          "boat",
+          "cinema",
+          "college",
+          "concerthall",
+          "entertainment",
+          "museum",
+          "multiple sports",
+          "nightclub",
+          "park",
+          "swimmingpool",
+          "theatre"
+        ],
+        "is_categorical": true,
+        "ori_description": "type of the attraction"
+      },
+      {
+        "name": "attraction-entrancefee",
+        "description": "how much is the entrance fee, the amount of money to pay for the entrance ticket",
+        "is_categorical": false,
+        "ori_description": "how much is the entrance fee"
+      },
+      {
+        "name": "attraction-openhours",
+        "description": "open hours of the attraction, a time period at which an attraction opens",
+        "is_categorical": false,
+        "ori_description": "open hours of the attraction"
+      },
+      {
+        "name": "attraction-address",
+        "description": "address of the attraction, for the location of the attraction",
+        "is_categorical": false,
+        "ori_description": "address of the attraction"
+      },
+      {
+        "name": "attraction-phone",
+        "description": "phone number of the attraction, a sequence of digits to contact the attraction by a phone call",
+        "is_categorical": false,
+        "ori_description": "phone number of the attraction"
+      },
+      {
+        "name": "attraction-postcode",
+        "description": "postal code of the attraction, a sequence of digits assigned to the attraction to receive mails",
+        "is_categorical": false,
+        "ori_description": "postal code of the attraction"
+      }
+    ],
+    "description": "find touristy stuff to do around you",
+    "intents": [
+      {
+        "name": "find_attraction",
+        "description": "search for places to see for leisure, given the area, name and type",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "attraction-area": "dontcare",
+          "attraction-name": "dontcare",
+          "attraction-type": "dontcare"
+        },
+        "ori_description": "search for places to see for leisure"
+      }
+    ]
+  },
+  {
+    "service_name": "restaurant",
+    "slots": [
+      {
+        "name": "restaurant-pricerange",
+        "description": "price budget for the restaurant, e.g. cheap, expensive, moderate",
+        "possible_values": [
+          "cheap",
+          "expensive",
+          "moderate"
+        ],
+        "is_categorical": true,
+        "ori_description": "price budget for the restaurant"
+      },
+      {
+        "name": "restaurant-area",
+        "description": "area or place of the restaurant, e.g. centre, east, north, south, west",
+        "possible_values": [
+          "centre",
+          "east",
+          "north",
+          "south",
+          "west"
+        ],
+        "is_categorical": true,
+        "ori_description": "area or place of the restaurant"
+      },
+      {
+        "name": "restaurant-food",
+        "description": "the cuisine of the restaurant you are looking for",
+        "is_categorical": false,
+        "ori_description": "the cuisine of the restaurant you are looking for"
+      },
+      {
+        "name": "restaurant-name",
+        "description": "name of the restaurant, as an identifier of the restaurant",
+        "possible_values": [],
+        "is_categorical": false,
+        "ori_description": "name of the restaurant"
+      },
+      {
+        "name": "restaurant-bookday",
+        "description": "day of the restaurant booking, e.g. monday, tuesday, wednesday, thursday, friday, saturday, sunday",
+        "possible_values": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday"
+        ],
+        "is_categorical": true,
+        "ori_description": "day of the restaurant booking"
+      },
+      {
+        "name": "restaurant-bookpeople",
+        "description": "how many people for the restaurant reservation, e.g. 1, 2, 3, 4, 5, 6, 7, 8",
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8"
+        ],
+        "is_categorical": true,
+        "ori_description": "how many people for the restaurant reservation"
+      },
+      {
+        "name": "restaurant-booktime",
+        "description": "time of the restaurant booking, a timestamp for the reservation",
+        "possible_values": [],
+        "is_categorical": false,
+        "ori_description": "time of the restaurant booking"
+      },
+      {
+        "name": "restaurant-address",
+        "description": "address of the restaurant, for the location of the restaurant",
+        "is_categorical": false,
+        "ori_description": "address of the restaurant"
+      },
+      {
+        "name": "restaurant-phone",
+        "description": "phone number of the restaurant, a sequence of digits used to contact the restaurant by a phone call",
+        "is_categorical": false,
+        "ori_description": "phone number of the restaurant"
+      },
+      {
+        "name": "restaurant-postcode",
+        "description": "postal code of the restaurant, a sequence of the digits assigned to the retaurant to receive mails",
+        "is_categorical": false,
+        "ori_description": "postal code of the restaurant"
+      },
+      {
+        "name": "restaurant-ref",
+        "description": "reference number of the restaurant booking, an identifier of the transaction of restaurant booking",
+        "is_categorical": false,
+        "ori_description": "reference number of the restaurant booking"
+      }
+    ],
+    "description": "find places to dine and whet your appetite",
+    "intents": [
+      {
+        "name": "find_restaurant",
+        "description": "search for places to wine and dine, given restaurant name, food type and so on",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "restaurant-pricerange": "dontcare",
+          "restaurant-area": "dontcare",
+          "restaurant-food": "dontcare",
+          "restaurant-name": "dontcare",
+          "restaurant-bookday": "dontcare",
+          "restaurant-bookpeople": "dontcare",
+          "restaurant-booktime": "dontcare"
+        },
+        "ori_description": "search for places to wine and dine"
+      },
+      {
+        "name": "book_restaurant",
+        "description": "book a table at a restaurant, given the name, people, day and time",
+        "is_transactional": true,
+        "required_slots": [],
+        "optional_slots": {
+          "restaurant-pricerange": "dontcare",
+          "restaurant-area": "dontcare",
+          "restaurant-food": "dontcare",
+          "restaurant-name": "dontcare",
+          "restaurant-bookday": "dontcare",
+          "restaurant-bookpeople": "dontcare",
+          "restaurant-booktime": "dontcare"
+        },
+        "ori_description": "book a table at a restaurant"
+      }
+    ]
+  }
+]

@@ -1,0 +1,350 @@
+[
+  {
+    "service_name": "train",
+    "slots": [
+      {
+        "name": "train-arriveby",
+        "description": "",
+        "possible_values": [],
+        "is_categorical": false
+      },
+      {
+        "name": "train-departure",
+        "description": "",
+        "possible_values": [
+          "birmingham new street",
+          "bishops stortford",
+          "broxbourne",
+          "cambridge",
+          "ely",
+          "kings lynn",
+          "leicester",
+          "london kings cross",
+          "london liverpool street",
+          "norwich",
+          "peterborough",
+          "stansted airport",
+          "stevenage"
+        ],
+        "is_categorical": true
+      },
+      {
+        "name": "train-day",
+        "description": "",
+        "possible_values": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday"
+        ],
+        "is_categorical": true
+      },
+      {
+        "name": "train-bookpeople",
+        "description": "",
+        "possible_values": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "15"
+        ],
+        "is_categorical": true
+      },
+      {
+        "name": "train-leaveat",
+        "description": "",
+        "possible_values": [],
+        "is_categorical": false
+      },
+      {
+        "name": "train-destination",
+        "description": "",
+        "possible_values": [
+          "birmingham new street",
+          "bishops stortford",
+          "broxbourne",
+          "cambridge",
+          "ely",
+          "kings lynn",
+          "leicester",
+          "london kings cross",
+          "london liverpool street",
+          "norwich",
+          "peterborough",
+          "stansted airport",
+          "stevenage"
+        ],
+        "is_categorical": true
+      },
+      {
+        "name": "train-trainid",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "train-ref",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "train-price",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "train-duration",
+        "description": "",
+        "is_categorical": false
+      }
+    ],
+    "description": "find trains that take you to places",
+    "intents": [
+      {
+        "name": "find_train",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "train-destination": "dontcare",
+          "train-arriveby": "dontcare",
+          "train-departure": "dontcare",
+          "train-day": "dontcare",
+          "train-bookpeople": "dontcare",
+          "train-leaveat": "dontcare"
+        }
+      },
+      {
+        "name": "book_train",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [],
+        "optional_slots": {
+          "train-destination": "dontcare",
+          "train-arriveby": "dontcare",
+          "train-departure": "dontcare",
+          "train-day": "dontcare",
+          "train-bookpeople": "dontcare",
+          "train-leaveat": "dontcare"
+        }
+      }
+    ]
+  },
+  {
+    "service_name": "attraction",
+    "slots": [
+      {
+        "name": "attraction-area",
+        "description": "",
+        "possible_values": [
+          "centre",
+          "east",
+          "north",
+          "south",
+          "west"
+        ],
+        "is_categorical": true
+      },
+      {
+        "name": "attraction-name",
+        "description": "",
+        "possible_values": [],
+        "is_categorical": false
+      },
+      {
+        "name": "attraction-type",
+        "description": "",
+        "possible_values": [
+          "architecture",
+          "boat",
+          "cinema",
+          "college",
+          "concerthall",
+          "entertainment",
+          "museum",
+          "multiple sports",
+          "nightclub",
+          "park",
+          "swimmingpool",
+          "theatre"
+        ],
+        "is_categorical": true
+      },
+      {
+        "name": "attraction-entrancefee",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "attraction-openhours",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "attraction-address",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "attraction-phone",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "attraction-postcode",
+        "description": "",
+        "is_categorical": false
+      }
+    ],
+    "description": "find touristy stuff to do around you",
+    "intents": [
+      {
+        "name": "find_attraction",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "attraction-area": "dontcare",
+          "attraction-name": "dontcare",
+          "attraction-type": "dontcare"
+        }
+      }
+    ]
+  },
+  {
+    "service_name": "restaurant",
+    "slots": [
+      {
+        "name": "restaurant-pricerange",
+        "description": "",
+        "possible_values": [
+          "cheap",
+          "expensive",
+          "moderate"
+        ],
+        "is_categorical": true
+      },
+      {
+        "name": "restaurant-area",
+        "description": "",
+        "possible_values": [
+          "centre",
+          "east",
+          "north",
+          "south",
+          "west"
+        ],
+        "is_categorical": true
+      },
+      {
+        "name": "restaurant-food",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "restaurant-name",
+        "description": "",
+        "possible_values": [],
+        "is_categorical": false
+      },
+      {
+        "name": "restaurant-bookday",
+        "description": "",
+        "possible_values": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday"
+        ],
+        "is_categorical": true
+      },
+      {
+        "name": "restaurant-bookpeople",
+        "description": "",
+        "possible_values": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8"
+        ],
+        "is_categorical": true
+      },
+      {
+        "name": "restaurant-booktime",
+        "description": "",
+        "possible_values": [],
+        "is_categorical": false
+      },
+      {
+        "name": "restaurant-address",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "restaurant-phone",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "restaurant-postcode",
+        "description": "",
+        "is_categorical": false
+      },
+      {
+        "name": "restaurant-ref",
+        "description": "",
+        "is_categorical": false
+      }
+    ],
+    "description": "find places to dine and whet your appetite",
+    "intents": [
+      {
+        "name": "find_restaurant",
+        "description": "",
+        "is_transactional": false,
+        "required_slots": [],
+        "optional_slots": {
+          "restaurant-pricerange": "dontcare",
+          "restaurant-area": "dontcare",
+          "restaurant-food": "dontcare",
+          "restaurant-name": "dontcare",
+          "restaurant-bookday": "dontcare",
+          "restaurant-bookpeople": "dontcare",
+          "restaurant-booktime": "dontcare"
+        }
+      },
+      {
+        "name": "book_restaurant",
+        "description": "",
+        "is_transactional": true,
+        "required_slots": [],
+        "optional_slots": {
+          "restaurant-pricerange": "dontcare",
+          "restaurant-area": "dontcare",
+          "restaurant-food": "dontcare",
+          "restaurant-name": "dontcare",
+          "restaurant-bookday": "dontcare",
+          "restaurant-bookpeople": "dontcare",
+          "restaurant-booktime": "dontcare"
+        }
+      }
+    ]
+  }
+]
