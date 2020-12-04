@@ -200,22 +200,31 @@ Joint Fusion-Encoder model: ```dstc8baseline_toptrans_dstc8_all_bert_2_2_768_102
 
 ### Cross-Encoders
 Intent: ```flat_active_intent_bert_snt_pair_dstc8_all_bert.sh```
+
 ReqSlot: ```flat_requested_slots_bert_snt_pair_dstc8_all_bert.sh```
+
 CatSlot: ```flat_cat_slot_value_bert_snt_pair_dstc8_all_bert.sh```
+
 NonCatSlot: ```flat_noncat_slots_bert_snt_pair_dstc8_all_bert.sh```
 
 ## Supplementary Training
 For supplementary training, we compare the model results before and after applying supplementary training on SNLI and SQUAD2
 ### SNLI
 Gain on Intent: ```flat_active_intent_bert_snt_pair_dstc8_all_bert_uncased_snli_desc_only.sh``` and ```flat_active_intent_bert_snt_pair_dstc8_all_bert_uncased_desc_only.sh```
+
 Gain on ReqSlot: ```flat_requested_slots_bert_snt_pair_dstc8_all_bert_uncased_snli_desc_only.sh``` and ```flat_requested_slots_bert_snt_pair_dstc8_all_bert_uncased_desc_only.sh```
+
 Gain on CatSlot: ```flat_cat_slot_value_bert_snt_pair_dstc8_all_bert_uncased_snli_desc_only_128.sh```  and ```flat_cat_slot_value_bert_snt_pair_dstc8_all_bert_uncased_desc_only_128.sh```
+
 Gain on NonCatSlot: ```flat_noncat_slots_bert_snt_pair_dstc8_all_uncased_snli_bert_desc_only_128.sh``` and ```flat_noncat_slots_bert_snt_pair_dstc8_all_uncased_bert_desc_only_128.sh```
 
 ### SQUAD
 Gain on Intent: ```flat_active_intent_bert_snt_pair_dstc8_all_bert_squad2_desc_only.sh``` and ```flat_active_intent_bert_snt_pair_dstc8_all_bert_desc_only.sh```
+
 Gain on ReqSlot: ```flat_requested_slots_bert_snt_pair_dstc8_all_squad2_desc_only.sh``` and ```flat_requested_slots_bert_snt_pair_dstc8_all_bert_desc_only.sh```
+
 Gain on CatSlot: ```flat_cat_slot_value_bert_snt_pair_dstc8_all_bert_squad2_desc_only_128.sh``` and ```flat_cat_slot_value_bert_snt_pair_dstc8_all_bert_bert_desc_only_128.sh```
+
 Gain on NoncatSlot: ```flat_noncat_slots_bert_snt_pair_dstc8_all_bert_squad2_desc_only_128.sh``` and ```flat_noncat_slots_bert_snt_pair_dstc8_all_bert_desc_only_128.sh```
 
 
