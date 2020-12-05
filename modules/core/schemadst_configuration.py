@@ -1,7 +1,11 @@
 # Time-stamp: <>
 # --------------------------------------------------------------------
 # File Name          : configuration_classify.py
+<<<<<<< HEAD
 # Original Author    : cajie@amazon.com
+=======
+# Original Author    : jiessie.cao@gmail.com
+>>>>>>> 4131baf55e48139fdc95ab20c573a529d9982b3d
 # Description        : The configuration class for ClassifierModel
 # --------------------------------------------------------------------
 

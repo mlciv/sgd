@@ -1,7 +1,11 @@
 # Time-stamp: <2020-06-06>
 # --------------------------------------------------------------------
 # File Name          : encode_sep_utterance_schema_pair_interface.py
+<<<<<<< HEAD
 # Original Author    : cajie@amazon.com
+=======
+# Original Author    : jiessie.cao@gmail.com
+>>>>>>> 4131baf55e48139fdc95ab20c573a529d9982b3d
 # Description        : A encode interface for seperately encode utterance and schema with bert sentenct pair
 # --------------------------------------------------------------------
 
@@ -15,6 +19,11 @@ from utils import (
 )
 from transformers import BertTokenizer
 
+<<<<<<< HEAD
+=======
+# Dimension of the embedding for intents, slots and categorical slot values in
+# the schema. Should be equal to BERT's hidden_size.
+>>>>>>> 4131baf55e48139fdc95ab20c573a529d9982b3d
 class EncodeSepUttSchemaInterface(object):
 
     @classmethod

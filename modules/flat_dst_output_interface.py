@@ -1,7 +1,11 @@
 # Time-stamp: <2020-06-06>
 # --------------------------------------------------------------------
 # File Name          : flat_dst_output_interface.py
+<<<<<<< HEAD
 # Original Author    : cajie@amazon.com
+=======
+# Original Author    : jiessie.cao@gmail.com
+>>>>>>> 4131baf55e48139fdc95ab20c573a529d9982b3d
 # Description        : A output interface for schema-guided dialogyem given the input,
 # to predict flatten examples for active_intent, requested_slots, slot goals
 # --------------------------------------------------------------------

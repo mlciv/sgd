@@ -1,7 +1,11 @@
 # Time-stamp: <2020-05-23>
 # --------------------------------------------------------------------
 # File Name          : encoder_configuration.py
+<<<<<<< HEAD
 # Original Author    : cajie@amazon.com
+=======
+# Original Author    : jiessie.cao@gmail.com
+>>>>>>> 4131baf55e48139fdc95ab20c573a529d9982b3d
 # Description        : Configuration for training or loading model
 # --------------------------------------------------------------------
 
