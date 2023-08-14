@@ -1,7 +1,23 @@
 Schema-guided Dialogue
 ==================
 
-This repo implements a family of neural components for schema-guided dialog, inclduing encoder architectures, description styles, supplementary training and so on.
+This repo implements a family of neural components for schema-guided dialog used in the following paper, inclduing encoder architectures, description styles, supplementary training and so on.  
+```
+@inproceedings{cao-zhang-2021-comparative,
+    title = "A Comparative Study on Schema-Guided Dialogue State Tracking",
+    author = "Cao, Jie  and
+      Zhang, Yi",
+    booktitle = "Proceedings of the 2021 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies",
+    month = jun,
+    year = "2021",
+    address = "Online",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2021.naacl-main.62",
+    doi = "10.18653/v1/2021.naacl-main.62",
+    pages = "782--796",
+    abstract = "Frame-based state representation is widely used in modern task-oriented dialog systems to model user intentions and slot values. However, a fixed design of domain ontology makes it difficult to extend to new services and APIs. Recent work proposed to use natural language descriptions to define the domain ontology instead of tag names for each intent or slot, thus offering a dynamic set of schema. In this paper, we conduct in-depth comparative studies to understand the use of natural language description for schema in dialog state tracking. Our discussion mainly covers three aspects: encoder architectures, impact of supplementary training, and effective schema description styles. We introduce a set of newly designed bench-marking descriptions and reveal the model robustness on both homogeneous and heterogeneous description styles in training and evaluation.",
+}
+```
 
 # Part I. Usage
 *******************
